@@ -1,0 +1,51 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
+
+@theme {
+    --font-sans: 'Ubuntu', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-display: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+    --color-brand: #ff4917;
+    --color-brand-dark: #d63a10;
+    --color-navy: #152029;
+    --color-navy-soft: #1d2b36;
+    --color-canvas: #f2f2f2;
+}
+
+@layer base {
+    h1,
+    h2,
+    h3,
+    h4 {
+        font-family: var(--font-display);
+    }
+}
+
+@layer components {
+    .panel {
+        @apply rounded-2xl bg-white shadow-sm ring-1 ring-navy/10;
+    }
+
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+    }
+
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+    }
+
+    .btn-inverse {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-sm font-medium text-white ring-1 ring-white/15 transition hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white;
+    }
+
+    .btn-navy {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-medium text-white transition hover:bg-navy-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+    }
+
+    .badge {
+        @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold;
+    }
+}
