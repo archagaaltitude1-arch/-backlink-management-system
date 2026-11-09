@@ -12,7 +12,8 @@
         ['label' => 'Profile', 'route' => 'customer.profile', 'icon' => 'profile'],
         ['label' => 'Websites', 'route' => 'customer.websites', 'icon' => 'websites'],
         ['label' => 'Services', 'route' => 'customer.services', 'icon' => 'services'],
-        ['label' => 'Orders', 'route' => 'customer.orders', 'icon' => 'orders'],
+        ['label' => 'Cart', 'route' => 'orders.cart', 'icon' => 'orders'],
+        ['label' => 'Orders', 'route' => 'orders.index', 'icon' => 'orders'],
     ];
 @endphp
 

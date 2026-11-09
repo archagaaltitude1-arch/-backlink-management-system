@@ -3,11 +3,5 @@
 @section('title', 'Order History')
 
 @section('content')
-    <section class="panel p-6 sm:p-8">
-        <p class="text-xs font-semibold tracking-wider text-brand uppercase">Member 3 · Orders</p>
-        <h1 class="mt-2 text-2xl font-semibold">Order History</h1>
-        <p class="mt-3 max-w-2xl text-sm leading-6 text-navy/70">
-            Placeholder for order history. This page extends the customer layout.
-        </p>
-    </section>
+    <div class="mx-auto max-w-6xl space-y-6"><div><p class="text-xs font-semibold tracking-wider text-brand uppercase">Anchuga · Orders</p><h1 class="mt-2 text-3xl font-semibold">Order history</h1></div>@if (session('success'))<div class="rounded-xl bg-green-50 p-4 text-sm text-green-800">{{ session('success') }}</div>@endif<section class="panel overflow-hidden"><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-navy text-white"><tr><th class="px-5 py-4">Order</th><th class="px-5 py-4">Items</th><th class="px-5 py-4">Total</th><th class="px-5 py-4">Status</th><th class="px-5 py-4"></th></tr></thead><tbody>@forelse ($orders as $order)<tr class="border-b border-navy/10"><td class="px-5 py-4 font-semibold">{{ $order->order_number }}<div class="text-xs font-normal text-navy/50">{{ $order->created_at->format('M j, Y') }}</div></td><td class="px-5 py-4">{{ $order->items->sum('quantity') }}</td><td class="px-5 py-4">${{ number_format($order->total_amount, 2) }}</td><td class="px-5 py-4"><span class="badge bg-orange-100 text-orange-800">{{ ucfirst($order->order_status) }}</span></td><td class="px-5 py-4 text-right"><a class="font-semibold text-brand hover:underline" href="{{ route('orders.show', $order) }}">View</a></td></tr>@empty<tr><td class="px-5 py-8 text-center text-navy/60" colspan="5">No orders yet.</td></tr>@endforelse</tbody></table></div></section></div>
 @endsection
