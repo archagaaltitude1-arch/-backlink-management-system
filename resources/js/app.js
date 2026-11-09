@@ -35,8 +35,29 @@ function initSidebar() {
     });
 }
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initSidebar);
-} else {
+function initPasswordToggle() {
+    const button = document.getElementById('toggle-password');
+    const input = document.getElementById('password');
+
+    if (!button || !input) {
+        return;
+    }
+
+    button.addEventListener('click', () => {
+        const showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        button.textContent = showing ? 'Show' : 'Hide';
+        button.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+    });
+}
+
+function boot() {
     initSidebar();
+    initPasswordToggle();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+} else {
+    boot();
 }
