@@ -51,7 +51,24 @@
     </nav>
 
     <div class="shrink-0 border-t border-white/10 px-5 py-4">
-        <p class="text-xs text-white/50">Signed in as</p>
-        <p class="mt-1 text-sm font-medium">{{ $userName ?? 'SEO User' }}</p>
+        <div class="flex items-center justify-between">
+            <a href="{{ route('seo.profile') }}" class="group block min-w-0">
+                <p class="text-xs text-white/50 group-hover:text-brand transition">Signed in as</p>
+                <p class="truncate text-sm font-semibold text-white group-hover:text-brand transition">{{ $userName ?? 'SEO User' }}</p>
+                <p class="text-[11px] text-white/40">Member 4 · SEO</p>
+            </a>
+            <form action="{{ route('seo.logout') }}" method="POST">
+                @csrf
+                <button
+                    type="submit"
+                    title="Sign Out"
+                    class="grid h-8 w-8 place-items-center rounded-lg bg-white/10 text-white/70 hover:bg-brand hover:text-white transition"
+                >
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </button>
+            </form>
+        </div>
     </div>
 </aside>
