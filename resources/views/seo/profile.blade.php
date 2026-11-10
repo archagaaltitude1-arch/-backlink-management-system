@@ -54,26 +54,17 @@
 
             <div class="space-y-3 text-sm">
                 <div class="flex justify-between py-1.5 border-b border-navy/5">
-                    <span class="text-navy/60">Module Scope</span>
-                    <span class="font-medium text-navy text-right">Order Fulfillment & Verification</span>
+                    <span class="text-navy/60">Email</span>
+                    <span class="font-medium text-navy truncate ml-2">{{ $profile['email'] }}</span>
                 </div>
                 <div class="flex justify-between py-1.5 border-b border-navy/5">
-                    <span class="text-navy/60">Branch</span>
-                    <span class="font-mono text-xs bg-canvas px-2 py-0.5 rounded text-navy">feature/staff-verification</span>
-                </div>
-                <div class="flex justify-between py-1.5 border-b border-navy/5">
-                    <span class="text-navy/60">Database Tables</span>
-                    <span class="font-medium text-navy">7 Owned Tables</span>
+                    <span class="text-navy/60">Contact</span>
+                    <span class="font-medium text-navy">{{ $profile['contact_number'] }}</span>
                 </div>
                 <div class="flex justify-between py-1.5">
-                    <span class="text-navy/60">Assigned Orders</span>
-                    <span class="font-semibold text-brand">4 Active</span>
+                    <span class="text-navy/60">Status</span>
+                    <span class="badge bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 text-xs">Active</span>
                 </div>
-            </div>
-
-            <div class="rounded-xl bg-canvas p-4 text-xs text-navy/70 leading-relaxed">
-                <strong class="text-navy block mb-1">Responsibilities (Backlink.pdf):</strong>
-                Managing staff orders, reviewing articles & target URLs, verifying live published backlinks, generating verification reports, and customer order updates.
             </div>
         </div>
 
