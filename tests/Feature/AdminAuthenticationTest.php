@@ -7,7 +7,6 @@ use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class AdminAuthenticationTest extends TestCase
@@ -18,44 +17,18 @@ class AdminAuthenticationTest extends TestCase
     {
         parent::setUp();
 
-        Schema::dropAllTables();
-
-        Schema::create('roles', function ($table) {
-            $table->id();
-            $table->string('role_name')->unique();
-            $table->json('permissions')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('users', function ($table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('password');
-            $table->foreignId('role_id')->nullable();
-            $table->string('status')->default('active');
-            $table->timestamps();
-        });
-
-        Schema::create('permissions', function ($table) {
-            $table->id();
-            $table->string('permission_name')->unique();
-            $table->string('description')->nullable();
-            $table->timestamps();
-        });
-
         $this->seed(RolePermissionSeeder::class);
     }
 
     public function test_guests_are_sent_to_the_login_page(): void
     {
         $this->get('/admin/dashboard')->assertRedirect(route('login'));
-        $this->get('/login')->assertOk()->assertSee('Admin sign in');
+        $this->get('/admin/login')->assertOk()->assertSee('Admin sign in');
     }
 
     public function test_invalid_credentials_are_rejected(): void
     {
-        $this->post('/login', [
+        $this->post('/admin/login', [
             'email' => 'missing@example.com',
             'password' => 'not-the-password',
         ])->assertSessionHasErrors('email');
@@ -84,12 +57,12 @@ class AdminAuthenticationTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->post('/login', [
+        $this->post('/admin/login', [
             'email' => 'inactive@example.com',
             'password' => 'password-1',
         ])->assertSessionHasErrors('email');
 
-        $this->post('/login', [
+        $this->post('/admin/login', [
             'email' => 'customer@example.com',
             'password' => 'password-1',
         ])->assertSessionHasErrors('email');
@@ -109,7 +82,7 @@ class AdminAuthenticationTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->post('/login', [
+        $this->post('/admin/login', [
             'email' => 'avery@example.com',
             'password' => 'password-1',
         ])->assertRedirect(route('admin.dashboard'));
@@ -119,7 +92,7 @@ class AdminAuthenticationTest extends TestCase
             ->assertSee('Avery Admin')
             ->assertSee('Roles & Permissions');
 
-        $this->post('/logout')->assertRedirect(route('login'));
+        $this->post('/admin/logout')->assertRedirect(route('login'));
         $this->get('/admin/dashboard')->assertRedirect(route('login'));
     }
 

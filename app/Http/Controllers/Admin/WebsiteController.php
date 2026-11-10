@@ -56,7 +56,7 @@ class WebsiteController extends Controller
         $website = DB::transaction(function () use ($request): Website {
             $website = Website::query()->create($request->safe()->only([
                 'website_name', 'domain', 'url', 'price', 'credit_cost', 'status',
-            ]));
+            ]) + $this->marketplaceAttributes($request));
             $website->niches()->sync($request->input('niche_ids', []));
             $website->seoMetric()->create($request->safe()->only([
                 'DR', 'DA', 'TF', 'CF', 'traffic', 'spam_score', 'backlinks',
@@ -92,7 +92,7 @@ class WebsiteController extends Controller
         DB::transaction(function () use ($request, $website): void {
             $website->update($request->safe()->only([
                 'website_name', 'domain', 'url', 'price', 'credit_cost', 'status',
-            ]));
+            ]) + $this->marketplaceAttributes($request));
             $website->niches()->sync($request->input('niche_ids', []));
             $website->seoMetric()->updateOrCreate(
                 ['website_id' => $website->id],
@@ -101,6 +101,21 @@ class WebsiteController extends Controller
         });
 
         return redirect()->route('admin.websites.show', $website)->with('success', 'Website updated.');
+    }
+
+    /** @return array<string, int|float|string> */
+    private function marketplaceAttributes(WebsiteRequest $request): array
+    {
+        return [
+            'niche' => Niche::query()->whereIn('id', $request->input('niche_ids', []))->orderBy('id')->value('niche_name') ?? 'General',
+            'domain_rating' => $request->float('DR'),
+            'domain_authority' => $request->float('DA'),
+            'trust_flow' => $request->float('TF'),
+            'page_authority' => $request->float('CF'),
+            'monthly_traffic' => $request->integer('traffic'),
+            'spam_score' => $request->float('spam_score'),
+            'backlinks' => $request->integer('backlinks'),
+        ];
     }
 
     public function destroy(Website $website): RedirectResponse

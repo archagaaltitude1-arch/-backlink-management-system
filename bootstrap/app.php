@@ -18,8 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => EnsureUserIsAdmin::class,
         ]);
 
-        $middleware->redirectGuestsTo(fn () => route('login'));
-        $middleware->redirectUsersTo(fn () => route('admin.dashboard'));
+        $middleware->redirectGuestsTo(fn (Request $request) => route($request->is('admin/*') ? 'login' : 'auth.login'));
+        $middleware->redirectUsersTo(fn (Request $request) => route($request->user()->isActiveAdmin() ? 'admin.dashboard' : 'customer.dashboard'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

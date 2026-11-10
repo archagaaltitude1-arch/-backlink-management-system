@@ -1,0 +1,5 @@
+@extends('layouts.customer')
+@section('title', 'SEO Reports')
+@section('content')
+    <div class="mx-auto max-w-6xl space-y-6"><div><p class="text-xs font-semibold tracking-wider text-brand uppercase">My account</p><h1 class="mt-2 text-3xl font-semibold">SEO reports</h1><p class="mt-2 text-sm text-navy/60">Verification summaries and published backlink results.</p></div><section class="grid gap-4">@forelse ($reports as $report)<article class="panel p-5"><div class="flex flex-wrap justify-between gap-3"><div><h2 class="font-semibold">{{ $report->name }}</h2><p class="mt-1 text-xs text-navy/55">{{ $report->updated_at->format('M j, Y') }}</p></div><span class="badge bg-green-100 text-green-800">{{ ucfirst($report->verification_status) }}</span></div><p class="mt-4 whitespace-pre-line text-sm leading-6 text-navy/75">{{ $report->report_summary }}</p></article>@empty<div class="panel p-8 text-center text-sm text-navy/55">Reports will appear after backlink verification is completed.</div>@endforelse</section><div>{{ $reports->links() }}</div></div>
+@endsection

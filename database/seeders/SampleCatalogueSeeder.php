@@ -178,7 +178,12 @@ class SampleCatalogueSeeder extends Seeder
 
             $website = Website::query()->updateOrCreate(
                 ['domain' => $websiteData['domain']],
-                $websiteData,
+                $websiteData + [
+                    'niche' => $nicheNames[0], 'domain_rating' => $metrics['DR'],
+                    'domain_authority' => $metrics['DA'], 'trust_flow' => $metrics['TF'],
+                    'page_authority' => $metrics['CF'], 'monthly_traffic' => $metrics['traffic'],
+                    'spam_score' => $metrics['spam_score'], 'backlinks' => $metrics['backlinks'],
+                ],
             );
 
             $website->niches()->sync(

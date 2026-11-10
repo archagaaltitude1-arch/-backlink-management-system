@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Cart extends Model
 {
-    protected $fillable = ['customer_id', 'session_id', 'status'];
+    protected $fillable = ['customer_id', 'session_id', 'status', 'coupon_code', 'coupon_discount'];
 
     public function items(): HasMany
     {
