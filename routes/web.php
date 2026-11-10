@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\CreditPricingController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -120,6 +121,15 @@ Route::view('/customer/profile', 'customer.profile')->name('customer.profile');
 Route::view('/customer/websites', 'customer.websites')->name('customer.websites');
 Route::view('/customer/services', 'customer.services')->name('customer.services');
 Route::view('/customer/orders', 'customer.orders')->name('customer.orders');
+
+Route::get('/orders/cart', [OrderController::class, 'cart'])->name('orders.cart');
+Route::post('/orders/cart/items', [OrderController::class, 'addToCart'])->name('orders.cart.items.store');
+Route::patch('/orders/cart/items/{cartItem}', [OrderController::class, 'updateCartItem'])->name('orders.cart.items.update');
+Route::delete('/orders/cart/items/{cartItem}', [OrderController::class, 'removeCartItem'])->name('orders.cart.items.destroy');
+Route::get('/orders/checkout', [OrderController::class, 'checkout'])->name('orders.checkout');
+Route::post('/orders', [OrderController::class, 'placeOrder'])->name('orders.store');
+Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
 Route::view('/seo/dashboard', 'seo.dashboard')->name('seo.dashboard');
 Route::view('/seo/assigned-orders', 'seo.assigned-orders')->name('seo.assigned-orders');
