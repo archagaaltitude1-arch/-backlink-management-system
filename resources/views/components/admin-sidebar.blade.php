@@ -11,12 +11,14 @@
         'payments' => ['M3 6h18v12H3z', 'M3 10h18', 'M7 15h5'],
         'reports' => ['M4 19V9', 'M10 19V5', 'M16 19v-6', 'M22 19H2'],
         'settings' => ['M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7', 'M12 2.5v2.5', 'M12 19v2.5', 'M2.5 12H5', 'M19 12h2.5', 'M5.4 5.4l1.8 1.8', 'M16.8 16.8l1.8 1.8', 'M18.6 5.4l-1.8 1.8', 'M7.2 16.8l-1.8 1.8'],
+        'roles' => ['M12 3l8 4v5c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V7l8-4z'],
     ];
 
     $navigation = [
         ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'dashboard'],
         ['label' => 'Customer Management', 'route' => 'admin.customers', 'icon' => 'customers'],
         ['label' => 'Staff Management', 'route' => 'admin.staff', 'icon' => 'staff'],
+        ['label' => 'Roles & Permissions', 'route' => 'admin.roles', 'icon' => 'roles'],
         ['label' => 'Website Management', 'route' => 'admin.websites', 'icon' => 'websites'],
         ['label' => 'Service Management', 'route' => 'admin.services', 'icon' => 'services'],
         ['label' => 'Niche Management', 'route' => 'admin.niches', 'icon' => 'niche'],
@@ -47,10 +49,10 @@
                 href="{{ route($item['route']) }}"
                 @class([
                     'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
-                    'bg-brand text-white' => request()->routeIs($item['route']),
-                    'text-white/75 hover:bg-white/10 hover:text-white' => ! request()->routeIs($item['route']),
+                    'bg-brand text-white' => request()->routeIs($item['route'], $item['route'].'.*'),
+                    'text-white/75 hover:bg-white/10 hover:text-white' => ! request()->routeIs($item['route'], $item['route'].'.*'),
                 ])
-                @if (request()->routeIs($item['route'])) aria-current="page" @endif
+                @if (request()->routeIs($item['route'], $item['route'].'.*')) aria-current="page" @endif
             >
                 <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     @foreach ($icons[$item['icon']] ?? [] as $path)

@@ -19,6 +19,12 @@
     </div>
 
     <div class="flex items-center gap-3">
+        @if (($portal ?? null) === 'Admin' && auth()->check())
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="text-sm font-semibold text-brand hover:text-brand-dark">Log out</button>
+            </form>
+        @endif
         <div class="hidden text-right sm:block">
             <p class="text-sm font-medium text-navy">{{ $userName ?? 'User' }}</p>
             <p class="text-xs text-navy/55">{{ $userRole ?? ($portal ?? 'Member') }}</p>

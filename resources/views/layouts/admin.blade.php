@@ -1,8 +1,9 @@
 {{-- Admin shell. Pages use @extends('layouts.admin') with @section('title') and @section('content'). --}}
 @php
+    $account = auth()->user();
     $portal = 'Admin';
-    $userName = 'Admin User';
-    $userRole = 'Team Lead';
+    $userName = $account?->name ?? 'Admin User';
+    $userRole = $account?->role?->role_name ?? 'Admin';
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
