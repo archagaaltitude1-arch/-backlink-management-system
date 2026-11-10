@@ -18,6 +18,10 @@ use App\Http\Controllers\CustomerAccountController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\WebsiteController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\Seo\SeoDashboardController;
+use App\Http\Controllers\Seo\StaffAuthController;
+use App\Http\Controllers\Seo\StaffOrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -209,8 +213,29 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-Route::view('/seo/dashboard', 'seo.dashboard')->name('seo.dashboard');
-Route::view('/seo/assigned-orders', 'seo.assigned-orders')->name('seo.assigned-orders');
+/*
+|--------------------------------------------------------------------------
+| SEO Staff Portal & Backlink Verification
+| Staff Dashboard, Authentication, Order Management & Verification
+|--------------------------------------------------------------------------
+*/
+// Staff Authentication
+Route::get('/seo/login', [StaffAuthController::class, 'showLogin'])->name('seo.login');
+Route::post('/seo/login', [StaffAuthController::class, 'login'])->name('seo.login.post');
+Route::post('/seo/logout', [StaffAuthController::class, 'logout'])->name('seo.logout');
+
+// Staff Profile Management
+Route::get('/seo/profile', [StaffAuthController::class, 'profile'])->name('seo.profile');
+Route::put('/seo/profile', [StaffAuthController::class, 'updateProfile'])->name('seo.profile.update');
+Route::put('/seo/profile/password', [StaffAuthController::class, 'updatePassword'])->name('seo.profile.password');
+
+// Staff Dashboard & Order Management
+Route::get('/seo/dashboard', [SeoDashboardController::class, 'index'])->name('seo.dashboard');
+Route::get('/seo/assigned-orders', [StaffOrderController::class, 'index'])->name('seo.assigned-orders');
+Route::post('/seo/orders/{id}/assign', [StaffOrderController::class, 'assign'])->name('seo.orders.assign');
+Route::put('/seo/orders/{id}/status', [StaffOrderController::class, 'updateStatus'])->name('seo.orders.status');
+
+// SEO Operations Views
 Route::view('/seo/articles', 'seo.articles')->name('seo.articles');
 Route::view('/seo/submissions', 'seo.submissions')->name('seo.submissions');
 Route::view('/seo/completed-orders', 'seo.completed-orders')->name('seo.completed-orders');
