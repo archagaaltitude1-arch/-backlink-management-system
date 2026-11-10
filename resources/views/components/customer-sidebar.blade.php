@@ -14,6 +14,16 @@
         ['label' => 'Services', 'route' => 'customer.services', 'icon' => 'services'],
         ['label' => 'Cart', 'route' => 'orders.cart', 'icon' => 'orders'],
         ['label' => 'Orders', 'route' => 'orders.index', 'icon' => 'orders'],
+        ['label' => 'Wallet', 'route' => 'customer.wallet', 'icon' => 'orders'],
+        ['label' => 'Payments', 'route' => 'customer.payment-history', 'icon' => 'orders'],
+        ['label' => 'Payment methods', 'route' => 'customer.payment-methods', 'icon' => 'profile'],
+        ['label' => 'Invoices', 'route' => 'customer.invoices', 'icon' => 'orders'],
+        ['label' => 'Saved websites', 'route' => 'customer.saved-websites', 'icon' => 'websites'],
+        ['label' => 'Projects', 'route' => 'customer.projects', 'icon' => 'orders'],
+        ['label' => 'Backlinks', 'route' => 'customer.backlinks', 'icon' => 'orders'],
+        ['label' => 'SEO reports', 'route' => 'customer.reports', 'icon' => 'orders'],
+        ['label' => 'Addresses', 'route' => 'customer.addresses', 'icon' => 'profile'],
+        ['label' => 'Notifications', 'route' => 'customer.notifications', 'icon' => 'orders'],
     ];
 @endphp
 

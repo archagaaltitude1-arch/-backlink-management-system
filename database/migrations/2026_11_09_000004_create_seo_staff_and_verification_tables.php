@@ -15,7 +15,7 @@ return new class extends Migration
      * - publications
      * - backlink_verifications
      * - backlink_reports
-     * - notifications
+     * - staff_notifications
      */
     public function up(): void
     {
@@ -73,7 +73,7 @@ return new class extends Migration
             $table->timestamp('created_at')->useCurrent();
         });
 
-        Schema::create('notifications', function (Blueprint $table) {
+        Schema::create('staff_notifications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('title');
@@ -88,7 +88,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notifications');
+        Schema::dropIfExists('staff_notifications');
         Schema::dropIfExists('backlink_reports');
         Schema::dropIfExists('backlink_verifications');
         Schema::dropIfExists('publications');

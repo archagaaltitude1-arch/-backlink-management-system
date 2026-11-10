@@ -19,7 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => EnsureUserIsAdmin::class,
         ]);
 
-        $middleware->redirectGuestsTo(fn () => route('login'));
+        $middleware->redirectGuestsTo(fn (Request $request) => route($request->is('admin/*') ? 'login' : 'auth.login'));
         $middleware->redirectUsersTo(function (Request $request) {
             $user = $request->user();
 
@@ -27,7 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return $user->dashboardUrl();
             }
 
-            return route('admin.dashboard');
+            return route('auth.login');
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {

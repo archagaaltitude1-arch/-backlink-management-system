@@ -1,7 +1,7 @@
 {{-- Customer shell. Pages use @extends('layouts.customer') with @section('title') and @section('content'). --}}
 @php
     $portal = 'Customer';
-    $userName = 'Customer User';
+    $userName = auth()->user()?->name ?? 'Guest';
     $userRole = 'Customer';
 @endphp
 <!DOCTYPE html>
@@ -17,8 +17,10 @@
     </head>
     <body class="bg-canvas font-sans text-navy antialiased">
         <div class="flex min-h-screen">
-            <div id="sidebar-backdrop" class="fixed inset-x-0 top-16 bottom-0 z-30 hidden bg-navy/50 lg:hidden"></div>
-            @include('components.customer-sidebar')
+            @auth
+                <div id="sidebar-backdrop" class="fixed inset-x-0 top-16 bottom-0 z-30 hidden bg-navy/50 lg:hidden"></div>
+                @include('components.customer-sidebar')
+            @endauth
             <div class="flex min-w-0 flex-1 flex-col">
                 @include('components.navbar')
                 <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">

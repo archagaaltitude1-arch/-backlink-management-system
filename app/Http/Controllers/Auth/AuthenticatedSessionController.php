@@ -21,7 +21,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View
     {
-        return view('auth.login');
+        return view('auth.admin-login');
     }
 
     /**
@@ -54,9 +54,7 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
-        $roleName = $user->role?->role_name;
-
-        if (! in_array($roleName, ['Admin', 'Staff', 'Customer'], true)) {
+        if ($user->role?->role_name !== 'Admin') {
             RateLimiter::hit($this->throttleKey($request));
 
             throw ValidationException::withMessages([
@@ -69,11 +67,7 @@ class AuthenticatedSessionController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        if ($roleName === 'Admin') {
-            return redirect()->intended($user->dashboardUrl());
-        }
-
-        return redirect()->to($user->dashboardUrl());
+        return redirect()->intended($user->dashboardUrl());
     }
 
     /**
