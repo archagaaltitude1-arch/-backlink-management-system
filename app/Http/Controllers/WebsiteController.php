@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Niche;
 use App\Models\Website;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -25,7 +26,7 @@ class WebsiteController extends Controller
                         ->orWhere('domain', 'like', '%'.$search.'%');
                 });
             })
-            ->when($filters['niche'] ?? null, fn ($query, string $niche) => $query->where('niche', $niche))
+            ->when($filters['niche'] ?? null, fn ($query, string $niche) => $query->where(fn ($query) => $query->where('niche', $niche)->orWhereHas('niches', fn ($query) => $query->where('niche_name', $niche))))
             ->when(isset($filters['min_dr']), fn ($query) => $query->where('domain_rating', '>=', $filters['min_dr']))
             ->when(($filters['sort'] ?? 'recommended') === 'dr', fn ($query) => $query->orderByDesc('domain_rating'))
             ->when(($filters['sort'] ?? 'recommended') === 'traffic', fn ($query) => $query->orderByDesc('monthly_traffic'))
@@ -34,11 +35,16 @@ class WebsiteController extends Controller
             ->paginate(12)
             ->withQueryString();
 
-        $niches = Website::query()
-            ->where('status', 'active')
-            ->distinct()
-            ->orderBy('niche')
-            ->pluck('niche');
+        $niches = Niche::query()
+            ->whereHas('websites', fn ($query) => $query->where('status', 'active'))
+            ->orderBy('niche_name')
+            ->pluck('niche_name')
+            ->merge(Website::query()
+                ->where('status', 'active')
+                ->distinct()
+                ->orderBy('niche')
+                ->pluck('niche'))
+            ->unique()->sort()->values();
 
         return view('customer.websites', compact('websites', 'niches', 'filters'));
     }

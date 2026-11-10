@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -31,14 +32,14 @@ class AuthController extends Controller
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => $data['password'],
-            'role' => 'customer',
+            'account_type' => 'customer',
             'status' => 'active',
         ]);
 
         $this->authenticateAndAdoptCart($request, $user);
 
         if ($request->expectsJson()) {
-            return response()->json(['data' => $user->only(['id', 'name', 'email', 'role'])], 201);
+            return response()->json(['data' => $user->only(['id', 'name', 'email']) + ['role' => 'customer']], 201);
         }
 
         return redirect()->route('customer.dashboard');
@@ -61,10 +62,12 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Too many login attempts. Please try again later.'])->onlyInput('email');
         }
 
+        $previousSessionId = $request->session()->getId();
+
         if (! Auth::attempt([
             'email' => $data['email'],
             'password' => $data['password'],
-            'role' => 'customer',
+            'role_id' => Role::query()->firstOrCreate(['role_name' => 'Customer'], ['permissions' => []])->id,
             'status' => 'active',
         ], $request->boolean('remember'))) {
             RateLimiter::hit($key, 60);
@@ -73,10 +76,11 @@ class AuthController extends Controller
         }
 
         RateLimiter::clear($key);
-        $this->adoptCart($request, $request->user());
+        $request->session()->regenerate();
+        $this->moveCart($previousSessionId, $request->session()->getId(), $request->user());
 
         if ($request->expectsJson()) {
-            return response()->json(['data' => $request->user()->only(['id', 'name', 'email', 'role'])]);
+            return response()->json(['data' => $request->user()->only(['id', 'name', 'email']) + ['role' => 'customer']]);
         }
 
         return redirect()->intended(route('customer.dashboard'));
@@ -95,13 +99,6 @@ class AuthController extends Controller
     {
         $previousSessionId = $request->session()->getId();
         Auth::login($user);
-        $request->session()->regenerate();
-        $this->moveCart($previousSessionId, $request->session()->getId(), $user);
-    }
-
-    private function adoptCart(Request $request, User $user): void
-    {
-        $previousSessionId = $request->session()->getId();
         $request->session()->regenerate();
         $this->moveCart($previousSessionId, $request->session()->getId(), $user);
     }

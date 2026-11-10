@@ -29,7 +29,7 @@
             {{ strtoupper(substr($userName ?? 'U', 0, 1)) }}
         </span>
         @auth
-            <form method="POST" action="{{ route('auth.logout') }}">
+            <form method="POST" action="{{ route(($portal ?? null) === 'Admin' ? 'logout' : 'auth.logout') }}">
                 @csrf
                 <button class="btn rounded-xl text-sm text-navy hover:bg-canvas" type="submit">Sign out</button>
             </form>

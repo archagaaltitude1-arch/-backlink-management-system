@@ -7,17 +7,35 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role', 'status', 'phone'])]
+#[Fillable(['name', 'email', 'password', 'account_type', 'role_id', 'status', 'phone'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    protected $attributes = ['status' => 'active', 'account_type' => 'customer'];
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user): void {
+            if ($user->role_id === null) {
+                $roleName = match ($user->account_type ?? 'customer') {
+                    'admin' => 'Admin',
+                    'staff' => 'Staff',
+                    'seo' => 'SEO',
+                    default => 'Customer',
+                };
+                $user->role()->associate(Role::query()->firstOrCreate(['role_name' => $roleName], ['permissions' => []]));
+            }
+        });
+    }
 
     public function wallet(): HasOne
     {
@@ -59,6 +77,17 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'role_id' => 'integer',
         ];
+    }
+
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function isActiveAdmin(): bool
+    {
+        return $this->status === 'active' && $this->role?->role_name === 'Admin';
     }
 }

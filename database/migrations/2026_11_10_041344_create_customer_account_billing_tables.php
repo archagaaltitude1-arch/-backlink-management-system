@@ -10,7 +10,9 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('role')->default('customer')->index();
-            $table->string('status')->default('active')->index();
+            if (! Schema::hasColumn('users', 'status')) {
+                $table->string('status')->default('active')->index();
+            }
             $table->string('phone', 40)->nullable();
         });
 

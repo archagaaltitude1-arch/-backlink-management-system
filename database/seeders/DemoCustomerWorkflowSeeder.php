@@ -10,9 +10,11 @@ use App\Models\CreditReservation;
 use App\Models\CreditTransaction;
 use App\Models\CustomerProject;
 use App\Models\Invoice;
+use App\Models\Niche;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentMethod;
+use App\Models\Role;
 use App\Models\SavedWebsite;
 use App\Models\User;
 use App\Models\Wallet;
@@ -34,7 +36,8 @@ class DemoCustomerWorkflowSeeder extends Seeder
             [
                 'name' => 'Alex Morgan',
                 'password' => Hash::make('CustomerDemo123!'),
-                'role' => 'customer',
+                'account_type' => 'customer',
+                'role_id' => Role::query()->firstOrCreate(['role_name' => 'Customer'], ['permissions' => []])->id,
                 'status' => 'active',
                 'phone' => '+1 555 010 2040',
                 'email_verified_at' => now(),
@@ -204,7 +207,7 @@ class DemoCustomerWorkflowSeeder extends Seeder
             $domain = str($publisher)->slug()->append('.example')->toString();
             $domainRating = 42 + (($index * 7) % 55);
 
-            Website::updateOrCreate(
+            $website = Website::updateOrCreate(
                 ['domain' => $domain],
                 [
                     'website_name' => $publisher,
@@ -224,6 +227,14 @@ class DemoCustomerWorkflowSeeder extends Seeder
                     'status' => 'active',
                 ]
             );
+            $niche = Niche::query()->firstOrCreate(['niche_name' => $website->niche]);
+            $website->niches()->syncWithoutDetaching([$niche->id]);
+            $website->seoMetric()->updateOrCreate(['website_id' => $website->id], [
+                'DR' => $website->domain_rating, 'DA' => $website->domain_authority,
+                'TF' => $website->trust_flow, 'CF' => $website->page_authority,
+                'traffic' => $website->monthly_traffic, 'spam_score' => $website->spam_score,
+                'backlinks' => $website->backlinks,
+            ]);
         }
     }
 }

@@ -128,7 +128,7 @@ class CustomerPurchaseTest extends TestCase
     public function test_only_fulfillment_staff_can_settle_reserved_credits(): void
     {
         $customer = User::factory()->create();
-        $staff = User::factory()->create(['role' => 'seo']);
+        $staff = User::factory()->create(['account_type' => 'seo']);
         $order = Order::create([
             'order_number' => 'BM-20261110-PAID01',
             'customer_id' => $customer->id,

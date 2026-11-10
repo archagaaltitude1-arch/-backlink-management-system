@@ -24,7 +24,7 @@ class CustomerAccountTest extends TestCase
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', [
             'email' => 'taylor@example.test',
-            'role' => 'customer',
+            'account_type' => 'customer',
             'status' => 'active',
         ]);
     }

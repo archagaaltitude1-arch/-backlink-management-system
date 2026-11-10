@@ -207,7 +207,7 @@ class PaymentController extends Controller
 
     public function settleCredits(Request $request, OrderItem $orderItem): JsonResponse
     {
-        abort_unless(in_array($request->user()->role, ['admin', 'staff', 'seo'], true), 403);
+        abort_unless($request->user()->status === 'active' && in_array($request->user()->role?->role_name, ['Admin', 'Staff', 'SEO'], true), 403);
         $data = $request->validate(['published' => ['required', 'boolean']]);
         $order = Order::query()->whereKey($orderItem->order_id)->where('payment_status', 'paid')->firstOrFail();
 

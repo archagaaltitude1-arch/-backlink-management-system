@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Website extends Model
 {
@@ -27,6 +29,18 @@ class Website extends Model
 
     protected function casts(): array
     {
-        return ['spam_score' => 'decimal:1', 'price' => 'decimal:2'];
+        return ['spam_score' => 'decimal:1', 'price' => 'decimal:2', 'credit_cost' => 'integer'];
+    }
+
+    public function seoMetric(): HasOne
+    {
+        return $this->hasOne(SeoMetric::class);
+    }
+
+    public function niches(): BelongsToMany
+    {
+        return $this->belongsToMany(Niche::class, 'website_niches')
+            ->using(WebsiteNiche::class)
+            ->withTimestamps();
     }
 }
