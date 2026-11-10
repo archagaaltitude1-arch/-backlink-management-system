@@ -86,8 +86,27 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    public function staffProfile(): HasOne
+    {
+        return $this->hasOne(StaffProfile::class);
+    }
+
+    public function assignedOrders(): HasMany
+    {
+        return $this->hasMany(OrderAssignment::class, 'staff_id');
+    }
+
     public function isActiveAdmin(): bool
     {
         return $this->status === 'active' && $this->role?->role_name === 'Admin';
+    }
+
+    public function dashboardUrl(): string
+    {
+        return match ($this->role?->role_name) {
+            'Staff', 'SEO' => route('seo.dashboard'),
+            'Customer' => route('customer.dashboard'),
+            default => route('admin.dashboard'),
+        };
     }
 }
