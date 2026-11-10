@@ -7,10 +7,11 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'role_id', 'status'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -27,16 +28,17 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'role_id' => 'integer',
         ];
     }
 
-    public function staffProfile(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function role(): BelongsTo
     {
-        return $this->hasOne(StaffProfile::class);
+        return $this->belongsTo(Role::class);
     }
 
-    public function assignedOrders(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function isActiveAdmin(): bool
     {
-        return $this->hasMany(OrderAssignment::class, 'staff_id');
+        return $this->status === 'active' && $this->role?->role_name === 'Admin';
     }
 }

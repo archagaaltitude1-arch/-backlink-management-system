@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\CreditPricingController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -79,7 +80,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/services/{service}/edit', [ServiceController::class, 'edit'])->name('admin.services.edit');
     Route::put('/admin/services/{service}', [ServiceController::class, 'update'])->name('admin.services.update');
     Route::delete('/admin/services/{service}', [ServiceController::class, 'destroy'])->name('admin.services.destroy');
-
     Route::get('/admin/niches', [NicheController::class, 'index'])->name('admin.niches');
     Route::get('/admin/niches/create', [NicheController::class, 'create'])->name('admin.niches.create');
     Route::post('/admin/niches', [NicheController::class, 'store'])->name('admin.niches.store');
@@ -87,7 +87,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/niches/{niche}/edit', [NicheController::class, 'edit'])->name('admin.niches.edit');
     Route::put('/admin/niches/{niche}', [NicheController::class, 'update'])->name('admin.niches.update');
     Route::delete('/admin/niches/{niche}', [NicheController::class, 'destroy'])->name('admin.niches.destroy');
-
     Route::get('/admin/niche-specifications/create', [NicheSpecificationController::class, 'create'])->name('admin.niche-specifications.create');
     Route::post('/admin/niche-specifications', [NicheSpecificationController::class, 'store'])->name('admin.niche-specifications.store');
     Route::get('/admin/niche-specifications/{nicheSpecification}/edit', [NicheSpecificationController::class, 'edit'])->name('admin.niche-specifications.edit');
