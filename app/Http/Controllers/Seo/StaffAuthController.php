@@ -52,8 +52,8 @@ class StaffAuthController extends Controller
                 );
             }
 
-            return redirect()->intended(route('seo.dashboard'))
-                ->with('success', 'Welcome back, ' . Auth::user()->name . '!');
+            return redirect()->route('seo.dashboard')
+                ->with('success', 'Welcome back, '.Auth::user()->name.'!');
         }
 
         return back()->withErrors([
@@ -103,7 +103,7 @@ class StaffAuthController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . ($user?->id ?? 0)],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,'.($user?->id ?? 0)],
             'designation' => ['required', 'string', 'max:255'],
             'contact_number' => ['nullable', 'string', 'max:50'],
         ]);

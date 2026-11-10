@@ -5,15 +5,12 @@ namespace Tests\Feature;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class AdminAuthenticationTest extends TestCase
 {
-    use RefreshDatabase;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -44,6 +41,37 @@ class AdminAuthenticationTest extends TestCase
             $table->timestamps();
         });
 
+        Schema::create('websites', function ($table) {
+            $table->id();
+            $table->string('status')->default('active');
+            $table->timestamps();
+        });
+
+        Schema::create('niches', function ($table) {
+            $table->id();
+            $table->string('niche_name');
+            $table->timestamps();
+        });
+
+        Schema::create('website_niches', function ($table) {
+            $table->id();
+            $table->foreignId('website_id');
+            $table->foreignId('niche_id');
+            $table->timestamps();
+        });
+
+        Schema::create('services', function ($table) {
+            $table->id();
+            $table->string('service_name');
+            $table->timestamps();
+        });
+
+        Schema::create('packages', function ($table) {
+            $table->id();
+            $table->string('package_name');
+            $table->timestamps();
+        });
+
         $this->seed(RolePermissionSeeder::class);
     }
 
@@ -63,10 +91,9 @@ class AdminAuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_inactive_and_non_admin_accounts_cannot_sign_in(): void
+    public function test_inactive_and_unassigned_accounts_cannot_sign_in(): void
     {
         $adminRole = Role::query()->where('role_name', 'Admin')->firstOrFail();
-        $customerRole = Role::query()->where('role_name', 'Customer')->firstOrFail();
 
         User::query()->create([
             'name' => 'Inactive Admin',
@@ -77,10 +104,10 @@ class AdminAuthenticationTest extends TestCase
         ]);
 
         User::query()->create([
-            'name' => 'Customer User',
-            'email' => 'customer@example.com',
+            'name' => 'Unassigned User',
+            'email' => 'unassigned@example.com',
             'password' => 'password-1',
-            'role_id' => $customerRole->id,
+            'role_id' => null,
             'status' => 'active',
         ]);
 
@@ -90,11 +117,86 @@ class AdminAuthenticationTest extends TestCase
         ])->assertSessionHasErrors('email');
 
         $this->post('/login', [
-            'email' => 'customer@example.com',
+            'email' => 'unassigned@example.com',
             'password' => 'password-1',
         ])->assertSessionHasErrors('email');
 
         $this->assertGuest();
+    }
+
+    public function test_an_active_customer_is_sent_to_the_customer_dashboard(): void
+    {
+        $customerRole = Role::query()->where('role_name', 'Customer')->firstOrFail();
+
+        $customer = User::query()->create([
+            'name' => 'Casey Customer',
+            'email' => 'casey@example.com',
+            'password' => 'password-1',
+            'role_id' => $customerRole->id,
+            'status' => 'active',
+        ]);
+
+        $this->post('/login', [
+            'email' => 'casey@example.com',
+            'password' => 'password-1',
+        ])->assertRedirect(route('customer.dashboard'));
+
+        $this->actingAs($customer)
+            ->get('/login')
+            ->assertRedirect(route('customer.dashboard'));
+
+        $this->actingAs($customer)
+            ->get('/')
+            ->assertSee(route('customer.dashboard'), false);
+    }
+
+    public function test_an_active_staff_member_is_sent_to_the_seo_dashboard(): void
+    {
+        $staffRole = Role::query()->where('role_name', 'Staff')->firstOrFail();
+
+        $staff = User::query()->create([
+            'name' => 'Rae Staff',
+            'email' => 'rae@example.com',
+            'password' => 'password-1',
+            'role_id' => $staffRole->id,
+            'status' => 'active',
+        ]);
+
+        $this->post('/login', [
+            'email' => 'rae@example.com',
+            'password' => 'password-1',
+        ])->assertRedirect(route('seo.dashboard'));
+
+        $this->actingAs($staff)
+            ->get('/login')
+            ->assertRedirect(route('seo.dashboard'));
+    }
+
+    public function test_staff_login_opens_the_seo_dashboard(): void
+    {
+        Schema::create('staff_profiles', function ($table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('designation')->default('SEO Specialist');
+            $table->string('contact_number')->nullable();
+            $table->timestamps();
+        });
+
+        $staffRole = Role::query()->where('role_name', 'Staff')->firstOrFail();
+
+        User::query()->create([
+            'name' => 'Rae Staff',
+            'email' => 'rae.staff@example.com',
+            'password' => 'password-1',
+            'role_id' => $staffRole->id,
+            'status' => 'active',
+        ]);
+
+        $this->withSession(['url.intended' => route('admin.dashboard')])
+            ->post('/seo/login', [
+                'email' => 'rae.staff@example.com',
+                'password' => 'password-1',
+            ])->assertRedirect(route('seo.dashboard'));
     }
 
     public function test_an_active_admin_can_sign_in_and_out(): void

@@ -54,7 +54,9 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
-        if ($user->role?->role_name !== 'Admin') {
+        $roleName = $user->role?->role_name;
+
+        if (! in_array($roleName, ['Admin', 'Staff', 'Customer'], true)) {
             RateLimiter::hit($this->throttleKey($request));
 
             throw ValidationException::withMessages([
@@ -67,7 +69,11 @@ class AuthenticatedSessionController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('admin.dashboard'));
+        if ($roleName === 'Admin') {
+            return redirect()->intended($user->dashboardUrl());
+        }
+
+        return redirect()->to($user->dashboardUrl());
     }
 
     /**

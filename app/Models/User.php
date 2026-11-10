@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -37,8 +39,27 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    public function staffProfile(): HasOne
+    {
+        return $this->hasOne(StaffProfile::class);
+    }
+
+    public function assignedOrders(): HasMany
+    {
+        return $this->hasMany(OrderAssignment::class, 'staff_id');
+    }
+
     public function isActiveAdmin(): bool
     {
         return $this->status === 'active' && $this->role?->role_name === 'Admin';
+    }
+
+    public function dashboardUrl(): string
+    {
+        return match ($this->role?->role_name) {
+            'Staff' => route('seo.dashboard'),
+            'Customer' => route('customer.dashboard'),
+            default => route('admin.dashboard'),
+        };
     }
 }
