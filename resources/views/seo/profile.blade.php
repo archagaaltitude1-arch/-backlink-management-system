@@ -8,7 +8,7 @@
     <div class="panel p-6 sm:p-8 border-l-4 border-l-brand">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <p class="text-xs font-semibold tracking-wider text-brand uppercase">Member 4 · Staff Management</p>
+                <p class="text-xs font-semibold tracking-wider text-brand uppercase">Staff Profile Management</p>
                 <h1 class="mt-1 text-2xl font-bold text-navy">Staff Profile & Settings</h1>
                 <p class="mt-1.5 text-sm text-navy/70">
                     Manage your SEO team credentials, designation, and contact details.

@@ -87,7 +87,7 @@ class StaffAuthController extends Controller
             'email' => $user->email ?? 'raweesha.lakruwan@example.com',
             'designation' => $user?->staffProfile?->designation ?? 'Senior SEO Specialist & Verifier',
             'contact_number' => $user?->staffProfile?->contact_number ?? '+94 77 987 6543',
-            'role' => 'Member 4 · SEO Staff',
+            'role' => 'SEO Operations Staff',
             'joined_at' => $user?->created_at?->format('M d, Y') ?? 'Nov 01, 2026',
         ];
 

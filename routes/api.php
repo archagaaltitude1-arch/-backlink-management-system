@@ -5,8 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Member 4 - Raweesha Lakruwan
-| Staff APIs: /api/staff/dashboard, /api/staff/assigned-orders, etc.
+| SEO Staff APIs: /api/staff/dashboard, /api/staff/assigned-orders, etc.
 |--------------------------------------------------------------------------
 */
 Route::prefix('staff')->group(function () {

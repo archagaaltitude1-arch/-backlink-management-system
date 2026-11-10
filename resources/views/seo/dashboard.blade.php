@@ -11,7 +11,7 @@
                 <div class="flex items-center gap-2">
                     <span class="inline-flex items-center gap-1.5 rounded-full bg-brand/20 px-3 py-1 text-xs font-semibold text-brand ring-1 ring-brand/30">
                         <span class="h-1.5 w-1.5 rounded-full bg-brand animate-pulse"></span>
-                        Member 4 · Fulfillment & Verification
+                        Fulfillment & Verification
                     </span>
                     <span class="text-xs text-white/60">Live Portal</span>
                 </div>

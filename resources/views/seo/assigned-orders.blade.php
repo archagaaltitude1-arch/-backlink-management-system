@@ -8,7 +8,7 @@
     <div class="panel p-6 sm:p-8 border-l-4 border-l-brand">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <p class="text-xs font-semibold tracking-wider text-brand uppercase">Member 4 · Staff Management & Fulfillment</p>
+                <p class="text-xs font-semibold tracking-wider text-brand uppercase">Staff Management & Fulfillment</p>
                 <h1 class="mt-1 text-2xl font-bold text-navy">Assigned Orders Management</h1>
                 <p class="mt-1.5 text-sm text-navy/70">
                     Review target URLs, anchor texts, customer requirements, update order status, and assign tasks to SEO staff.

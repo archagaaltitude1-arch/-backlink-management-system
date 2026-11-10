@@ -29,8 +29,8 @@ Route::view('/customer/orders', 'customer.orders')->name('customer.orders');
 
 /*
 |--------------------------------------------------------------------------
-| Member 4 - Raweesha Lakruwan
-| SEO Staff Dashboard, Authentication, Order Management & Backlink Verification
+| SEO Staff Portal & Backlink Verification
+| Staff Dashboard, Authentication, Order Management & Verification
 |--------------------------------------------------------------------------
 */
 // Staff Authentication
@@ -49,7 +49,7 @@ Route::get('/seo/assigned-orders', [StaffOrderController::class, 'index'])->name
 Route::post('/seo/orders/{id}/assign', [StaffOrderController::class, 'assign'])->name('seo.orders.assign');
 Route::put('/seo/orders/{id}/status', [StaffOrderController::class, 'updateStatus'])->name('seo.orders.status');
 
-// Other Member 4 Views
+// SEO Operations Views
 Route::view('/seo/articles', 'seo.articles')->name('seo.articles');
 Route::view('/seo/submissions', 'seo.submissions')->name('seo.submissions');
 Route::view('/seo/completed-orders', 'seo.completed-orders')->name('seo.completed-orders');

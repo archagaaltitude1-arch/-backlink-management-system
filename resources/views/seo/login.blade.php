@@ -14,7 +14,7 @@
                 <span class="grid h-12 w-12 place-items-center rounded-2xl bg-brand font-display text-xl font-bold text-white shadow-md">B</span>
                 <div>
                     <span class="block font-display text-xl font-bold leading-tight text-navy">Backlink Management</span>
-                    <span class="block text-xs font-semibold tracking-wider text-brand uppercase">SEO Staff Portal · Member 4</span>
+                    <span class="block text-xs font-semibold tracking-wider text-brand uppercase">SEO Staff Portal</span>
                 </div>
             </div>
             <h2 class="mt-6 text-center font-display text-2xl font-bold tracking-tight text-navy">

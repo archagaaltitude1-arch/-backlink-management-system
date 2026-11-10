@@ -55,7 +55,7 @@
             <a href="{{ route('seo.profile') }}" class="group block min-w-0">
                 <p class="text-xs text-white/50 group-hover:text-brand transition">Signed in as</p>
                 <p class="truncate text-sm font-semibold text-white group-hover:text-brand transition">{{ $userName ?? 'SEO User' }}</p>
-                <p class="text-[11px] text-white/40">Member 4 · SEO</p>
+                <p class="text-[11px] text-white/40">SEO Operations</p>
             </a>
             <form action="{{ route('seo.logout') }}" method="POST">
                 @csrf

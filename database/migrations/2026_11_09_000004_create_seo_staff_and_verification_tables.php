@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * Member 4 (Raweesha Lakruwan) database tables:
+     * SEO Staff and Backlink Verification tables:
      * - staff_profiles
      * - order_assignments
      * - article_reviews

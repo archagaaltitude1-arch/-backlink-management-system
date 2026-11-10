@@ -19,7 +19,7 @@ class StaffApiController extends Controller
     {
         return response()->json([
             'status' => 'success',
-            'member' => 'Member 4 - Raweesha Lakruwan',
+            'staff' => 'Raweesha Lakruwan',
             'role' => 'SEO Staff Dashboard & Backlink Verification',
             'stats' => [
                 'total_assigned' => 4,
