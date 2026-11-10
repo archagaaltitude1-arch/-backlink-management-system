@@ -1,0 +1,7 @@
+@extends('layouts.customer')
+
+@section('title', 'Sign In')
+
+@section('content')
+    <div class="mx-auto max-w-xl space-y-6"><div><p class="text-xs font-semibold tracking-wider text-brand uppercase">Customer access</p><h1 class="mt-2 text-3xl font-semibold">Sign in</h1></div>@if ($errors->any())<div class="rounded-xl bg-red-50 p-4 text-sm text-red-800">{{ $errors->first() }}</div>@endif<section class="panel p-6"><form method="POST" action="{{ route('auth.authenticate') }}" class="space-y-4">@csrf<div><label class="text-sm font-medium" for="email">Email</label><input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="email" required class="mt-1 w-full rounded-lg border border-navy/15 px-3 py-2.5 text-sm"></div><div><label class="text-sm font-medium" for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required class="mt-1 w-full rounded-lg border border-navy/15 px-3 py-2.5 text-sm"></div><label class="flex items-center gap-2 text-sm"><input name="remember" type="checkbox" value="1" class="rounded border-navy/30 text-brand focus:ring-brand">Remember me</label><button class="btn-primary w-full" type="submit">Sign in</button></form></section><p class="text-sm text-navy/65">New here? <a class="font-semibold text-brand hover:underline" href="{{ route('auth.register') }}">Create an account</a></p></div>
+@endsection

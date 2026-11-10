@@ -7,15 +7,20 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
 {
-    protected $fillable = ['order_number', 'customer_id', 'session_id', 'total_amount', 'payment_status', 'order_status'];
+    protected $fillable = ['order_number', 'customer_id', 'session_id', 'total_amount', 'discount_amount', 'coupon_code', 'payment_status', 'order_status'];
 
     protected function casts(): array
     {
-        return ['total_amount' => 'decimal:2'];
+        return ['total_amount' => 'decimal:2', 'discount_amount' => 'decimal:2'];
     }
 
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 }
