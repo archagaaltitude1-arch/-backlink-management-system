@@ -3,237 +3,242 @@
 namespace App\Http\Controllers\Seo;
 
 use App\Http\Controllers\Controller;
+use App\Models\CustomerProject;
 use App\Models\OrderAssignment;
+use App\Models\OrderItem;
 use App\Models\User;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class StaffOrderController extends Controller
 {
-    /**
-     * Display all assigned orders with filtering and search.
-     */
     public function index(Request $request): View
     {
-        $statusFilter = $request->query('status', 'all');
-        $search = strtolower(trim($request->query('search', '')));
+        $viewer = $this->fulfillmentUser($request);
+        $statusFilter = $request->string('status')->toString() ?: 'all';
+        $search = trim($request->string('search')->toString());
 
-        $allOrders = [
-            [
-                'id' => 'ORD-10480',
-                'order_item_id' => 101,
-                'customer' => 'Sofia Alvarez',
-                'customer_email' => 'sofia.alvarez@example.com',
-                'service' => 'Link Insertion',
-                'website' => 'techinsider-journal.com',
-                'domain_authority' => 64,
-                'domain_rating' => 68,
-                'traffic' => '142K/mo',
-                'niche' => 'Technology & AI',
-                'target_url' => 'https://innovate-ai.io/deep-learning-insights',
-                'anchor_text' => 'neural network architectures',
-                'article_topic' => 'Trends in Deep Learning Optimization for 2027',
-                'assigned_staff_id' => 1,
-                'assigned_staff' => 'Raweesha Lakruwan',
-                'assigned_by' => 'Archaga (Team Lead)',
-                'status' => 'in_progress',
-                'status_label' => 'In Progress',
-                'due_date' => 'Nov 12, 2026',
-                'notes' => 'Place link in section 3 of existing published article.',
-            ],
-            [
-                'id' => 'ORD-10481',
-                'order_item_id' => 102,
-                'customer' => 'James Okonkwo',
-                'customer_email' => 'james.okonkwo@example.com',
-                'service' => 'Niche Edit',
-                'website' => 'healthwire-daily.org',
-                'domain_authority' => 58,
-                'domain_rating' => 61,
-                'traffic' => '89K/mo',
-                'niche' => 'Health & Wellness',
-                'target_url' => 'https://purevitamins.store/organic-supplements',
-                'anchor_text' => 'natural organic vitamins',
-                'article_topic' => 'Holistic Wellness & Essential Micronutrients',
-                'assigned_staff_id' => 1,
-                'assigned_staff' => 'Raweesha Lakruwan',
-                'assigned_by' => 'Archaga (Team Lead)',
-                'status' => 'assigned',
-                'status_label' => 'Assigned',
-                'due_date' => 'Nov 14, 2026',
-                'notes' => 'Target paragraph awaiting review before outreach.',
-            ],
-            [
-                'id' => 'ORD-10482',
-                'order_item_id' => 103,
-                'customer' => 'Priya Fernando',
-                'customer_email' => 'priya.fernando@example.com',
-                'service' => 'Guest Post',
-                'website' => 'fintech-chronicle.com',
-                'domain_authority' => 72,
-                'domain_rating' => 75,
-                'traffic' => '310K/mo',
-                'niche' => 'Finance & Banking',
-                'target_url' => 'https://securepay-solutions.com/cross-border-gateway',
-                'anchor_text' => 'instant global payment rails',
-                'article_topic' => 'The Next Era of Cross-Border B2B Settlement',
-                'assigned_staff_id' => 1,
-                'assigned_staff' => 'Raweesha Lakruwan',
-                'assigned_by' => 'Raweesha Lakruwan',
-                'status' => 'published',
-                'status_label' => 'Published / Verification Ready',
-                'due_date' => 'Nov 10, 2026',
-                'notes' => 'Article live at https://fintech-chronicle.com/b2b-settlement-2026',
-            ],
-            [
-                'id' => 'ORD-10479',
-                'order_item_id' => 104,
-                'customer' => 'Liam Chen',
-                'customer_email' => 'liam.chen@example.com',
-                'service' => 'Guest Post',
-                'website' => 'traveler-horizons.net',
-                'domain_authority' => 51,
-                'domain_rating' => 54,
-                'traffic' => '65K/mo',
-                'niche' => 'Travel & Hospitality',
-                'target_url' => 'https://boutique-escapes.travel/alpine-villas',
-                'anchor_text' => 'luxury alpine chalets',
-                'article_topic' => 'Top Winter Destinations for Discerning Travelers',
-                'assigned_staff_id' => 2,
-                'assigned_staff' => 'Sarah Silva',
-                'assigned_by' => 'Raweesha Lakruwan',
-                'status' => 'completed',
-                'status_label' => 'Verified & Completed',
-                'due_date' => 'Nov 06, 2026',
-                'notes' => 'DoFollow backlink verified live. Verification report generated.',
-            ],
-            [
-                'id' => 'ORD-10483',
-                'order_item_id' => 105,
-                'customer' => 'Elena Rostova',
-                'customer_email' => 'elena.rostova@example.com',
-                'service' => 'Niche Edit',
-                'website' => 'automotive-future.io',
-                'domain_authority' => 61,
-                'domain_rating' => 63,
-                'traffic' => '115K/mo',
-                'niche' => 'Automotive & EV',
-                'target_url' => 'https://ev-chargenet.com/ultra-fast-stations',
-                'anchor_text' => 'next-gen fast chargers',
-                'article_topic' => 'High-Speed Charging Infrastructure Across Europe',
-                'assigned_staff_id' => null,
-                'assigned_staff' => 'Unassigned',
-                'assigned_by' => null,
-                'status' => 'unassigned',
-                'status_label' => 'Needs Assignment',
-                'due_date' => 'Nov 15, 2026',
-                'notes' => 'New order waiting for staff assignment.',
-            ],
-        ];
+        $orders = $this->cards($viewer)
+            ->when($statusFilter !== 'all' && $statusFilter !== '', fn (Collection $orders) => $orders->where('status', $statusFilter))
+            ->when($search !== '', function (Collection $orders) use ($search) {
+                $needle = mb_strtolower($search);
 
-        // Apply filtering
-        $filtered = array_filter($allOrders, function ($order) use ($statusFilter, $search) {
-            $matchesStatus = match ($statusFilter) {
-                'assigned' => $order['status'] === 'assigned',
-                'in_progress' => $order['status'] === 'in_progress',
-                'published' => $order['status'] === 'published',
-                'completed' => $order['status'] === 'completed',
-                'unassigned' => $order['status'] === 'unassigned',
-                default => true,
-            };
-
-            $matchesSearch = true;
-            if (! empty($search)) {
-                $haystack = strtolower(
-                    $order['id'] . ' ' .
-                    $order['website'] . ' ' .
-                    $order['anchor_text'] . ' ' .
-                    $order['customer'] . ' ' .
-                    $order['assigned_staff']
-                );
-                $matchesSearch = str_contains($haystack, $search);
-            }
-
-            return $matchesStatus && $matchesSearch;
-        });
-
-        $staffList = [
-            ['id' => 1, 'name' => 'Raweesha Lakruwan', 'role' => 'SEO Specialist (You)'],
-            ['id' => 2, 'name' => 'Sarah Silva', 'role' => 'Content & Placement Lead'],
-            ['id' => 3, 'name' => 'Kavindu Perera', 'role' => 'Junior SEO Analyst'],
-        ];
+                return $orders->filter(fn (array $order): bool => str_contains(mb_strtolower(implode(' ', [
+                    $order['id'],
+                    $order['customer'],
+                    $order['customer_email'],
+                    $order['service'],
+                    $order['website'],
+                    $order['anchor_text'],
+                    $order['target_url'],
+                    $order['assigned_staff'],
+                ])), $needle));
+            })
+            ->values();
 
         return view('seo.assigned-orders', [
-            'orders' => array_values($filtered),
-            'staffList' => $staffList,
+            'orders' => $orders,
+            'staffList' => $this->staffList(),
             'currentFilter' => $statusFilter,
             'searchTerm' => $search,
-            'totalCount' => count($allOrders),
         ]);
     }
 
-    /**
-     * Assign or reassign an order item to a staff member.
-     */
     public function assign(Request $request, string $orderId): RedirectResponse
     {
-        $validated = $request->validate([
-            'staff_id' => ['required'],
-            'staff_name' => ['nullable', 'string'],
-            'notes' => ['nullable', 'string'],
+        $viewer = $this->fulfillmentUser($request);
+        $data = $request->validate([
+            'order_item_id' => ['required', 'integer', 'exists:order_items,id'],
+            'staff_id' => ['required', 'integer'],
+            'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $orderItemId = intval($request->input('order_item_id', rand(100, 999)));
-        $assignedBy = Auth::id() ?? 1;
+        $staff = User::query()
+            ->whereKey($data['staff_id'])
+            ->where('status', 'active')
+            ->whereHas('role', fn ($query) => $query->whereIn('role_name', ['Staff', 'SEO']))
+            ->first();
 
-        try {
-            if (Schema::hasTable('order_assignments')) {
-                OrderAssignment::updateOrCreate(
-                    ['order_item_id' => $orderItemId],
-                    [
-                        'staff_id' => is_numeric($validated['staff_id']) ? $validated['staff_id'] : $assignedBy,
-                        'assigned_by' => $assignedBy,
-                        'status' => 'assigned',
-                        'notes' => $validated['notes'] ?? 'Assigned via SEO Staff Portal',
-                    ]
-                );
-            }
-        } catch (\Throwable $e) {
-            // gracefully handled if database tables are in migration phase
+        if ($staff === null) {
+            return back()->withErrors(['staff_id' => 'Choose an active staff member.'])->withInput();
         }
 
-        $staffName = $validated['staff_name'] ?? 'SEO Staff';
+        $item = OrderItem::query()->with('order')->findOrFail($data['order_item_id']);
 
-        return back()->with('success', "Order #{$orderId} successfully assigned to {$staffName}.");
+        OrderAssignment::query()->updateOrCreate(
+            ['order_item_id' => $item->id],
+            [
+                'staff_id' => $staff->id,
+                'assigned_by' => $viewer->id,
+                'status' => 'assigned',
+                'notes' => $data['notes'] ?? null,
+            ],
+        );
+
+        if ($item->order?->order_status === 'pending') {
+            $item->order->update(['order_status' => 'processing']);
+        }
+
+        return back()->with('success', 'Order '.$item->order?->order_number.' assigned to '.$staff->name.'.');
+    }
+
+    public function updateStatus(Request $request, string $orderId): RedirectResponse
+    {
+        $viewer = $this->fulfillmentUser($request);
+        $data = $request->validate([
+            'order_item_id' => ['required', 'integer', 'exists:order_items,id'],
+            'status' => ['required', Rule::in(['assigned', 'in_progress', 'published'])],
+            'notes' => ['nullable', 'string', 'max:1000'],
+            'published_url' => ['nullable', 'url', 'max:2000', 'required_if:status,published'],
+        ]);
+
+        $assignment = OrderAssignment::query()->where('order_item_id', $data['order_item_id'])->firstOrFail();
+        if ($viewer->role?->role_name !== 'Admin' && $assignment->staff_id !== $viewer->id) {
+            abort(403);
+        }
+
+        $assignment->update([
+            'status' => $data['status'],
+            'notes' => $data['notes'] ?? $assignment->notes,
+        ]);
+
+        if ($data['status'] === 'published' && ! $this->publishBacklink($assignment, $data['published_url'])) {
+            return back()->withErrors(['published_url' => 'This order has no customer account to approve the backlink.'])->withInput();
+        }
+
+        return back()->with('success', 'Order '.$orderId.' is now '.str_replace('_', ' ', $data['status']).'.');
     }
 
     /**
-     * Update the progress/status of an assigned order.
+     * @return Collection<int, array<string, mixed>>
      */
-    public function updateStatus(Request $request, string $orderId): RedirectResponse
+    public function cards(User $viewer): Collection
     {
-        $validated = $request->validate([
-            'status' => ['required', 'string'],
-            'notes' => ['nullable', 'string'],
-            'published_url' => ['nullable', 'url'],
-        ]);
+        $items = OrderItem::query()
+            ->with(['order.customer', 'assignment.staff', 'assignment.assignedBy', 'website', 'project'])
+            ->when($viewer->role?->role_name !== 'Admin', function ($query) use ($viewer): void {
+                $query->whereHas('assignment', fn ($query) => $query->where('staff_id', $viewer->id));
+            })
+            ->latest()
+            ->get();
 
-        $orderItemId = intval($request->input('order_item_id', rand(100, 999)));
+        return $items->map(fn (OrderItem $item): array => $this->card($item));
+    }
 
-        try {
-            if (Schema::hasTable('order_assignments')) {
-                OrderAssignment::where('order_item_id', $orderItemId)->update([
-                    'status' => $validated['status'],
-                    'notes' => $validated['notes'] ?? null,
-                ]);
-            }
-        } catch (\Throwable $e) {
-            // gracefully handled
+    /**
+     * @return Collection<int, array{id: int, name: string, role: string, active_orders: int}>
+     */
+    public function staffList(): Collection
+    {
+        return User::query()
+            ->with('role')
+            ->withCount(['assignedOrders as active_orders' => fn ($query) => $query->whereIn('status', ['assigned', 'in_progress', 'published'])])
+            ->where('status', 'active')
+            ->whereHas('role', fn ($query) => $query->whereIn('role_name', ['Staff', 'SEO']))
+            ->orderBy('name')
+            ->get()
+            ->map(fn (User $staff): array => [
+                'id' => $staff->id,
+                'name' => $staff->name,
+                'role' => $staff->role?->role_name ?? 'Staff',
+                'active_orders' => $staff->active_orders,
+            ]);
+    }
+
+    /**
+     * @return Collection<int, OrderItem>
+     */
+    public function unassignedItems(): Collection
+    {
+        return OrderItem::query()
+            ->with('order.customer')
+            ->whereDoesntHave('assignment')
+            ->latest()
+            ->limit(50)
+            ->get();
+    }
+
+    private function publishBacklink(OrderAssignment $assignment, string $publishedUrl): bool
+    {
+        $item = $assignment->orderItem()->with('order')->firstOrFail();
+        $order = $item->order;
+        if ($order?->customer_id === null) {
+            return false;
         }
 
-        return back()->with('success', "Order #{$orderId} status updated to " . ucfirst(str_replace('_', ' ', $validated['status'])) . '.');
+        $project = CustomerProject::query()->where('order_item_id', $item->id)->first()
+            ?? CustomerProject::query()->where('order_id', $order->id)->whereNull('order_item_id')->first()
+            ?? new CustomerProject;
+
+        $project->fill([
+            'customer_id' => $order->customer_id,
+            'order_id' => $order->id,
+            'order_item_id' => $item->id,
+            'name' => $item->item_name,
+            'status' => 'published',
+            'target_url' => $item->target_url,
+            'published_url' => $publishedUrl,
+            'verification_status' => 'pending',
+            'completed_at' => null,
+        ])->save();
+
+        return true;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function card(OrderItem $item): array
+    {
+        $status = $item->assignment?->status ?? 'unassigned';
+
+        return [
+            'id' => $item->order?->order_number ?? 'Item '.$item->id,
+            'order_item_id' => $item->id,
+            'customer' => $item->order?->customer?->name ?? 'Guest checkout',
+            'customer_email' => $item->order?->customer?->email ?? '',
+            'service' => $item->item_name,
+            'website' => $item->website?->domain ?? 'No publisher selected',
+            'domain_authority' => $item->website?->domain_authority ?? '—',
+            'domain_rating' => $item->website?->domain_rating ?? '—',
+            'traffic' => $item->website?->monthly_traffic !== null ? number_format((int) $item->website->monthly_traffic) : '—',
+            'niche' => $item->website?->niche ?? '—',
+            'target_url' => $item->target_url,
+            'anchor_text' => $item->anchor_text,
+            'article_topic' => $item->article_topic,
+            'assigned_staff_id' => $item->assignment?->staff_id,
+            'assigned_staff' => $item->assignment?->staff?->name ?? 'Unassigned',
+            'assigned_by' => $item->assignment?->assignedBy?->name,
+            'status' => $status,
+            'status_label' => match ($status) {
+                'in_progress' => 'In Progress',
+                'assigned' => 'Assigned',
+                'published' => 'Published / Ready for approval',
+                'completed' => 'Approved by customer',
+                'reassigned' => 'Reassigned',
+                default => 'Needs assignment',
+            },
+            'due_date' => $item->order?->created_at?->addDays(7)->format('M d, Y') ?? '—',
+            'notes' => $item->assignment?->notes,
+            'published_url' => $item->project?->published_url,
+            'verification_status' => $item->project?->verification_status,
+        ];
+    }
+
+    private function fulfillmentUser(Request $request): User
+    {
+        $user = $request->user();
+        if ($user === null) {
+            throw new HttpResponseException(redirect()->guest(route('seo.login')));
+        }
+
+        $user->loadMissing('role');
+        abort_unless(in_array($user->role?->role_name, ['Admin', 'Staff', 'SEO'], true), 403);
+
+        return $user;
     }
 }

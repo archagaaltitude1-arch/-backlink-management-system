@@ -4,6 +4,14 @@
     $portal = 'Admin';
     $userName = $account?->name ?? 'Admin User';
     $userRole = $account?->role?->role_name ?? 'Admin';
+    $adminUnreadNotifications = 0;
+    $adminPhotoUrl = null;
+    if ($account) {
+        $workspace = app(\App\Http\Controllers\Admin\AdminWorkspace::class);
+        $workspace->rememberSync($account);
+        $adminUnreadNotifications = $account->unreadNotifications()->where('type', 'admin.insight')->count();
+        $adminPhotoUrl = $workspace->photoPath($account) ? route('admin.profile-photo') : null;
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class OrderItem extends Model
 {
@@ -17,5 +18,20 @@ class OrderItem extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function website(): BelongsTo
+    {
+        return $this->belongsTo(Website::class);
+    }
+
+    public function assignment(): HasOne
+    {
+        return $this->hasOne(OrderAssignment::class);
+    }
+
+    public function project(): HasOne
+    {
+        return $this->hasOne(CustomerProject::class);
     }
 }

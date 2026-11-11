@@ -162,6 +162,9 @@
                                 Customer: <strong class="text-navy">{{ $order['customer'] }}</strong> ({{ $order['customer_email'] }}) ·
                                 Assigned Staff: <strong class="text-brand">{{ $order['assigned_staff'] }}</strong> (via {{ $order['assigned_by'] ?? 'Unassigned' }})
                             </p>
+                            @if ($order['published_url'])
+                                <p class="text-[11px] text-navy/50">Published: <a href="{{ $order['published_url'] }}" class="text-brand" target="_blank" rel="noopener noreferrer">{{ $order['published_url'] }}</a> · Customer: {{ ucfirst(str_replace('_', ' ', $order['verification_status'] ?? 'pending')) }}</p>
+                            @endif
                         </div>
                     </div>
 
@@ -196,9 +199,9 @@
                                 <select name="status" class="block w-full rounded-lg border border-navy/20 bg-white px-2.5 py-1.5 text-xs text-navy focus:border-brand focus:outline-none">
                                     <option value="assigned" @selected($order['status'] === 'assigned')>Assigned</option>
                                     <option value="in_progress" @selected($order['status'] === 'in_progress')>In Progress</option>
-                                    <option value="published" @selected($order['status'] === 'published')>Published / Ready for Verification</option>
-                                    <option value="completed" @selected($order['status'] === 'completed')>Completed</option>
+                                    <option value="published" @selected($order['status'] === 'published')>Published for customer approval</option>
                                 </select>
+                                <input name="published_url" type="url" value="{{ $order['published_url'] }}" placeholder="Published URL, required when publishing" class="block w-full rounded-lg border border-navy/20 bg-white px-2.5 py-1.5 text-xs text-navy focus:border-brand focus:outline-none">
                                 <button type="submit" class="btn-primary w-full text-xs py-1.5">
                                     Save Status
                                 </button>

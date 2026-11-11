@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CustomerProject extends Model
 {
-    protected $fillable = ['customer_id', 'order_id', 'name', 'status', 'target_url', 'published_url', 'verification_status', 'report_summary', 'completed_at'];
+    protected $fillable = ['customer_id', 'order_id', 'order_item_id', 'name', 'status', 'target_url', 'published_url', 'verification_status', 'report_summary', 'completed_at'];
 
     protected function casts(): array
     {
@@ -17,5 +17,10 @@ class CustomerProject extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function orderItem(): BelongsTo
+    {
+        return $this->belongsTo(OrderItem::class);
     }
 }

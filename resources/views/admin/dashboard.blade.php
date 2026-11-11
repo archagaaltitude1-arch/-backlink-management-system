@@ -38,6 +38,86 @@
             </div>
         </section>
 
+        <section class="panel overflow-hidden">
+            <div class="flex flex-col gap-3 border-b border-navy/10 px-5 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-6">
+                <div>
+                    <h2 class="text-lg font-semibold">Customer orders</h2>
+                    <p class="mt-1 text-sm text-navy/60">New customer orders arrive here. Assign each one to an SEO staff member.</p>
+                </div>
+                <p class="text-sm text-navy/70">
+                    Active staff:
+                    @forelse ($assignmentStaff as $member)
+                        <span class="font-semibold text-navy">{{ $member->name }}</span>{{ $loop->last ? '' : ', ' }}
+                    @empty
+                        <span>none yet</span>
+                    @endforelse
+                </p>
+            </div>
+            @forelse ($unassignedItems as $item)
+                <form method="POST" action="{{ route('admin.orders.assign', [$item->order, $item]) }}" class="grid gap-3 border-b border-navy/10 px-5 py-4 last:border-b-0 sm:px-6 lg:grid-cols-[minmax(0,1fr)_16rem_auto] lg:items-end">
+                    @csrf
+                    <div class="min-w-0">
+                        <p class="font-medium">{{ $item->order?->order_number ?? 'Order' }} · {{ $item->item_name }}</p>
+                        <p class="mt-1 truncate text-xs text-navy/55">{{ $item->order?->customer?->name ?? 'Guest checkout' }}</p>
+                    </div>
+                    <div>
+                        <label for="dashboard-staff-{{ $item->id }}" class="text-sm font-medium">SEO staff</label>
+                        <select id="dashboard-staff-{{ $item->id }}" name="staff_id" class="mt-2 w-full rounded-xl border border-navy/15 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/30" @disabled($assignmentStaff->isEmpty())>
+                            @foreach ($assignmentStaff as $member)
+                                <option value="{{ $member->id }}">{{ $member->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-navy" @disabled($assignmentStaff->isEmpty())>Assign to SEO staff</button>
+                </form>
+            @empty
+                <div class="grid gap-3 px-5 py-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_16rem_auto] lg:items-end">
+                    <p class="text-sm text-navy/60">No customer orders are waiting. A new order will show up in this list.</p>
+                    <div>
+                        <label for="dashboard-staff-empty" class="text-sm font-medium">SEO staff</label>
+                        <select id="dashboard-staff-empty" class="mt-2 w-full rounded-xl border border-navy/15 bg-white px-4 py-2.5 text-sm outline-none" disabled>
+                            @forelse ($assignmentStaff as $member)
+                                <option>{{ $member->name }}</option>
+                            @empty
+                                <option>No active staff accounts</option>
+                            @endforelse
+                        </select>
+                    </div>
+                    <button type="button" class="btn-navy" disabled>Assign to SEO staff</button>
+                </div>
+            @endforelse
+        </section>
+
+        @if ($insights)
+            <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <a href="{{ route('admin.reports') }}" class="panel p-5 hover:border-brand">
+                    <p class="text-sm text-navy/60">Reports this month</p>
+                    <p class="mt-3 font-display text-3xl font-semibold tabular-nums">{{ $insights['monthOrders'] }}</p>
+                    <p class="mt-2 text-xs text-navy/55">{{ $insights['todayOrders'] }} today · {{ $insights['weekOrders'] }} this week · ${{ number_format($insights['monthRevenue'], 2) }} revenue</p>
+                </a>
+                <a href="{{ route('admin.staff-performance') }}" class="panel p-5 hover:border-brand">
+                    <p class="text-sm text-navy/60">SEO staff this month</p>
+                    <ul class="mt-3 space-y-1 text-sm">
+                        @forelse ($insights['staff'] as $member)
+                            <li class="flex justify-between gap-3"><span class="truncate">{{ $member['name'] }}</span><span class="tabular-nums text-navy/60">{{ $member['completed'] }}/{{ $member['assigned'] }}</span></li>
+                        @empty
+                            <li class="text-navy/60">No staff accounts yet.</li>
+                        @endforelse
+                    </ul>
+                </a>
+                <a href="{{ route('admin.notifications') }}" class="panel p-5 hover:border-brand">
+                    <p class="text-sm text-navy/60">Admin notifications</p>
+                    <p class="mt-3 font-display text-3xl font-semibold tabular-nums">{{ $insights['unread'] }}</p>
+                    <p class="mt-2 text-xs text-navy/55">Unread updates for your admin account</p>
+                </a>
+                <a href="{{ route('admin.customer-statistics') }}" class="panel p-5 hover:border-brand">
+                    <p class="text-sm text-navy/60">Customers</p>
+                    <p class="mt-3 font-display text-3xl font-semibold tabular-nums">{{ $insights['customerTotal'] }}</p>
+                    <p class="mt-2 text-xs text-navy/55">{{ $insights['customerMonth'] }} new this month · {{ $insights['customerActive'] }} active</p>
+                </a>
+            </section>
+        @endif
+
         <section aria-label="Statistics">
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 @foreach ($stats as $stat)
@@ -47,6 +127,63 @@
                         <p class="mt-2 text-xs text-navy/45">{{ $stat['hint'] }}</p>
                     </article>
                 @endforeach
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <div class="panel overflow-hidden">
+                <div class="flex items-center justify-between gap-4 border-b border-navy/10 px-5 py-4 sm:px-6">
+                    <div>
+                        <h2 class="text-lg font-semibold">Assignment queue</h2>
+                        <p class="mt-1 text-sm text-navy/60">Who is publishing each customer order.</p>
+                    </div>
+                    <a href="{{ route('admin.orders') }}" class="text-sm font-semibold text-brand">Assign orders</a>
+                </div>
+                <ul class="divide-y divide-navy/10">
+                    @forelse ($recentOrders as $order)
+                        @php
+                            $needsStaff = $order->items->isEmpty() || $order->items->contains(fn ($item) => $item->assignment === null);
+                            $assignees = $order->items->map(fn ($item) => $item->assignment?->staff?->name)->filter()->unique()->join(', ');
+                        @endphp
+                        <li class="flex items-center justify-between gap-4 px-5 py-3.5 text-sm sm:px-6">
+                            <div class="min-w-0">
+                                <a href="{{ route('admin.orders.show', $order) }}" class="font-medium hover:text-brand">{{ $order->order_number }}</a>
+                                <p class="truncate text-xs text-navy/55">{{ $order->customer?->name ?? 'Guest checkout' }}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs font-medium {{ $needsStaff ? 'text-amber-800' : 'text-navy' }}">{{ $needsStaff ? 'Needs SEO staff' : $assignees }}</p>
+                                <a href="{{ route('admin.orders') }}" class="text-xs font-semibold text-brand">Assign</a>
+                            </div>
+                        </li>
+                    @empty
+                        <li class="px-5 py-6 text-sm text-navy/60 sm:px-6">No customer orders have arrived yet.</li>
+                    @endforelse
+                </ul>
+            </div>
+            <div class="panel overflow-hidden">
+                <div class="flex items-center justify-between gap-4 border-b border-navy/10 px-5 py-4 sm:px-6">
+                    <div>
+                        <h2 class="text-lg font-semibold">Recent payments</h2>
+                        <p class="mt-1 text-sm text-navy/60">Latest payment records.</p>
+                    </div>
+                    <a href="{{ route('admin.payments') }}" class="text-sm font-semibold text-brand">View all</a>
+                </div>
+                <ul class="divide-y divide-navy/10">
+                    @forelse ($recentPayments as $payment)
+                        <li class="flex items-center justify-between gap-4 px-5 py-3.5 text-sm sm:px-6">
+                            <div class="min-w-0">
+                                <a href="{{ route('admin.payments.show', $payment) }}" class="font-medium hover:text-brand">{{ $payment->transaction_id }}</a>
+                                <p class="truncate text-xs text-navy/55">{{ $payment->order?->order_number ?? $payment->customer?->name ?? 'Account payment' }}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-medium tabular-nums">${{ number_format((float) $payment->amount, 2) }}</p>
+                                <p class="text-xs text-navy/55">{{ ucfirst($payment->status) }}</p>
+                            </div>
+                        </li>
+                    @empty
+                        <li class="px-5 py-6 text-sm text-navy/60 sm:px-6">No payments have been recorded yet.</li>
+                    @endforelse
+                </ul>
             </div>
         </section>
 
