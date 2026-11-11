@@ -21,7 +21,6 @@ class SeoDashboardController extends Controller
         abort_unless(in_array($user->role?->role_name, ['Admin', 'Staff', 'SEO'], true), 403);
 
         $cards = $orders->cards($user);
-        $staffMembers = $orders->staffList();
 
         return view('seo.dashboard', [
             'stats' => [
@@ -30,9 +29,7 @@ class SeoDashboardController extends Controller
                 'pending_review' => $cards->where('status', 'published')->count(),
                 'completed' => $cards->where('status', 'completed')->count(),
             ],
-            'orders' => $cards->take(8),
-            'unassignedItems' => $orders->unassignedItems(),
-            'staffMembers' => $staffMembers,
+            'orders' => $cards,
             'currentStaff' => $user->name,
         ]);
     }

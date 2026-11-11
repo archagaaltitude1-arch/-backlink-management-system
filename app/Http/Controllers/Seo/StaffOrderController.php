@@ -42,48 +42,9 @@ class StaffOrderController extends Controller
 
         return view('seo.assigned-orders', [
             'orders' => $orders,
-            'staffList' => $this->staffList(),
             'currentFilter' => $statusFilter,
             'searchTerm' => $search,
         ]);
-    }
-
-    public function assign(Request $request, string $orderId): RedirectResponse
-    {
-        $viewer = $this->fulfillmentUser($request);
-        $data = $request->validate([
-            'order_item_id' => ['required', 'integer', 'exists:order_items,id'],
-            'staff_id' => ['required', 'integer'],
-            'notes' => ['nullable', 'string', 'max:1000'],
-        ]);
-
-        $staff = User::query()
-            ->whereKey($data['staff_id'])
-            ->where('status', 'active')
-            ->whereHas('role', fn ($query) => $query->whereIn('role_name', ['Staff', 'SEO']))
-            ->first();
-
-        if ($staff === null) {
-            return back()->withErrors(['staff_id' => 'Choose an active staff member.'])->withInput();
-        }
-
-        $item = OrderItem::query()->with('order')->findOrFail($data['order_item_id']);
-
-        OrderAssignment::query()->updateOrCreate(
-            ['order_item_id' => $item->id],
-            [
-                'staff_id' => $staff->id,
-                'assigned_by' => $viewer->id,
-                'status' => 'assigned',
-                'notes' => $data['notes'] ?? null,
-            ],
-        );
-
-        if ($item->order?->order_status === 'pending') {
-            $item->order->update(['order_status' => 'processing']);
-        }
-
-        return back()->with('success', 'Order '.$item->order?->order_number.' assigned to '.$staff->name.'.');
     }
 
     public function updateStatus(Request $request, string $orderId): RedirectResponse
@@ -127,39 +88,6 @@ class StaffOrderController extends Controller
             ->get();
 
         return $items->map(fn (OrderItem $item): array => $this->card($item));
-    }
-
-    /**
-     * @return Collection<int, array{id: int, name: string, role: string, active_orders: int}>
-     */
-    public function staffList(): Collection
-    {
-        return User::query()
-            ->with('role')
-            ->withCount(['assignedOrders as active_orders' => fn ($query) => $query->whereIn('status', ['assigned', 'in_progress', 'published'])])
-            ->where('status', 'active')
-            ->whereHas('role', fn ($query) => $query->whereIn('role_name', ['Staff', 'SEO']))
-            ->orderBy('name')
-            ->get()
-            ->map(fn (User $staff): array => [
-                'id' => $staff->id,
-                'name' => $staff->name,
-                'role' => $staff->role?->role_name ?? 'Staff',
-                'active_orders' => $staff->active_orders,
-            ]);
-    }
-
-    /**
-     * @return Collection<int, OrderItem>
-     */
-    public function unassignedItems(): Collection
-    {
-        return OrderItem::query()
-            ->with('order.customer')
-            ->whereDoesntHave('assignment')
-            ->latest()
-            ->limit(50)
-            ->get();
     }
 
     private function publishBacklink(OrderAssignment $assignment, string $publishedUrl): bool
@@ -210,6 +138,7 @@ class StaffOrderController extends Controller
             'target_url' => $item->target_url,
             'anchor_text' => $item->anchor_text,
             'article_topic' => $item->article_topic,
+            'requirements' => $item->requirements,
             'assigned_staff_id' => $item->assignment?->staff_id,
             'assigned_staff' => $item->assignment?->staff?->name ?? 'Unassigned',
             'assigned_by' => $item->assignment?->assignedBy?->name,
