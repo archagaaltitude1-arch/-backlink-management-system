@@ -8,6 +8,7 @@ use App\Models\OrderItem;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class SeoStaffDashboardTest extends TestCase
@@ -20,6 +21,7 @@ class SeoStaffDashboardTest extends TestCase
         $staffTwo = $this->staff('Other Staff', 'other.staff@example.test');
         $customer = $this->customer();
         $ownItem = $this->item($customer, 'BM-20261111-STF001', 'https://client-one.example/ai-tools', 'enterprise AI tools');
+        $secondOwnItem = $this->item($customer, 'BM-20261111-STF003', 'https://client-one.example/saas-seo', 'saas link building');
         $otherItem = $this->item($customer, 'BM-20261111-STF002', 'https://other-client.example/hidden', 'other staff anchor');
 
         OrderAssignment::query()->create([
@@ -30,19 +32,37 @@ class SeoStaffDashboardTest extends TestCase
             'notes' => 'Priority client placement.',
         ]);
         OrderAssignment::query()->create([
+            'order_item_id' => $secondOwnItem->id,
+            'staff_id' => $staffOne->id,
+            'assigned_by' => $this->admin()->id,
+            'status' => 'in_progress',
+        ]);
+        OrderAssignment::query()->create([
             'order_item_id' => $otherItem->id,
             'staff_id' => $staffTwo->id,
             'assigned_by' => $this->admin()->id,
             'status' => 'in_progress',
         ]);
 
+        $this->assertFalse(Route::has('seo.orders.assign'));
+        $this->assertTrue(Route::has('seo.articles'));
+        $this->assertTrue(Route::has('seo.submissions'));
+        $this->assertTrue(Route::has('seo.completed-orders'));
+
         $this->actingAs($staffOne)
             ->get(route('seo.dashboard'))
             ->assertOk()
             ->assertSee('BM-20261111-STF001')
+            ->assertSee('BM-20261111-STF003')
             ->assertSee('https://client-one.example/ai-tools')
             ->assertSee('enterprise AI tools')
-            ->assertSee('Assign Order to Staff')
+            ->assertSee('Use editorial tone with dofollow link.')
+            ->assertSee('Articles')
+            ->assertSee('Submissions')
+            ->assertSee('Completed Orders')
+            ->assertDontSee('Assign Order to Staff')
+            ->assertDontSee('Assign customer orders to staff')
+            ->assertDontSee('SEO Team Workload')
             ->assertDontSee('BM-20261111-STF002')
             ->assertDontSee('https://other-client.example/hidden');
 
@@ -50,9 +70,12 @@ class SeoStaffDashboardTest extends TestCase
             ->get(route('seo.assigned-orders'))
             ->assertOk()
             ->assertSee('BM-20261111-STF001')
+            ->assertSee('BM-20261111-STF003')
             ->assertSee('https://client-one.example/ai-tools')
             ->assertSee('enterprise AI tools')
-            ->assertSee('Assign / Reassign Staff')
+            ->assertSee('Use editorial tone with dofollow link.')
+            ->assertDontSee('Assign / Reassign Staff')
+            ->assertDontSee('assign tasks to SEO staff')
             ->assertDontSee('BM-20261111-STF002');
     }
 
@@ -186,6 +209,7 @@ class SeoStaffDashboardTest extends TestCase
             'target_url' => $targetUrl,
             'anchor_text' => $anchorText,
             'article_topic' => 'Enterprise AI Adoption in 2026',
+            'requirements' => 'Use editorial tone with dofollow link.',
         ]);
     }
 }

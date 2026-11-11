@@ -239,7 +239,6 @@ Route::put('/seo/profile/password', [StaffAuthController::class, 'updatePassword
 // Staff Dashboard & Order Management
 Route::get('/seo/dashboard', [SeoDashboardController::class, 'index'])->name('seo.dashboard');
 Route::get('/seo/assigned-orders', [StaffOrderController::class, 'index'])->name('seo.assigned-orders');
-Route::post('/seo/orders/{id}/assign', [StaffOrderController::class, 'assign'])->name('seo.orders.assign');
 Route::match(['put', 'patch'], '/seo/orders/{id}/status', [StaffOrderController::class, 'updateStatus'])->name('seo.orders.status');
 
 // SEO Operations Views

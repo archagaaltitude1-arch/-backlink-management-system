@@ -23,19 +23,31 @@ class OrderAssignmentAndApprovalTest extends TestCase
     {
         $customer = User::factory()->create();
         $item = $this->item($customer, 'BM-ASSIGN-0001');
+        $staff = $this->staff();
 
         $this->actingAs($customer)
-            ->post(route('seo.orders.assign', 'BM-ASSIGN-0001'), [
-                'order_item_id' => $item->id,
-                'staff_id' => $this->staff()->id,
+            ->post(route('admin.orders.assign', [$item->order, $item]), [
+                'staff_id' => $staff->id,
             ])
-            ->assertForbidden();
+            ->assertRedirect()
+            ->assertSessionHasErrors();
+
+        $this->actingAs($staff)
+            ->post(route('admin.orders.assign', [$item->order, $item]), [
+                'staff_id' => $staff->id,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasErrors();
+
+        $this->assertDatabaseMissing('order_assignments', [
+            'order_item_id' => $item->id,
+        ]);
     }
 
     public function test_dashboards_show_staff_assignment_for_a_waiting_order(): void
     {
         $customer = $this->customer('Morgan Digital');
-        $this->item($customer, 'BM-ASSIGN-0003');
+        $item = $this->item($customer, 'BM-ASSIGN-0003');
         $this->staff();
 
         $this->actingAs($this->admin())
@@ -47,12 +59,16 @@ class OrderAssignmentAndApprovalTest extends TestCase
             ->assertSee('Assign to SEO staff');
 
         $this->actingAs($this->admin())
+            ->get(route('admin.orders.show', $item->order))
+            ->assertOk()
+            ->assertSee('Maya Staff')
+            ->assertSee('BM-ASSIGN-0003');
+
+        $this->actingAs($this->admin())
             ->get(route('seo.dashboard'))
             ->assertOk()
-            ->assertSee('Assign customer orders to staff')
-            ->assertSee('Maya Staff')
-            ->assertSee('BM-ASSIGN-0003')
-            ->assertSee('Assign Order to Staff');
+            ->assertDontSee('Assign customer orders to staff')
+            ->assertDontSee('Assign Order to Staff');
     }
 
     public function test_admin_dashboard_lists_active_staff_when_no_order_is_waiting(): void
