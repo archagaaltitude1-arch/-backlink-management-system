@@ -77,6 +77,21 @@ class SeoStaffDashboardTest extends TestCase
             ->assertDontSee('Assign / Reassign Staff')
             ->assertDontSee('assign tasks to SEO staff')
             ->assertDontSee('BM-20261111-STF002');
+
+        $this->actingAs($staffOne)
+            ->get(route('seo.articles'))
+            ->assertOk()
+            ->assertSee('Article Review');
+
+        $this->actingAs($staffOne)
+            ->get(route('seo.submissions'))
+            ->assertOk()
+            ->assertSee('Verify Backlink');
+
+        $this->actingAs($staffOne)
+            ->get(route('seo.completed-orders'))
+            ->assertOk()
+            ->assertSee('Backlink Verification Report');
     }
 
     public function test_seo_staff_can_update_their_assigned_work_status_and_cannot_update_others(): void
