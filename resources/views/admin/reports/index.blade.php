@@ -7,8 +7,9 @@
         <section>
             <p class="text-xs font-semibold tracking-wider text-brand uppercase">Admin</p>
             <h1 class="mt-2 text-2xl font-semibold">Reports & Analytics</h1>
-            <p class="mt-2 max-w-2xl text-sm leading-6 text-navy/70">Counts and SEO averages from the records already stored in this system.</p>
+            <p class="mt-2 max-w-2xl text-sm leading-6 text-navy/70">Orders, revenue, and payments for the dates you choose, plus the catalogue counts already stored in this system.</p>
         </section>
+        @include('admin.reports.business')
         <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <article class="panel p-5">
                 <p class="text-sm text-navy/60">Customers</p>
@@ -43,7 +44,7 @@
             </article>
             <article class="panel p-5">
                 <p class="text-sm text-navy/60">Orders / payments</p>
-                <p class="mt-3 font-display text-3xl font-semibold">{{ $hasOrders && $hasPayments ? 'Available' : '—' }}</p>
+                <p class="mt-3 font-display text-3xl font-semibold tabular-nums">{{ $orderCount }} / {{ $paymentCount }}</p>
             </article>
         </section>
         <section class="grid grid-cols-1 gap-4 sm:grid-cols-3">

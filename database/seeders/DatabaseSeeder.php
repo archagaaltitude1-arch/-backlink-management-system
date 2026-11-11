@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             SampleCatalogueSeeder::class,
             DemoCustomerWorkflowSeeder::class,
+            FulfillmentWorkflowSeeder::class,
         ]);
     }
 }

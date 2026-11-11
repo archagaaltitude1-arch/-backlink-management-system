@@ -18,6 +18,11 @@ class OrderAssignment extends Model
         'notes',
     ];
 
+    public function orderItem(): BelongsTo
+    {
+        return $this->belongsTo(OrderItem::class);
+    }
+
     public function staff(): BelongsTo
     {
         return $this->belongsTo(User::class, 'staff_id');

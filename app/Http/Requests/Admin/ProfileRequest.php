@@ -23,6 +23,7 @@ class ProfileRequest extends FormRequest
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->user()?->id)],
             'current_password' => ['required_with:password', 'nullable', 'string'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ];
     }
 }

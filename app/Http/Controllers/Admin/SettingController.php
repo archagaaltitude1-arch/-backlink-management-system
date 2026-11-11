@@ -6,15 +6,29 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ProfileRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class SettingController extends Controller
 {
-    public function edit(): View
+    public function edit(AdminWorkspace $workspace): View
     {
+        $user = auth()->user()?->load('role');
+
         return view('admin.settings.edit', [
-            'user' => auth()->user()?->load('role'),
+            'user' => $user,
+            'photoUrl' => $user ? ($workspace->photoPath($user) ? route('admin.profile-photo') : null) : null,
         ]);
+    }
+
+    public function photo(AdminWorkspace $workspace): BinaryFileResponse
+    {
+        $user = auth()->user();
+        $path = $user ? $workspace->photoPath($user) : null;
+        abort_unless($path !== null, 404);
+
+        return response()->file(Storage::disk('local')->path($path));
     }
 
     public function update(ProfileRequest $request): RedirectResponse
@@ -33,6 +47,10 @@ class SettingController extends Controller
             }
 
             $user->password = $request->validated('password');
+        }
+
+        if ($request->hasFile('photo')) {
+            app(AdminWorkspace::class)->storePhoto($user, $request->file('photo'));
         }
 
         $user->name = $request->validated('name');

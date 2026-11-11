@@ -49,6 +49,54 @@
         </div>
     @endif
 
+    <section class="panel p-5 space-y-4">
+        <div class="flex flex-col gap-2 border-b border-navy/10 pb-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <h2 class="text-lg font-bold text-navy">Assign customer orders to staff</h2>
+                <p class="text-sm text-navy/60">Choose an order and the staff member who will publish the backlink.</p>
+            </div>
+            <p class="text-sm text-navy/70">
+                Active staff:
+                @forelse ($staffMembers as $staff)
+                    <span class="font-semibold text-navy">{{ $staff['name'] }}</span>{{ $loop->last ? '' : ', ' }}
+                @empty
+                    <span>none yet</span>
+                @endforelse
+            </p>
+        </div>
+
+        <form action="{{ route('seo.orders.assign', ['id' => $unassignedItems->first()->order?->order_number ?? 'order']) }}" method="POST" class="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
+            @csrf
+            <div>
+                <label for="assign-order" class="block text-xs font-semibold text-navy">Select Order</label>
+                <select id="assign-order" name="order_item_id" class="mt-1 block w-full rounded-xl border border-navy/20 bg-white px-3 py-2.5 text-sm text-navy focus:border-brand focus:outline-none" @disabled($unassignedItems->isEmpty())>
+                    @forelse ($unassignedItems as $item)
+                        <option value="{{ $item->id }}">{{ $item->order?->order_number ?? 'Order' }} · {{ $item->item_name }} · {{ $item->order?->customer?->name ?? 'Guest' }}</option>
+                    @empty
+                        <option value="">No customer orders are waiting</option>
+                    @endforelse
+                </select>
+            </div>
+            <div>
+                <label for="assign-staff" class="block text-xs font-semibold text-navy">Assign to Staff Member</label>
+                <select id="assign-staff" name="staff_id" class="mt-1 block w-full rounded-xl border border-navy/20 bg-white px-3 py-2.5 text-sm text-navy focus:border-brand focus:outline-none" @disabled($staffMembers->isEmpty() || $unassignedItems->isEmpty())>
+                    @forelse ($staffMembers as $staff)
+                        <option value="{{ $staff['id'] }}">{{ $staff['name'] }} ({{ $staff['active_orders'] }} active)</option>
+                    @empty
+                        <option value="">No active staff accounts</option>
+                    @endforelse
+                </select>
+            </div>
+            <div>
+                <label for="assign-notes" class="block text-xs font-semibold text-navy">Assignment Notes</label>
+                <input id="assign-notes" name="notes" type="text" placeholder="Placement notes for the staff member" class="mt-1 block w-full rounded-xl border border-navy/20 bg-white px-3 py-2.5 text-sm text-navy placeholder:text-navy/40 focus:border-brand focus:outline-none" @disabled($unassignedItems->isEmpty())>
+            </div>
+            <button type="submit" class="btn-primary text-sm font-semibold" @disabled($staffMembers->isEmpty() || $unassignedItems->isEmpty())>
+                Assign Order to Staff
+            </button>
+        </form>
+    </section>
+
     <!-- Key Metrics Cards -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div class="panel p-5 relative overflow-hidden border-t-4 border-t-brand">
@@ -139,7 +187,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-navy/10">
-                        @foreach ($orders as $order)
+                        @forelse ($orders as $order)
                             <tr class="hover:bg-canvas/40 transition">
                                 <td class="py-3.5 px-4">
                                     <div class="font-bold text-navy">{{ $order['id'] }}</div>
@@ -189,55 +237,18 @@
                                     </a>
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-4 py-8 text-sm text-navy/60">No customer orders are assigned yet.</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Sidebar Column: Team Allocation & Quick Assignment -->
+        <!-- Sidebar Column: Team Allocation -->
         <div class="space-y-6">
-            <!-- Order Assignment Tool -->
-            <div class="panel p-5 space-y-4">
-                <div class="flex items-center justify-between pb-3 border-b border-navy/10">
-                    <div>
-                        <h3 class="text-sm font-bold text-navy">Order Assignment</h3>
-                        <p class="text-xs text-navy/60">Assign customer orders to SEO staff</p>
-                    </div>
-                    <span class="badge bg-brand/10 text-brand">Task #3</span>
-                </div>
-
-                <form action="{{ route('seo.orders.assign', ['id' => 'ORD-10483']) }}" method="POST" class="space-y-3">
-                    @csrf
-                    <div>
-                        <label class="block text-xs font-semibold text-navy">Select Order</label>
-                        <select name="order_item_id" class="mt-1 block w-full rounded-xl border border-navy/20 bg-white px-3 py-2 text-xs text-navy focus:border-brand focus:outline-none">
-                            <option value="105">ORD-10483 · automotive-future.io (Unassigned)</option>
-                            <option value="102">ORD-10481 · healthwire-daily.org</option>
-                            <option value="101">ORD-10480 · techinsider-journal.com</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-navy">Assign to Staff Member</label>
-                        <select name="staff_id" class="mt-1 block w-full rounded-xl border border-navy/20 bg-white px-3 py-2 text-xs text-navy focus:border-brand focus:outline-none">
-                            @foreach ($staffMembers as $staff)
-                                <option value="{{ $staff['id'] }}">{{ $staff['name'] }} ({{ $staff['active_orders'] }} active)</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-navy">Assignment Notes / Strategy</label>
-                        <textarea name="notes" rows="2" placeholder="e.g. Prioritize anchor placement in intro section" class="mt-1 block w-full rounded-xl border border-navy/20 bg-white p-2.5 text-xs text-navy placeholder:text-navy/40 focus:border-brand focus:outline-none"></textarea>
-                    </div>
-
-                    <button type="submit" class="btn-primary w-full text-xs py-2.5 font-semibold">
-                        Assign Order to Staff
-                    </button>
-                </form>
-            </div>
-
             <!-- SEO Staff Team Workload -->
             <div class="panel p-5 space-y-4">
                 <div class="flex items-center justify-between pb-3 border-b border-navy/10">

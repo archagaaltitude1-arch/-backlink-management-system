@@ -7,13 +7,25 @@
     <div class="mx-auto max-w-2xl space-y-6">
         <section>
             <p class="text-xs font-semibold tracking-wider text-brand uppercase">Admin</p>
-            <h1 class="mt-2 text-2xl font-semibold">Settings</h1>
-            <p class="mt-2 text-sm leading-6 text-navy/70">Update the signed-in admin account. Role stays as assigned.</p>
+            <h1 class="mt-2 text-2xl font-semibold">Admin profile</h1>
+            <p class="mt-2 text-sm leading-6 text-navy/70">Update your own name, email, photo, and password. Role stays as assigned.</p>
         </section>
         @include('admin.niches.partials.alerts')
-        <form method="POST" action="{{ route('admin.settings.update') }}" class="panel space-y-5 p-6 sm:p-8">
+        <form method="POST" action="{{ route('admin.settings.update') }}" enctype="multipart/form-data" class="panel space-y-5 p-6 sm:p-8">
             @csrf
             @method('PUT')
+            <div class="flex items-center gap-4">
+                @if ($photoUrl)
+                    <img src="{{ $photoUrl }}" alt="" class="h-16 w-16 rounded-full object-cover">
+                @else
+                    <span class="grid h-16 w-16 place-items-center rounded-full bg-navy text-lg font-semibold text-white">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                @endif
+                <div class="min-w-0 flex-1">
+                    <label for="photo" class="text-sm font-medium">Profile picture</label>
+                    <input id="photo" name="photo" type="file" accept="image/png,image/jpeg,image/webp" class="mt-2 block w-full text-sm">
+                    @error('photo') <p class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
+                </div>
+            </div>
             <div>
                 <label for="name" class="text-sm font-medium">Name</label>
                 <input id="name" name="name" type="text" value="{{ old('name', $user->name) }}" required maxlength="255" class="{{ $input }}">
