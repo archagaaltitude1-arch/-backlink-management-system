@@ -22,15 +22,16 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CustomerAccountController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\WebsiteController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Seo\SeoDashboardController;
 use App\Http\Controllers\Seo\StaffAuthController;
 use App\Http\Controllers\Seo\StaffOrderController;
-use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return auth()->check()
-        ? redirect()->to(auth()->user()->dashboardUrl())
+        ? redirect()->route(auth()->user()->isActiveAdmin() ? 'admin.dashboard' : 'customer.dashboard')
         : redirect()->route('auth.login');
 });
 
