@@ -5,22 +5,24 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\CreditPricing;
 use App\Models\Niche;
+use App\Models\Order;
 use App\Models\Package;
+use App\Models\Payment;
 use App\Models\SeoMetric;
 use App\Models\Service;
 use App\Models\User;
 use App\Models\Website;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class ReportController extends Controller
 {
-    public function __invoke(): View
+    public function __invoke(AdminWorkspace $workspace): View
     {
         $customers = User::query()->whereHas('role', fn ($query) => $query->where('role_name', 'Customer'));
         $staff = User::query()->whereHas('role', fn ($query) => $query->whereNotIn('role_name', ['Customer', 'Admin']));
+        $period = ReportPeriod::fromRequest(request());
 
-        return view('admin.reports.index', [
+        return view('admin.reports.index', array_merge($workspace->report($period), [
             'customerCount' => (clone $customers)->count(),
             'activeCustomers' => (clone $customers)->where('status', 'active')->count(),
             'staffCount' => (clone $staff)->count(),
@@ -36,8 +38,8 @@ class ReportController extends Controller
             'topWebsites' => SeoMetric::query()->with('website')->orderByDesc('DR')->limit(5)->get(),
             'services' => Service::query()->orderBy('service_name')->get(),
             'packages' => Package::query()->orderBy('package_name')->get(),
-            'hasOrders' => Schema::hasTable('orders'),
-            'hasPayments' => Schema::hasTable('payments'),
-        ]);
+            'orderCount' => Order::query()->count(),
+            'paymentCount' => Payment::query()->count(),
+        ]));
     }
 }

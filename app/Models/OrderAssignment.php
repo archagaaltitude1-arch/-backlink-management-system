@@ -20,7 +20,7 @@ class OrderAssignment extends Model
 
     public function orderItem(): BelongsTo
     {
-        return $this->belongsTo(OrderItem::class, 'order_item_id');
+        return $this->belongsTo(OrderItem::class);
     }
 
     public function staff(): BelongsTo
@@ -34,7 +34,7 @@ class OrderAssignment extends Model
     }
 
     /**
-     * Format the order assignment with its related order item and customer details.
+     * Format this assignment for the staff API without changing fulfillment records.
      *
      * @return array<string, mixed>
      */

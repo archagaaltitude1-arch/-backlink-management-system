@@ -10,6 +10,7 @@
         'orders' => ['M9 3h6v4H9z', 'M8 5H6v15h12V5h-2', 'M9 12h6', 'M9 16h4'],
         'payments' => ['M3 6h18v12H3z', 'M3 10h18', 'M7 15h5'],
         'reports' => ['M4 19V9', 'M10 19V5', 'M16 19v-6', 'M22 19H2'],
+        'performance' => ['M4 19V10', 'M9 19V5', 'M14 19v-7', 'M19 19V8'],
         'settings' => ['M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7', 'M12 2.5v2.5', 'M12 19v2.5', 'M2.5 12H5', 'M19 12h2.5', 'M5.4 5.4l1.8 1.8', 'M16.8 16.8l1.8 1.8', 'M18.6 5.4l-1.8 1.8', 'M7.2 16.8l-1.8 1.8'],
         'roles' => ['M12 3l8 4v5c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V7l8-4z'],
     ];
@@ -18,6 +19,7 @@
         ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'dashboard'],
         ['label' => 'Customer Management', 'route' => 'admin.customers', 'icon' => 'customers'],
         ['label' => 'Staff Management', 'route' => 'admin.staff', 'icon' => 'staff'],
+        ['label' => 'SEO Staff Performance', 'route' => 'admin.staff-performance', 'icon' => 'performance'],
         ['label' => 'Roles & Permissions', 'route' => 'admin.roles', 'icon' => 'roles'],
         ['label' => 'Website Management', 'route' => 'admin.websites', 'icon' => 'websites'],
         ['label' => 'Service Management', 'route' => 'admin.services', 'icon' => 'services'],

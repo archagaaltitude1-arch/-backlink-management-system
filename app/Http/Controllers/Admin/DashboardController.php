@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Niche;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Package;
+use App\Models\Payment;
 use App\Models\Service;
 use App\Models\User;
 use App\Models\Website;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -21,11 +23,11 @@ class DashboardController extends Controller
         $customers = User::query()->whereHas('role', fn ($query) => $query->where('role_name', 'Customer'));
         $staff = User::query()->whereHas('role', fn ($query) => $query->where('role_name', 'Staff'));
 
-        $orderCount = Schema::hasTable('orders') ? (int) Schema::getConnection()->table('orders')->count() : null;
-        $paymentCount = Schema::hasTable('payments') ? (int) Schema::getConnection()->table('payments')->count() : null;
+        $admin = auth()->user();
 
         return view('admin.dashboard', [
-            'adminName' => auth()->user()?->name ?? 'Admin',
+            'adminName' => $admin?->name ?? 'Admin',
+            'insights' => $admin instanceof User ? app(AdminWorkspace::class)->dashboard($admin) : null,
             'stats' => [
                 ['label' => 'Total Customers', 'value' => $customers->count(), 'hint' => 'Customer accounts'],
                 ['label' => 'Total Staff', 'value' => $staff->count(), 'hint' => 'Staff accounts'],
@@ -33,9 +35,22 @@ class DashboardController extends Controller
                 ['label' => 'Total Services', 'value' => Service::query()->count(), 'hint' => 'Backlink services'],
                 ['label' => 'Total Niches', 'value' => Niche::query()->count(), 'hint' => 'Industry categories'],
                 ['label' => 'Total Packages', 'value' => Package::query()->count(), 'hint' => 'Credit packages'],
-                ['label' => 'Total Orders', 'value' => $orderCount ?? '—', 'hint' => $orderCount === null ? 'Orders module is not in this database yet' : 'Order records'],
-                ['label' => 'Total Payments', 'value' => $paymentCount ?? '—', 'hint' => $paymentCount === null ? 'Payments module is not in this database yet' : 'Payment records'],
+                ['label' => 'Total Orders', 'value' => Order::query()->count(), 'hint' => 'Orders placed by customers'],
+                ['label' => 'Total Payments', 'value' => Payment::query()->count(), 'hint' => 'Payments recorded for orders and credits'],
             ],
+            'unassignedItems' => OrderItem::query()
+                ->with(['order.customer:id,name', 'assignment.staff:id,name'])
+                ->whereDoesntHave('assignment')
+                ->latest()
+                ->limit(8)
+                ->get(),
+            'assignmentStaff' => User::query()
+                ->where('status', 'active')
+                ->whereHas('role', fn ($query) => $query->whereIn('role_name', ['Staff', 'SEO']))
+                ->orderBy('name')
+                ->get(['id', 'name']),
+            'recentOrders' => Order::query()->with(['customer:id,name', 'items.assignment.staff:id,name'])->latest()->limit(5)->get(),
+            'recentPayments' => Payment::query()->with(['customer:id,name', 'order:id,order_number'])->latest()->limit(5)->get(),
             'recentCustomers' => $customers->latest()->limit(5)->get(),
             'recentWebsites' => Website::query()->with('niches')->latest()->limit(6)->get(),
             'websiteSummary' => [

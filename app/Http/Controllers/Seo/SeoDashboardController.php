@@ -3,47 +3,37 @@
 namespace App\Http\Controllers\Seo;
 
 use App\Http\Controllers\Controller;
-use App\Models\OrderAssignment;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class SeoDashboardController extends Controller
 {
-    /**
-     * Display the SEO Staff Dashboard for the authenticated staff member.
-     */
-    public function index(Request $request): View
+    public function index(Request $request, StaffOrderController $orders): View|RedirectResponse
     {
         $user = $request->user();
-        $assignments = collect();
-
-        if ($user && Schema::hasTable('order_assignments')) {
-            $assignments = $user->assignedOrders()
-                ->with([
-                    'orderItem.order.customer',
-                    'orderItem.website.seoMetric',
-                    'orderItem.service',
-                    'assignedBy',
-                    'staff',
-                ])
-                ->latest()
-                ->get();
+        if ($user === null) {
+            throw new HttpResponseException(redirect()->guest(route('seo.login')));
         }
 
-        $orders = $assignments->map(fn (OrderAssignment $assignment): array => $assignment->toPortalArray());
+        $user->loadMissing('role');
+        abort_unless(in_array($user->role?->role_name, ['Admin', 'Staff', 'SEO'], true), 403);
 
-        $stats = [
-            'total_assigned' => $orders->count(),
-            'in_progress' => $orders->where('status', 'in_progress')->count(),
-            'pending_review' => $orders->whereIn('status', ['assigned', 'pending'])->count(),
-            'completed' => $orders->where('status', 'completed')->count(),
-        ];
+        $cards = $orders->cards($user);
+        $staffMembers = $orders->staffList();
 
         return view('seo.dashboard', [
-            'stats' => $stats,
-            'orders' => $orders->all(),
-            'currentStaff' => $user?->name ?? 'SEO Staff',
+            'stats' => [
+                'total_assigned' => $cards->where('status', '!=', 'unassigned')->count(),
+                'in_progress' => $cards->where('status', 'in_progress')->count(),
+                'pending_review' => $cards->where('status', 'published')->count(),
+                'completed' => $cards->where('status', 'completed')->count(),
+            ],
+            'orders' => $cards->take(8),
+            'unassignedItems' => $orders->unassignedItems(),
+            'staffMembers' => $staffMembers,
+            'currentStaff' => $user->name,
         ]);
     }
 }

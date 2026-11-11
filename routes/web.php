@@ -2,15 +2,20 @@
 
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\CreditPricingController;
+use App\Http\Controllers\Admin\CustomerStatisticController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\NicheController;
 use App\Http\Controllers\Admin\NicheSpecificationController;
+use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PackageController;
+use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\StaffPerformanceController;
 use App\Http\Controllers\Admin\WebsiteController as AdminWebsiteController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\AuthController;
@@ -123,17 +128,19 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/admin/credit-pricing/{creditPricing}', [CreditPricingController::class, 'update'])->name('admin.credit-pricing.update');
     Route::delete('/admin/credit-pricing/{creditPricing}', [CreditPricingController::class, 'destroy'])->name('admin.credit-pricing.destroy');
 
-    Route::view('/admin/orders', 'admin.unavailable', [
-        'heading' => 'Order Management',
-        'summary' => 'Orders placed across the system.',
-    ])->name('admin.orders');
-    Route::view('/admin/payments', 'admin.unavailable', [
-        'heading' => 'Payment Management',
-        'summary' => 'Payment records for completed orders.',
-    ])->name('admin.payments');
+    Route::get('/admin/orders', [AdminOrderController::class, 'index'])->name('admin.orders');
+    Route::get('/admin/orders/{order}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
+    Route::post('/admin/orders/{order}/items/{orderItem}/assign', [AdminOrderController::class, 'assign'])->name('admin.orders.assign');
+    Route::get('/admin/payments', [AdminPaymentController::class, 'index'])->name('admin.payments');
+    Route::get('/admin/payments/{payment}', [AdminPaymentController::class, 'show'])->name('admin.payments.show');
     Route::get('/admin/reports', ReportController::class)->name('admin.reports');
+    Route::get('/admin/staff-performance', StaffPerformanceController::class)->name('admin.staff-performance');
+    Route::get('/admin/customer-statistics', CustomerStatisticController::class)->name('admin.customer-statistics');
+    Route::get('/admin/notifications', [AdminNotificationController::class, 'index'])->name('admin.notifications');
+    Route::patch('/admin/notifications/{notification}/read', [AdminNotificationController::class, 'read'])->name('admin.notifications.read');
     Route::get('/admin/settings', [SettingController::class, 'edit'])->name('admin.settings');
     Route::put('/admin/settings', [SettingController::class, 'update'])->name('admin.settings.update');
+    Route::get('/admin/profile-photo', [SettingController::class, 'photo'])->name('admin.profile-photo');
 });
 
 Route::view('/customer/dashboard', 'customer.dashboard')->name('customer.dashboard');
@@ -164,6 +171,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/customer/notifications/{notification}/read', [CustomerAccountController::class, 'markNotificationRead'])->name('customer.notifications.read');
     Route::get('/customer/projects', [CustomerAccountController::class, 'projects'])->name('customer.projects');
     Route::get('/customer/backlinks', [CustomerAccountController::class, 'backlinks'])->name('customer.backlinks');
+    Route::post('/customer/backlinks/{project}/decision', [CustomerAccountController::class, 'decideBacklink'])->name('customer.backlinks.decide');
     Route::get('/customer/reports', [CustomerAccountController::class, 'reports'])->name('customer.reports');
     Route::post('/customer/wallet/packages/{creditPackage}/purchase', [PaymentController::class, 'purchaseCredits'])->name('customer.wallet.purchase');
 
@@ -228,9 +236,10 @@ Route::get('/seo/profile', [StaffAuthController::class, 'profile'])->name('seo.p
 Route::put('/seo/profile', [StaffAuthController::class, 'updateProfile'])->name('seo.profile.update');
 Route::put('/seo/profile/password', [StaffAuthController::class, 'updatePassword'])->name('seo.profile.password');
 
-// Staff Dashboard & Assigned Order Management
+// Staff Dashboard & Order Management
 Route::get('/seo/dashboard', [SeoDashboardController::class, 'index'])->name('seo.dashboard');
 Route::get('/seo/assigned-orders', [StaffOrderController::class, 'index'])->name('seo.assigned-orders');
+Route::post('/seo/orders/{id}/assign', [StaffOrderController::class, 'assign'])->name('seo.orders.assign');
 Route::match(['put', 'patch'], '/seo/orders/{id}/status', [StaffOrderController::class, 'updateStatus'])->name('seo.orders.status');
 
 // SEO Operations Views

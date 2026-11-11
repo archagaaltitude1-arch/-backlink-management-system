@@ -6,6 +6,7 @@ use App\Models\BillingAddress;
 use App\Models\CreditPackage;
 use App\Models\CustomerProject;
 use App\Models\Invoice;
+use App\Models\OrderAssignment;
 use App\Models\PaymentMethod;
 use App\Models\SavedWebsite;
 use Illuminate\Http\JsonResponse;
@@ -257,9 +258,76 @@ class CustomerAccountController extends Controller
     public function backlinks(Request $request): View
     {
         $backlinks = $request->user()->hasMany(CustomerProject::class, 'customer_id')
-            ->whereNotNull('published_url')->latest()->paginate(10);
+            ->with('order')
+            ->whereNotNull('published_url')
+            ->latest()
+            ->paginate(10);
 
         return view('customer.backlinks', compact('backlinks'));
+    }
+
+    public function decideBacklink(Request $request, CustomerProject $project): RedirectResponse
+    {
+        abort_unless($project->customer_id === $request->user()->id, 404);
+        abort_unless($project->published_url !== null, 404);
+
+        $data = $request->validate([
+            'decision' => ['required', Rule::in(['approve', 'changes'])],
+            'feedback' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        if ($data['decision'] === 'approve') {
+            $project->update([
+                'verification_status' => 'approved',
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
+            $this->syncAssignment($project, 'completed');
+            $this->completeOrderWhenApproved($project);
+
+            return back()->with('success', 'Backlink approved.');
+        }
+
+        $project->update([
+            'verification_status' => 'changes_requested',
+            'status' => 'processing',
+            'report_summary' => $data['feedback'] ?? $project->report_summary,
+            'completed_at' => null,
+        ]);
+        $this->syncAssignment($project, 'in_progress');
+
+        return back()->with('success', 'Change request sent back to the assigned staff.');
+    }
+
+    private function syncAssignment(CustomerProject $project, string $status): void
+    {
+        if ($project->order_item_id === null) {
+            return;
+        }
+
+        OrderAssignment::query()->where('order_item_id', $project->order_item_id)->update(['status' => $status]);
+    }
+
+    private function completeOrderWhenApproved(CustomerProject $project): void
+    {
+        $order = $project->order;
+        if ($order === null) {
+            return;
+        }
+
+        $itemIds = $order->items()->pluck('id');
+        if ($itemIds->isEmpty()) {
+            return;
+        }
+
+        $approved = CustomerProject::query()
+            ->whereIn('order_item_id', $itemIds)
+            ->where('verification_status', 'approved')
+            ->count();
+
+        if ($approved === $itemIds->count()) {
+            $order->update(['order_status' => 'completed']);
+        }
     }
 
     public function reports(Request $request): View

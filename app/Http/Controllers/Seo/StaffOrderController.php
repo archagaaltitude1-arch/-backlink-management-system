@@ -3,162 +3,242 @@
 namespace App\Http\Controllers\Seo;
 
 use App\Http\Controllers\Controller;
+use App\Models\CustomerProject;
 use App\Models\OrderAssignment;
-use Illuminate\Http\JsonResponse;
+use App\Models\OrderItem;
+use App\Models\User;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class StaffOrderController extends Controller
 {
-    /**
-     * Display orders assigned to the currently authenticated SEO staff member.
-     */
     public function index(Request $request): View
     {
-        $user = $request->user();
-        $statusFilter = $request->query('status', 'all');
-        $search = strtolower(trim((string) $request->query('search', '')));
+        $viewer = $this->fulfillmentUser($request);
+        $statusFilter = $request->string('status')->toString() ?: 'all';
+        $search = trim($request->string('search')->toString());
 
-        $assignments = collect();
+        $orders = $this->cards($viewer)
+            ->when($statusFilter !== 'all' && $statusFilter !== '', fn (Collection $orders) => $orders->where('status', $statusFilter))
+            ->when($search !== '', function (Collection $orders) use ($search) {
+                $needle = mb_strtolower($search);
 
-        if ($user && Schema::hasTable('order_assignments')) {
-            $assignments = $user->assignedOrders()
-                ->with([
-                    'orderItem.order.customer',
-                    'orderItem.website.seoMetric',
-                    'orderItem.service',
-                    'assignedBy',
-                    'staff',
-                ])
-                ->latest()
-                ->get();
-        }
-
-        $allOrders = $assignments
-            ->map(fn (OrderAssignment $assignment): array => $assignment->toPortalArray())
-            ->all();
-
-        $filtered = array_filter($allOrders, function (array $order) use ($statusFilter, $search): bool {
-            $matchesStatus = match ($statusFilter) {
-                'assigned' => $order['status'] === 'assigned',
-                'in_progress' => $order['status'] === 'in_progress',
-                'published' => $order['status'] === 'published',
-                'completed' => $order['status'] === 'completed',
-                default => true,
-            };
-
-            $matchesSearch = true;
-            if ($search !== '') {
-                $haystack = strtolower(implode(' ', [
+                return $orders->filter(fn (array $order): bool => str_contains(mb_strtolower(implode(' ', [
                     $order['id'],
-                    $order['website'],
-                    $order['website_name'],
-                    $order['target_url'],
-                    $order['anchor_text'],
-                    $order['article_topic'],
-                    (string) ($order['requirements'] ?? ''),
                     $order['customer'],
-                ]));
-                $matchesSearch = str_contains($haystack, $search);
-            }
-
-            return $matchesStatus && $matchesSearch;
-        });
+                    $order['customer_email'],
+                    $order['service'],
+                    $order['website'],
+                    $order['anchor_text'],
+                    $order['target_url'],
+                    $order['assigned_staff'],
+                ])), $needle));
+            })
+            ->values();
 
         return view('seo.assigned-orders', [
-            'orders' => array_values($filtered),
+            'orders' => $orders,
+            'staffList' => $this->staffList(),
             'currentFilter' => $statusFilter,
             'searchTerm' => $search,
-            'totalCount' => count($allOrders),
         ]);
+    }
+
+    public function assign(Request $request, string $orderId): RedirectResponse
+    {
+        $viewer = $this->fulfillmentUser($request);
+        $data = $request->validate([
+            'order_item_id' => ['required', 'integer', 'exists:order_items,id'],
+            'staff_id' => ['required', 'integer'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $staff = User::query()
+            ->whereKey($data['staff_id'])
+            ->where('status', 'active')
+            ->whereHas('role', fn ($query) => $query->whereIn('role_name', ['Staff', 'SEO']))
+            ->first();
+
+        if ($staff === null) {
+            return back()->withErrors(['staff_id' => 'Choose an active staff member.'])->withInput();
+        }
+
+        $item = OrderItem::query()->with('order')->findOrFail($data['order_item_id']);
+
+        OrderAssignment::query()->updateOrCreate(
+            ['order_item_id' => $item->id],
+            [
+                'staff_id' => $staff->id,
+                'assigned_by' => $viewer->id,
+                'status' => 'assigned',
+                'notes' => $data['notes'] ?? null,
+            ],
+        );
+
+        if ($item->order?->order_status === 'pending') {
+            $item->order->update(['order_status' => 'processing']);
+        }
+
+        return back()->with('success', 'Order '.$item->order?->order_number.' assigned to '.$staff->name.'.');
+    }
+
+    public function updateStatus(Request $request, string $orderId): RedirectResponse
+    {
+        $viewer = $this->fulfillmentUser($request);
+        $data = $request->validate([
+            'order_item_id' => ['required', 'integer', 'exists:order_items,id'],
+            'status' => ['required', Rule::in(['assigned', 'in_progress', 'published'])],
+            'notes' => ['nullable', 'string', 'max:1000'],
+            'published_url' => ['nullable', 'url', 'max:2000', 'required_if:status,published'],
+        ]);
+
+        $assignment = OrderAssignment::query()->where('order_item_id', $data['order_item_id'])->firstOrFail();
+        if ($viewer->role?->role_name !== 'Admin' && $assignment->staff_id !== $viewer->id) {
+            abort(403);
+        }
+
+        $assignment->update([
+            'status' => $data['status'],
+            'notes' => $data['notes'] ?? $assignment->notes,
+        ]);
+
+        if ($data['status'] === 'published' && ! $this->publishBacklink($assignment, $data['published_url'])) {
+            return back()->withErrors(['published_url' => 'This order has no customer account to approve the backlink.'])->withInput();
+        }
+
+        return back()->with('success', 'Order '.$orderId.' is now '.str_replace('_', ' ', $data['status']).'.');
     }
 
     /**
-     * Update the progress/status of an order assigned to the authenticated SEO staff member.
+     * @return Collection<int, array<string, mixed>>
      */
-    public function updateStatus(Request $request, string $orderId): RedirectResponse|JsonResponse
+    public function cards(User $viewer): Collection
     {
-        $validated = $request->validate([
-            'status' => ['required', 'string', Rule::in(['assigned', 'in_progress', 'published', 'completed'])],
-            'notes' => ['nullable', 'string', 'max:2000'],
-            'assignment_id' => ['nullable', 'integer'],
-            'order_item_id' => ['nullable', 'integer'],
-        ]);
+        $items = OrderItem::query()
+            ->with(['order.customer', 'assignment.staff', 'assignment.assignedBy', 'website', 'project'])
+            ->when($viewer->role?->role_name !== 'Admin', function ($query) use ($viewer): void {
+                $query->whereHas('assignment', fn ($query) => $query->where('staff_id', $viewer->id));
+            })
+            ->latest()
+            ->get();
 
-        abort_unless(Schema::hasTable('order_assignments'), 404);
-
-        $assignment = $this->resolveStaffAssignment($request, $orderId);
-
-        $payload = ['status' => $validated['status']];
-        if ($request->has('notes')) {
-            $payload['notes'] = $validated['notes'];
-        }
-
-        $assignment->update($payload);
-
-        $assignment->load([
-            'orderItem.order.customer',
-            'orderItem.website.seoMetric',
-            'orderItem.service',
-            'assignedBy',
-            'staff',
-        ]);
-
-        $portalOrder = $assignment->toPortalArray();
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'data' => $portalOrder,
-            ]);
-        }
-
-        return back()->with(
-            'success',
-            "Order #{$portalOrder['id']} status updated to {$portalOrder['status_label']}."
-        );
+        return $items->map(fn (OrderItem $item): array => $this->card($item));
     }
 
-    private function resolveStaffAssignment(Request $request, string $orderId): OrderAssignment
+    /**
+     * @return Collection<int, array{id: int, name: string, role: string, active_orders: int}>
+     */
+    public function staffList(): Collection
+    {
+        return User::query()
+            ->with('role')
+            ->withCount(['assignedOrders as active_orders' => fn ($query) => $query->whereIn('status', ['assigned', 'in_progress', 'published'])])
+            ->where('status', 'active')
+            ->whereHas('role', fn ($query) => $query->whereIn('role_name', ['Staff', 'SEO']))
+            ->orderBy('name')
+            ->get()
+            ->map(fn (User $staff): array => [
+                'id' => $staff->id,
+                'name' => $staff->name,
+                'role' => $staff->role?->role_name ?? 'Staff',
+                'active_orders' => $staff->active_orders,
+            ]);
+    }
+
+    /**
+     * @return Collection<int, OrderItem>
+     */
+    public function unassignedItems(): Collection
+    {
+        return OrderItem::query()
+            ->with('order.customer')
+            ->whereDoesntHave('assignment')
+            ->latest()
+            ->limit(50)
+            ->get();
+    }
+
+    private function publishBacklink(OrderAssignment $assignment, string $publishedUrl): bool
+    {
+        $item = $assignment->orderItem()->with('order')->firstOrFail();
+        $order = $item->order;
+        if ($order?->customer_id === null) {
+            return false;
+        }
+
+        $project = CustomerProject::query()->where('order_item_id', $item->id)->first()
+            ?? CustomerProject::query()->where('order_id', $order->id)->whereNull('order_item_id')->first()
+            ?? new CustomerProject;
+
+        $project->fill([
+            'customer_id' => $order->customer_id,
+            'order_id' => $order->id,
+            'order_item_id' => $item->id,
+            'name' => $item->item_name,
+            'status' => 'published',
+            'target_url' => $item->target_url,
+            'published_url' => $publishedUrl,
+            'verification_status' => 'pending',
+            'completed_at' => null,
+        ])->save();
+
+        return true;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function card(OrderItem $item): array
+    {
+        $status = $item->assignment?->status ?? 'unassigned';
+
+        return [
+            'id' => $item->order?->order_number ?? 'Item '.$item->id,
+            'order_item_id' => $item->id,
+            'customer' => $item->order?->customer?->name ?? 'Guest checkout',
+            'customer_email' => $item->order?->customer?->email ?? '',
+            'service' => $item->item_name,
+            'website' => $item->website?->domain ?? 'No publisher selected',
+            'domain_authority' => $item->website?->domain_authority ?? '—',
+            'domain_rating' => $item->website?->domain_rating ?? '—',
+            'traffic' => $item->website?->monthly_traffic !== null ? number_format((int) $item->website->monthly_traffic) : '—',
+            'niche' => $item->website?->niche ?? '—',
+            'target_url' => $item->target_url,
+            'anchor_text' => $item->anchor_text,
+            'article_topic' => $item->article_topic,
+            'assigned_staff_id' => $item->assignment?->staff_id,
+            'assigned_staff' => $item->assignment?->staff?->name ?? 'Unassigned',
+            'assigned_by' => $item->assignment?->assignedBy?->name,
+            'status' => $status,
+            'status_label' => match ($status) {
+                'in_progress' => 'In Progress',
+                'assigned' => 'Assigned',
+                'published' => 'Published / Ready for approval',
+                'completed' => 'Approved by customer',
+                'reassigned' => 'Reassigned',
+                default => 'Needs assignment',
+            },
+            'due_date' => $item->order?->created_at?->addDays(7)->format('M d, Y') ?? '—',
+            'notes' => $item->assignment?->notes,
+            'published_url' => $item->project?->published_url,
+            'verification_status' => $item->project?->verification_status,
+        ];
+    }
+
+    private function fulfillmentUser(Request $request): User
     {
         $user = $request->user();
-        abort_if($user === null, 403);
-
-        $baseQuery = $user->assignedOrders();
-
-        if ($request->filled('assignment_id')) {
-            $assignment = (clone $baseQuery)->whereKey($request->integer('assignment_id'))->first();
-            if ($assignment) {
-                return $assignment;
-            }
+        if ($user === null) {
+            throw new HttpResponseException(redirect()->guest(route('seo.login')));
         }
 
-        if ($request->filled('order_item_id')) {
-            $assignment = (clone $baseQuery)->where('order_item_id', $request->integer('order_item_id'))->first();
-            if ($assignment) {
-                return $assignment;
-            }
-        }
+        $user->loadMissing('role');
+        abort_unless(in_array($user->role?->role_name, ['Admin', 'Staff', 'SEO'], true), 403);
 
-        if (ctype_digit($orderId)) {
-            $numericId = (int) $orderId;
-            $assignment = (clone $baseQuery)
-                ->where(function ($query) use ($numericId): void {
-                    $query->whereKey($numericId)
-                        ->orWhere('order_item_id', $numericId);
-                })
-                ->first();
-
-            if ($assignment) {
-                return $assignment;
-            }
-        }
-
-        return (clone $baseQuery)
-            ->whereHas('orderItem.order', fn ($query) => $query->where('order_number', $orderId))
-            ->firstOrFail();
+        return $user;
     }
 }

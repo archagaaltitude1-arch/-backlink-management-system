@@ -25,7 +25,7 @@ class MergeIntegrationTest extends TestCase
         $this->assertDatabaseCount('websites', 46);
         $this->assertDatabaseCount('seo_metrics', 46);
         $this->assertDatabaseCount('users', 11);
-        $this->assertDatabaseCount('orders', 3);
+        $this->assertDatabaseCount('orders', 8);
         $this->assertDatabaseCount('wallets', 1);
         $customer = User::query()->where('email', 'customer@example.test')->firstOrFail();
         $this->assertSame('Customer', $customer->role->role_name);

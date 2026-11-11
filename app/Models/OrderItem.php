@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class OrderItem extends Model
 {
@@ -30,8 +30,13 @@ class OrderItem extends Model
         return $this->belongsTo(Service::class);
     }
 
-    public function assignments(): HasMany
+    public function assignment(): HasOne
     {
-        return $this->hasMany(OrderAssignment::class, 'order_item_id');
+        return $this->hasOne(OrderAssignment::class);
+    }
+
+    public function project(): HasOne
+    {
+        return $this->hasOne(CustomerProject::class);
     }
 }
