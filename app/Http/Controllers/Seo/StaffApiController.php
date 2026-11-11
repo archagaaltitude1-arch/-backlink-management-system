@@ -4,10 +4,8 @@ namespace App\Http\Controllers\Seo;
 
 use App\Http\Controllers\Controller;
 use App\Models\OrderAssignment;
-use App\Models\StaffProfile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
 class StaffApiController extends Controller
@@ -15,37 +13,23 @@ class StaffApiController extends Controller
     /**
      * GET /api/staff/dashboard
      */
-    public function dashboard(): JsonResponse
+    public function dashboard(Request $request): JsonResponse
     {
+        $user = $request->user();
+        $orders = $this->staffOrders($request);
+
         return response()->json([
             'status' => 'success',
-            'staff' => 'Raweesha Lakruwan',
+            'staff' => $user?->name ?? 'SEO Staff',
             'role' => 'SEO Staff Dashboard & Backlink Verification',
             'stats' => [
-                'total_assigned' => 4,
-                'in_progress' => 1,
-                'pending_review' => 1,
-                'published_ready_for_verify' => 1,
-                'completed' => 1,
+                'total_assigned' => count($orders),
+                'in_progress' => count(array_filter($orders, fn (array $o) => $o['status'] === 'in_progress')),
+                'pending_review' => count(array_filter($orders, fn (array $o) => in_array($o['status'], ['assigned', 'pending'], true))),
+                'published_ready_for_verify' => count(array_filter($orders, fn (array $o) => $o['status'] === 'published')),
+                'completed' => count(array_filter($orders, fn (array $o) => $o['status'] === 'completed')),
             ],
-            'recent_assigned_orders' => [
-                [
-                    'order_id' => 'ORD-10480',
-                    'order_item_id' => 101,
-                    'website' => 'techinsider-journal.com',
-                    'anchor_text' => 'neural network architectures',
-                    'target_url' => 'https://innovate-ai.io/deep-learning-insights',
-                    'status' => 'in_progress',
-                ],
-                [
-                    'order_id' => 'ORD-10481',
-                    'order_item_id' => 102,
-                    'website' => 'healthwire-daily.org',
-                    'anchor_text' => 'natural organic vitamins',
-                    'target_url' => 'https://purevitamins.store/organic-supplements',
-                    'status' => 'assigned',
-                ],
-            ],
+            'recent_assigned_orders' => array_slice($orders, 0, 5),
         ]);
     }
 
@@ -56,38 +40,32 @@ class StaffApiController extends Controller
     {
         return response()->json([
             'status' => 'success',
-            'orders' => [
-                [
-                    'id' => 'ORD-10480',
-                    'order_item_id' => 101,
-                    'customer' => 'Sofia Alvarez',
-                    'website' => 'techinsider-journal.com',
-                    'service' => 'Link Insertion',
-                    'anchor_text' => 'neural network architectures',
-                    'target_url' => 'https://innovate-ai.io/deep-learning-insights',
-                    'status' => 'in_progress',
-                ],
-                [
-                    'id' => 'ORD-10481',
-                    'order_item_id' => 102,
-                    'customer' => 'James Okonkwo',
-                    'website' => 'healthwire-daily.org',
-                    'service' => 'Niche Edit',
-                    'anchor_text' => 'natural organic vitamins',
-                    'target_url' => 'https://purevitamins.store/organic-supplements',
-                    'status' => 'assigned',
-                ],
-                [
-                    'id' => 'ORD-10482',
-                    'order_item_id' => 103,
-                    'customer' => 'Priya Fernando',
-                    'website' => 'fintech-chronicle.com',
-                    'service' => 'Guest Post',
-                    'anchor_text' => 'instant global payment rails',
-                    'target_url' => 'https://securepay-solutions.com/cross-border-gateway',
-                    'status' => 'published',
-                ],
-            ],
+            'orders' => $this->staffOrders($request),
         ]);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function staffOrders(Request $request): array
+    {
+        $user = $request->user();
+
+        if (! $user || ! Schema::hasTable('order_assignments')) {
+            return [];
+        }
+
+        return $user->assignedOrders()
+            ->with([
+                'orderItem.order.customer',
+                'orderItem.website.seoMetric',
+                'orderItem.service',
+                'assignedBy',
+                'staff',
+            ])
+            ->latest()
+            ->get()
+            ->map(fn (OrderAssignment $assignment): array => $assignment->toPortalArray())
+            ->all();
     }
 }

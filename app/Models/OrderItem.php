@@ -25,6 +25,11 @@ class OrderItem extends Model
         return $this->belongsTo(Website::class);
     }
 
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class);
+    }
+
     public function assignment(): HasOne
     {
         return $this->hasOne(OrderAssignment::class);
