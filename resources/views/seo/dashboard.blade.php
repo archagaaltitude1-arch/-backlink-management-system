@@ -19,7 +19,7 @@
                     SEO Staff Dashboard
                 </h1>
                 <p class="mt-1.5 max-w-2xl text-sm text-white/70">
-                    Welcome back, <strong class="text-white">{{ $currentStaff }}</strong>. Manage assigned backlink orders, review target URLs & anchor texts, advance content workflows, and perform link verification.
+                    Welcome back, <strong class="text-white">{{ $currentStaff }}</strong>. Review your assigned backlink orders, inspect target URLs, anchor texts, and customer requirements, and update your assigned work status.
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
@@ -27,7 +27,7 @@
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
-                    Manage Assigned Orders
+                    Assigned Orders
                 </a>
                 <a href="{{ route('seo.profile') }}" class="btn-inverse text-sm">
                     Staff Profile
@@ -63,7 +63,7 @@
                     </svg>
                 </div>
             </div>
-            <p class="mt-3 text-xs text-navy/55">Active customer order items</p>
+            <p class="mt-3 text-xs text-navy/55">Orders assigned to you</p>
         </div>
 
         <div class="panel p-5 relative overflow-hidden border-t-4 border-t-sky-500">
@@ -93,7 +93,7 @@
                     </svg>
                 </div>
             </div>
-            <p class="mt-3 text-xs text-navy/55">Articles & anchor targets</p>
+            <p class="mt-3 text-xs text-navy/55">Awaiting fulfillment start</p>
         </div>
 
         <div class="panel p-5 relative overflow-hidden border-t-4 border-t-emerald-500">
@@ -108,42 +108,41 @@
                     </svg>
                 </div>
             </div>
-            <p class="mt-3 text-xs text-navy/55">Backlinks confirmed & reports ready</p>
+            <p class="mt-3 text-xs text-navy/55">Backlinks confirmed & completed</p>
         </div>
     </div>
 
-    <!-- Main Grid: Assigned Orders & Staff Workload -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Assigned Orders Table (2 Cols) -->
-        <div class="panel lg:col-span-2 overflow-hidden">
-            <div class="flex items-center justify-between p-5 border-b border-navy/10 bg-canvas/30">
-                <div>
-                    <h2 class="text-base font-bold text-navy">Assigned Order Queue</h2>
-                    <p class="text-xs text-navy/60 mt-0.5">Orders retrieved for SEO team fulfillment</p>
-                </div>
-                <a href="{{ route('seo.assigned-orders') }}" class="text-xs font-semibold text-brand hover:underline">
-                    View All Orders &rarr;
-                </a>
+    <!-- Assigned Orders Section -->
+    <div class="panel overflow-hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-5 border-b border-navy/10 bg-canvas/30">
+            <div>
+                <h2 class="text-base font-bold text-navy">Assigned Orders</h2>
+                <p class="text-xs text-navy/60 mt-0.5">Orders assigned to you with target URLs, anchor texts, and customer requirements</p>
             </div>
+            <a href="{{ route('seo.assigned-orders') }}" class="text-xs font-semibold text-brand hover:underline">
+                View Detailed Order List &rarr;
+            </a>
+        </div>
 
+        @if (count($orders) > 0)
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="border-b border-navy/10 bg-canvas/50 text-[11px] font-semibold text-navy/60 uppercase tracking-wider">
                             <th class="py-3 px-4">Order / Customer</th>
                             <th class="py-3 px-4">Publisher Website</th>
-                            <th class="py-3 px-4">Target URL & Anchor</th>
-                            <th class="py-3 px-4">Assigned To</th>
+                            <th class="py-3 px-4">Target URL & Anchor Text</th>
+                            <th class="py-3 px-4">Customer Requirements</th>
                             <th class="py-3 px-4">Status</th>
-                            <th class="py-3 px-4 text-right">Action</th>
+                            <th class="py-3 px-4 text-right">Update Work Status</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-navy/10">
                         @foreach ($orders as $order)
-                            <tr class="hover:bg-canvas/40 transition">
+                            <tr class="hover:bg-canvas/40 transition align-top">
                                 <td class="py-3.5 px-4">
                                     <div class="font-bold text-navy">{{ $order['id'] }}</div>
-                                    <div class="text-xs text-navy/60">{{ $order['customer'] }}</div>
+                                    <div class="text-xs text-navy/70">{{ $order['customer'] }}</div>
                                     <span class="inline-block mt-1 text-[11px] font-medium text-navy/50">{{ $order['service'] }}</span>
                                 </td>
                                 <td class="py-3.5 px-4">
@@ -152,19 +151,36 @@
                                         <span class="rounded bg-navy/5 px-1.5 py-0.5 text-navy font-mono font-medium">DA {{ $order['domain_authority'] }}</span>
                                         <span class="rounded bg-brand/10 px-1.5 py-0.5 text-brand font-mono font-medium">DR {{ $order['domain_rating'] }}</span>
                                     </div>
+                                    <div class="text-[11px] text-navy/50 mt-1">{{ $order['niche'] }}</div>
                                 </td>
                                 <td class="py-3.5 px-4 max-w-xs">
-                                    <div class="font-medium text-navy text-xs truncate" title="{{ $order['target_url'] }}">
+                                    <a
+                                        href="{{ $order['target_url'] }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="font-medium text-navy hover:text-brand text-xs break-all block"
+                                        title="{{ $order['target_url'] }}"
+                                    >
                                         {{ $order['target_url'] }}
-                                    </div>
-                                    <div class="mt-1 flex items-center gap-1.5 text-xs text-navy/70">
+                                    </a>
+                                    <div class="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-navy/70">
                                         <span class="text-navy/40">Anchor:</span>
                                         <span class="font-semibold text-brand bg-brand/5 px-1.5 py-0.5 rounded">{{ $order['anchor_text'] }}</span>
                                     </div>
                                 </td>
-                                <td class="py-3.5 px-4">
-                                    <span class="text-xs font-medium text-navy block">{{ $order['assigned_staff'] }}</span>
-                                    <span class="text-[11px] text-navy/50">By {{ $order['assigned_by'] ?? 'Pending' }}</span>
+                                <td class="py-3.5 px-4 max-w-sm">
+                                    <div class="text-xs text-navy">
+                                        <span class="font-semibold">Topic:</span> {{ $order['article_topic'] }}
+                                    </div>
+                                    <div class="mt-1 text-xs text-navy/70">
+                                        <span class="font-semibold text-navy/80">Requirements:</span>
+                                        {{ $order['requirements'] ?: 'No specific customer requirements provided.' }}
+                                    </div>
+                                    @if (! empty($order['notes']))
+                                        <div class="mt-1 text-[11px] text-navy/55 italic">
+                                            Notes: {{ $order['notes'] }}
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="py-3.5 px-4">
                                     @php
@@ -181,98 +197,40 @@
                                     </span>
                                 </td>
                                 <td class="py-3.5 px-4 text-right">
-                                    <a
-                                        href="{{ route('seo.assigned-orders', ['search' => $order['id']]) }}"
-                                        class="inline-flex items-center gap-1 text-xs font-semibold text-brand hover:text-brand-dark"
-                                    >
-                                        Process &rarr;
-                                    </a>
+                                    <form action="{{ route('seo.orders.status', ['id' => $order['assignment_id'] ?? $order['id']]) }}" method="POST" class="inline-flex items-center gap-2">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="hidden" name="assignment_id" value="{{ $order['assignment_id'] }}">
+                                        <input type="hidden" name="order_item_id" value="{{ $order['order_item_id'] }}">
+                                        <select name="status" aria-label="Work status for {{ $order['id'] }}" class="rounded-lg border border-navy/20 bg-white px-2.5 py-1.5 text-xs text-navy focus:border-brand focus:outline-none">
+                                            <option value="assigned" @selected($order['status'] === 'assigned')>Assigned</option>
+                                            <option value="in_progress" @selected($order['status'] === 'in_progress')>In Progress</option>
+                                            <option value="published" @selected($order['status'] === 'published')>Published</option>
+                                            <option value="completed" @selected($order['status'] === 'completed')>Completed</option>
+                                        </select>
+                                        <button type="submit" class="btn-primary text-xs px-3 py-1.5">
+                                            Update
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
-        </div>
-
-        <!-- Sidebar Column: Team Allocation & Quick Assignment -->
-        <div class="space-y-6">
-            <!-- Order Assignment Tool -->
-            <div class="panel p-5 space-y-4">
-                <div class="flex items-center justify-between pb-3 border-b border-navy/10">
-                    <div>
-                        <h3 class="text-sm font-bold text-navy">Order Assignment</h3>
-                        <p class="text-xs text-navy/60">Assign customer orders to SEO staff</p>
-                    </div>
-                    <span class="badge bg-brand/10 text-brand">Task #3</span>
+        @else
+            <div class="p-12 text-center">
+                <div class="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-canvas text-navy/40">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
                 </div>
-
-                <form action="{{ route('seo.orders.assign', ['id' => 'ORD-10483']) }}" method="POST" class="space-y-3">
-                    @csrf
-                    <div>
-                        <label class="block text-xs font-semibold text-navy">Select Order</label>
-                        <select name="order_item_id" class="mt-1 block w-full rounded-xl border border-navy/20 bg-white px-3 py-2 text-xs text-navy focus:border-brand focus:outline-none">
-                            <option value="105">ORD-10483 · automotive-future.io (Unassigned)</option>
-                            <option value="102">ORD-10481 · healthwire-daily.org</option>
-                            <option value="101">ORD-10480 · techinsider-journal.com</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-navy">Assign to Staff Member</label>
-                        <select name="staff_id" class="mt-1 block w-full rounded-xl border border-navy/20 bg-white px-3 py-2 text-xs text-navy focus:border-brand focus:outline-none">
-                            @foreach ($staffMembers as $staff)
-                                <option value="{{ $staff['id'] }}">{{ $staff['name'] }} ({{ $staff['active_orders'] }} active)</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-navy">Assignment Notes / Strategy</label>
-                        <textarea name="notes" rows="2" placeholder="e.g. Prioritize anchor placement in intro section" class="mt-1 block w-full rounded-xl border border-navy/20 bg-white p-2.5 text-xs text-navy placeholder:text-navy/40 focus:border-brand focus:outline-none"></textarea>
-                    </div>
-
-                    <button type="submit" class="btn-primary w-full text-xs py-2.5 font-semibold">
-                        Assign Order to Staff
-                    </button>
-                </form>
+                <h3 class="mt-4 text-base font-bold text-navy">No Assigned Orders Yet</h3>
+                <p class="mt-1 text-xs text-navy/60 max-w-md mx-auto">
+                    Orders assigned to your account will appear here with their target URLs, anchor texts, and customer requirements.
+                </p>
             </div>
-
-            <!-- SEO Staff Team Workload -->
-            <div class="panel p-5 space-y-4">
-                <div class="flex items-center justify-between pb-3 border-b border-navy/10">
-                    <div>
-                        <h3 class="text-sm font-bold text-navy">SEO Team Workload</h3>
-                        <p class="text-xs text-navy/60">Staff management & order distribution</p>
-                    </div>
-                </div>
-
-                <div class="space-y-3">
-                    @foreach ($staffMembers as $staff)
-                        <div class="flex items-center justify-between p-3 rounded-xl bg-canvas/40 border border-navy/5">
-                            <div class="flex items-center gap-3">
-                                <span class="grid h-8 w-8 place-items-center rounded-lg bg-navy text-xs font-bold text-white">
-                                    {{ strtoupper(substr($staff['name'], 0, 1)) }}
-                                </span>
-                                <div>
-                                    <p class="text-xs font-semibold text-navy">{{ $staff['name'] }}</p>
-                                    <p class="text-[11px] text-navy/55">{{ $staff['role'] }}</p>
-                                </div>
-                            </div>
-                            <span class="badge bg-white ring-1 ring-navy/10 text-xs font-bold text-brand">
-                                {{ $staff['active_orders'] }} orders
-                            </span>
-                        </div>
-                    @endforeach
-                </div>
-
-                <div class="pt-2 text-center">
-                    <a href="{{ route('seo.profile') }}" class="text-xs font-medium text-navy/60 hover:text-brand">
-                        View & Edit Your Profile &rarr;
-                    </a>
-                </div>
-            </div>
-        </div>
+        @endif
     </div>
 </div>
 @endsection

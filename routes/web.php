@@ -228,11 +228,10 @@ Route::get('/seo/profile', [StaffAuthController::class, 'profile'])->name('seo.p
 Route::put('/seo/profile', [StaffAuthController::class, 'updateProfile'])->name('seo.profile.update');
 Route::put('/seo/profile/password', [StaffAuthController::class, 'updatePassword'])->name('seo.profile.password');
 
-// Staff Dashboard & Order Management
+// Staff Dashboard & Assigned Order Management
 Route::get('/seo/dashboard', [SeoDashboardController::class, 'index'])->name('seo.dashboard');
 Route::get('/seo/assigned-orders', [StaffOrderController::class, 'index'])->name('seo.assigned-orders');
-Route::post('/seo/orders/{id}/assign', [StaffOrderController::class, 'assign'])->name('seo.orders.assign');
-Route::put('/seo/orders/{id}/status', [StaffOrderController::class, 'updateStatus'])->name('seo.orders.status');
+Route::match(['put', 'patch'], '/seo/orders/{id}/status', [StaffOrderController::class, 'updateStatus'])->name('seo.orders.status');
 
 // SEO Operations Views
 Route::view('/seo/articles', 'seo.articles')->name('seo.articles');

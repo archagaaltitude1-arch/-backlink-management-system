@@ -1,6 +1,6 @@
 @extends('layouts.seo')
 
-@section('title', 'Manage Assigned Staff Orders')
+@section('title', 'Assigned Orders')
 
 @section('content')
 <div class="space-y-6">
@@ -8,10 +8,10 @@
     <div class="panel p-6 sm:p-8 border-l-4 border-l-brand">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <p class="text-xs font-semibold tracking-wider text-brand uppercase">Staff Management & Fulfillment</p>
-                <h1 class="mt-1 text-2xl font-bold text-navy">Assigned Orders Management</h1>
+                <p class="text-xs font-semibold tracking-wider text-brand uppercase">Order Fulfillment & Verification</p>
+                <h1 class="mt-1 text-2xl font-bold text-navy">Assigned Orders</h1>
                 <p class="mt-1.5 text-sm text-navy/70">
-                    Review target URLs, anchor texts, customer requirements, update order status, and assign tasks to SEO staff.
+                    Review target URLs, anchor texts, and customer requirements, and update the status of your assigned orders.
                 </p>
             </div>
             <div class="flex items-center gap-3">
@@ -39,12 +39,11 @@
         <div class="flex flex-wrap items-center gap-1.5">
             @php
                 $tabs = [
-                    'all' => 'All Orders',
+                    'all' => 'All Assigned',
                     'assigned' => 'Assigned',
                     'in_progress' => 'In Progress',
                     'published' => 'Published / Ready',
                     'completed' => 'Completed',
-                    'unassigned' => 'Unassigned',
                 ];
             @endphp
             @foreach ($tabs as $key => $label)
@@ -152,54 +151,51 @@
                             </div>
                         </div>
 
-                        <!-- Article Topic & Notes -->
-                        <div class="text-xs text-navy/70 space-y-1">
+                        <!-- Article Topic & Customer Requirements -->
+                        <div class="text-xs text-navy/70 space-y-1.5">
                             <p><strong class="text-navy">Article Topic:</strong> {{ $order['article_topic'] }}</p>
+                            <p>
+                                <strong class="text-navy">Customer Requirements:</strong>
+                                <span>{{ $order['requirements'] ?: 'No additional customer requirements specified.' }}</span>
+                            </p>
                             @if ($order['notes'])
-                                <p><strong class="text-navy">Staff Notes:</strong> <span class="italic text-navy/80">{{ $order['notes'] }}</span></p>
+                                <p><strong class="text-navy">Work Notes:</strong> <span class="italic text-navy/80">{{ $order['notes'] }}</span></p>
                             @endif
                             <p class="text-[11px] text-navy/50 pt-1">
                                 Customer: <strong class="text-navy">{{ $order['customer'] }}</strong> ({{ $order['customer_email'] }}) ·
-                                Assigned Staff: <strong class="text-brand">{{ $order['assigned_staff'] }}</strong> (via {{ $order['assigned_by'] ?? 'Unassigned' }})
+                                Assigned By: <strong class="text-navy">{{ $order['assigned_by'] }}</strong>
                             </p>
                         </div>
                     </div>
 
-                    <!-- Right: Staff Management Actions (Order Assignment & Status update) -->
-                    <div class="lg:w-80 shrink-0 space-y-3 pt-3 lg:pt-0 lg:border-l lg:border-navy/10 lg:pl-6">
-                        <!-- Quick Re-Assign form -->
-                        <div class="rounded-xl bg-canvas/40 p-3.5 border border-navy/10">
-                            <p class="text-xs font-bold text-navy mb-2">Assign / Reassign Staff</p>
-                            <form action="{{ route('seo.orders.assign', ['id' => $order['id']]) }}" method="POST" class="space-y-2">
-                                @csrf
-                                <input type="hidden" name="order_item_id" value="{{ $order['order_item_id'] }}">
-                                <select name="staff_id" class="block w-full rounded-lg border border-navy/20 bg-white px-2.5 py-1.5 text-xs text-navy focus:border-brand focus:outline-none">
-                                    @foreach ($staffList as $staff)
-                                        <option value="{{ $staff['id'] }}" @selected($order['assigned_staff_id'] == $staff['id'])>
-                                            {{ $staff['name'] }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <button type="submit" class="btn-navy w-full text-xs py-1.5">
-                                    Update Assignment
-                                </button>
-                            </form>
-                        </div>
-
-                        <!-- Update Status Form -->
-                        <div class="rounded-xl bg-canvas/40 p-3.5 border border-navy/10">
-                            <p class="text-xs font-bold text-navy mb-2">Update Workflow Status</p>
-                            <form action="{{ route('seo.orders.status', ['id' => $order['id']]) }}" method="POST" class="space-y-2">
+                    <!-- Right: Update Assigned Work Status -->
+                    <div class="lg:w-80 shrink-0 pt-3 lg:pt-0 lg:border-l lg:border-navy/10 lg:pl-6">
+                        <div class="rounded-xl bg-canvas/40 p-4 border border-navy/10">
+                            <p class="text-xs font-bold text-navy mb-2">Update Work Status</p>
+                            <form action="{{ route('seo.orders.status', ['id' => $order['assignment_id'] ?? $order['id']]) }}" method="POST" class="space-y-3">
                                 @csrf
                                 @method('PUT')
+                                <input type="hidden" name="assignment_id" value="{{ $order['assignment_id'] }}">
                                 <input type="hidden" name="order_item_id" value="{{ $order['order_item_id'] }}">
-                                <select name="status" class="block w-full rounded-lg border border-navy/20 bg-white px-2.5 py-1.5 text-xs text-navy focus:border-brand focus:outline-none">
-                                    <option value="assigned" @selected($order['status'] === 'assigned')>Assigned</option>
-                                    <option value="in_progress" @selected($order['status'] === 'in_progress')>In Progress</option>
-                                    <option value="published" @selected($order['status'] === 'published')>Published / Ready for Verification</option>
-                                    <option value="completed" @selected($order['status'] === 'completed')>Completed</option>
-                                </select>
-                                <button type="submit" class="btn-primary w-full text-xs py-1.5">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-navy/70 mb-1">Status</label>
+                                    <select name="status" class="block w-full rounded-lg border border-navy/20 bg-white px-2.5 py-1.5 text-xs text-navy focus:border-brand focus:outline-none">
+                                        <option value="assigned" @selected($order['status'] === 'assigned')>Assigned</option>
+                                        <option value="in_progress" @selected($order['status'] === 'in_progress')>In Progress</option>
+                                        <option value="published" @selected($order['status'] === 'published')>Published / Ready for Verification</option>
+                                        <option value="completed" @selected($order['status'] === 'completed')>Completed</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-navy/70 mb-1">Work Notes (Optional)</label>
+                                    <textarea
+                                        name="notes"
+                                        rows="2"
+                                        placeholder="Add fulfillment progress or placement notes..."
+                                        class="block w-full rounded-lg border border-navy/20 bg-white p-2 text-xs text-navy placeholder:text-navy/40 focus:border-brand focus:outline-none"
+                                    >{{ $order['notes'] }}</textarea>
+                                </div>
+                                <button type="submit" class="btn-primary w-full text-xs py-2">
                                     Save Status
                                 </button>
                             </form>
@@ -214,8 +210,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                     </svg>
                 </div>
-                <h3 class="mt-4 text-base font-bold text-navy">No Orders Found</h3>
-                <p class="mt-1 text-xs text-navy/60">No orders match the current status filter or search query.</p>
+                <h3 class="mt-4 text-base font-bold text-navy">No Assigned Orders Found</h3>
+                <p class="mt-1 text-xs text-navy/60">No orders assigned to your account match the current filter or search query.</p>
                 <a href="{{ route('seo.assigned-orders') }}" class="btn-primary mt-4 inline-flex text-xs">
                     Reset Filter
                 </a>
