@@ -45,6 +45,18 @@
         @apply inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-medium text-white transition hover:bg-navy-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
     }
 
+    .btn-outline {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-navy ring-1 ring-navy/15 transition hover:bg-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+    }
+
+    .btn-sm {
+        @apply px-3! py-2! text-xs!;
+    }
+
+    .btn-lg {
+        @apply px-5! py-3! text-base!;
+    }
+
     .badge {
         @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold;
     }

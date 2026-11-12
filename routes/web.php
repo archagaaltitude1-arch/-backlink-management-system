@@ -3,7 +3,15 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    if (auth()->check()) {
+        $user = auth()->user();
+
+        return redirect(method_exists($user, 'dashboardUrl')
+            ? $user->dashboardUrl()
+            : route('customer.dashboard'));
+    }
+
+    return app(\App\Http\Controllers\Customer\PageController::class)->home();
 });
 
 Route::view('/admin/dashboard', 'admin.dashboard')->name('admin.dashboard');
@@ -29,3 +37,5 @@ Route::view('/seo/assigned-orders', 'seo.assigned-orders')->name('seo.assigned-o
 Route::view('/seo/articles', 'seo.articles')->name('seo.articles');
 Route::view('/seo/submissions', 'seo.submissions')->name('seo.submissions');
 Route::view('/seo/completed-orders', 'seo.completed-orders')->name('seo.completed-orders');
+
+require __DIR__.'/marketplace.php';
