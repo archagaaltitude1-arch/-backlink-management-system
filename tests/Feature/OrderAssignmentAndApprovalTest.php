@@ -89,8 +89,18 @@ class OrderAssignmentAndApprovalTest extends TestCase
         $customer = $this->customer('Morgan <script>alert(1)</script>');
         $item = $this->item($customer, 'BM-ASSIGN-0001');
         $staff = $this->staff();
+        $item->order->update(['order_status' => 'awaiting_approval']);
 
         $this->actingAs($this->admin())
+            ->from(route('admin.orders.show', $item->order))
+            ->post(route('admin.orders.assign', [$item->order, $item]), ['staff_id' => $staff->id])
+            ->assertSessionHasErrors('staff_id');
+        $this->assertDatabaseMissing('order_assignments', ['order_item_id' => $item->id]);
+
+        $this->post(route('admin.orders.approve', $item->order))->assertRedirect();
+        $this->assertDatabaseHas('orders', ['id' => $item->order_id, 'order_status' => 'processing']);
+
+        $this
             ->from(route('admin.orders.show', $item->order))
             ->post(route('admin.orders.assign', [$item->order, $item]), ['staff_id' => $staff->id])
             ->assertRedirect(route('admin.orders.show', $item->order))

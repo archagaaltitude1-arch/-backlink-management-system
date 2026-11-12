@@ -50,7 +50,7 @@
                     <select id="order_status" name="order_status" class="mt-2 w-full rounded-xl border border-navy/15 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/30">
                         <option value="">All</option>
                         @foreach ($orderStatuses as $status)
-                            <option value="{{ $status }}" @selected($orderStatus === $status)>{{ ucfirst($status) }}</option>
+                            <option value="{{ $status }}" @selected($orderStatus === $status)>{{ str($status)->headline() }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -75,7 +75,7 @@
                                 <p class="text-xs text-navy/50">{{ $order->customer?->email }}</p>
                             </div>
                             <div class="text-left sm:text-right">
-                                <span class="badge {{ $statusStyles[$order->order_status] ?? 'bg-canvas text-navy' }}">{{ ucfirst($order->order_status) }}</span>
+                                <span class="badge {{ $statusStyles[$order->order_status] ?? 'bg-canvas text-navy' }}">{{ str($order->order_status)->headline() }}</span>
                                 <p class="mt-2 text-xs text-navy/50">{{ $order->created_at?->format('M j, Y') }}</p>
                             </div>
                         </div>
@@ -91,6 +91,7 @@
                                     default => 'Needs SEO staff',
                                 };
                             @endphp
+                            @if ($order->payment_status === 'paid' && in_array($order->order_status, ['processing', 'completed'], true))
                             <form method="POST" action="{{ route('admin.orders.assign', [$order, $item]) }}" class="mt-4 grid gap-3 rounded-xl border border-navy/10 bg-canvas/40 p-4 lg:grid-cols-[minmax(0,1fr)_16rem_auto] lg:items-end">
                                 @csrf
                                 <div class="min-w-0">
@@ -111,6 +112,7 @@
                                 </div>
                                 <button type="submit" class="btn-navy" @disabled($staff->isEmpty())>{{ $assignee ? 'Reassign' : 'Assign to SEO staff' }}</button>
                             </form>
+                            @endif
                         @empty
                             <p class="mt-4 text-sm text-navy/60">This customer order has no placement yet.</p>
                         @endforelse

@@ -3,5 +3,43 @@
 @section('title', 'Payment')
 
 @section('content')
-    <div class="mx-auto max-w-3xl space-y-6"><div><p class="text-xs font-semibold tracking-wider text-brand uppercase">Checkout · Payment</p><h1 class="mt-2 text-3xl font-semibold">Complete payment</h1></div><div class="rounded-xl border border-orange-300 bg-orange-50 p-4 text-sm text-orange-950"><strong>Demo payment gateway.</strong> No real payment method or card details are used. Select a simulation result below.</div>@if ($errors->any())<div class="rounded-xl bg-red-50 p-4 text-sm text-red-800">{{ $errors->first() }}</div>@endif<section class="panel p-6"><div class="flex justify-between gap-4"><div><p class="text-sm text-navy/55">Order</p><p class="mt-1 font-semibold">{{ $order->order_number }}</p></div><div class="text-right"><p class="text-sm text-navy/55">Amount due</p><p class="mt-1 text-2xl font-semibold">${{ number_format($order->total_amount, 2) }}</p></div></div><form method="POST" action="{{ route('orders.payment.process', $order) }}" class="mt-6 space-y-4">@csrf<label class="block text-sm font-medium" for="demo_result">Simulation result</label><select id="demo_result" name="demo_result" class="w-full rounded-lg border border-navy/15 px-3 py-2.5 text-sm"><option value="success">Successful payment</option><option value="declined">Declined payment</option></select><input type="hidden" name="payment_method" value="demo_card"><button class="btn-primary w-full" type="submit">Pay ${{ number_format($order->total_amount, 2) }}</button></form></section></div>
+    @php
+        $demo = \App\Http\StripeCheckout::usesDemo();
+        $available = $demo || \App\Http\StripeCheckout::isConfigured();
+    @endphp
+    <div class="mx-auto max-w-3xl space-y-6">
+        <h1 class="text-3xl font-semibold">Complete payment</h1>
+        @if ($errors->any())
+            <p class="rounded-xl bg-red-50 p-4 text-sm text-red-800" role="alert">{{ $errors->first() }}</p>
+        @endif
+        <section class="panel space-y-5 p-6">
+            <div class="flex justify-between gap-4">
+                <div>
+                    <p class="text-sm text-navy/55">Order</p>
+                    <p class="font-semibold">{{ $order->order_number }}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-navy/55">Amount due</p>
+                    <p class="text-2xl font-semibold">${{ number_format($order->total_amount, 2) }}</p>
+                </div>
+            </div>
+            @if ($available)
+                <form method="POST" action="{{ route('orders.payment.process', $order) }}" class="space-y-4">
+                    @csrf
+                    @if ($demo)
+                        <p class="text-sm text-navy/65">Demo payment. No money will be charged.</p>
+                        <label class="block text-sm font-medium" for="demo_result">Simulation result</label>
+                        <select id="demo_result" name="demo_result" class="w-full rounded-lg border border-navy/15 px-3 py-2.5 text-sm">
+                            <option value="success">Successful payment</option>
+                            <option value="declined">Declined payment</option>
+                        </select>
+                        <input type="hidden" name="payment_method" value="demo_card">
+                    @endif
+                    <button class="btn-primary w-full" type="submit">{{ $demo ? 'Simulate payment' : 'Continue to Stripe' }}</button>
+                </form>
+            @else
+                <p class="text-sm text-navy/65" role="status">Stripe checkout is currently unavailable.</p>
+            @endif
+        </section>
+    </div>
 @endsection

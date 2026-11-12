@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\StripeCheckout;
 use App\Models\CreditPackage;
 use App\Models\CreditReservation;
 use App\Models\CreditTransaction;
-use App\Models\CustomerProject;
-use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
@@ -34,15 +33,21 @@ class PaymentController extends Controller
         }
 
         if ($request->expectsJson()) {
-            return response()->json(['data' => ['order_number' => $order->order_number, 'amount' => $order->total_amount, 'gateway' => 'demo']]);
+            return response()->json(['data' => ['order_number' => $order->order_number, 'amount' => $order->total_amount, 'gateway' => StripeCheckout::usesDemo() ? 'demo' : 'stripe']]);
         }
 
         return view('orders.payment', compact('order'));
     }
 
-    public function payOrder(Request $request, Order $order): RedirectResponse|JsonResponse
+    public function payOrder(Request $request, Order $order, StripeCheckout $checkout): RedirectResponse|JsonResponse
     {
         abort_unless($order->customer_id === $request->user()->id, 404);
+        if (! StripeCheckout::usesDemo()) {
+            $url = $checkout->start($request->user(), $order);
+
+            return $this->stripeRedirect($request, $url, route('orders.show', $order));
+        }
+
         $data = $request->validate([
             'payment_method' => ['required', 'in:demo_card'],
             'demo_result' => ['required', 'in:success,declined'],
@@ -55,6 +60,10 @@ class PaymentController extends Controller
             }
 
             $isSuccessful = $data['demo_result'] === 'success';
+            if ($isSuccessful) {
+                $lockedOrder->reservePaymentCoupon($request->user());
+            }
+
             $payment = Payment::create([
                 'customer_id' => $request->user()->id,
                 'order_id' => $lockedOrder->id,
@@ -67,34 +76,20 @@ class PaymentController extends Controller
                 'paid_at' => $isSuccessful ? now() : null,
             ]);
 
-            $lockedOrder->update([
-                'payment_status' => $isSuccessful ? 'paid' : 'failed',
-                'order_status' => $isSuccessful ? 'processing' : 'pending',
-            ]);
-
             if ($isSuccessful) {
-                Invoice::firstOrCreate(['order_id' => $lockedOrder->id], [
-                    'customer_id' => $request->user()->id,
-                    'invoice_number' => 'INV-'.now()->format('Ymd').'-'.Str::upper(Str::random(6)),
-                    'total_amount' => $lockedOrder->total_amount,
-                    'issued_at' => now(),
-                ]);
-
-                CustomerProject::firstOrCreate(['order_id' => $lockedOrder->id], [
-                    'customer_id' => $request->user()->id,
-                    'name' => 'Backlink project '.$lockedOrder->order_number,
-                    'status' => 'processing',
-                    'target_url' => $lockedOrder->items->first()?->target_url,
-                ]);
-            } elseif ($lockedOrder->coupon_code) {
-                $request->user()->couponUsages()->where('order_id', $lockedOrder->id)->delete();
+                $lockedOrder->confirmPayment();
+            } else {
+                $lockedOrder->update(['payment_status' => 'failed', 'order_status' => 'pending']);
+                if ($lockedOrder->coupon_code) {
+                    $request->user()->couponUsages()->where('order_id', $lockedOrder->id)->delete();
+                }
             }
 
             return $payment;
         });
 
         if ($payment->wasRecentlyCreated) {
-            $request->user()->notify(new OrderPlacedNotification($order->fresh(['items']), $payment));
+            rescue(fn () => $request->user()->notify(new OrderPlacedNotification($order->fresh(['rewardCoupon']), $payment)));
         }
 
         if ($request->expectsJson()) {
@@ -102,7 +97,7 @@ class PaymentController extends Controller
         }
 
         return redirect()->route('orders.show', $order)
-            ->with($payment->status === 'successful' ? 'success' : 'error', $payment->status === 'successful' ? 'Demo payment successful. Your order is processing.' : 'Demo payment declined. You can try again.');
+            ->with($payment->status === 'successful' ? 'success' : 'error', $payment->status === 'successful' ? 'Demo payment confirmed. Your order is awaiting admin approval.' : 'Demo payment declined. You can try again.');
     }
 
     public function history(Request $request): View|JsonResponse
@@ -116,9 +111,15 @@ class PaymentController extends Controller
         return view('customer.payment-history', compact('payments'));
     }
 
-    public function purchaseCredits(Request $request, CreditPackage $creditPackage): RedirectResponse|JsonResponse
+    public function purchaseCredits(Request $request, CreditPackage $creditPackage, StripeCheckout $checkout): RedirectResponse|JsonResponse
     {
         abort_unless($creditPackage->is_active, 404);
+
+        if (! StripeCheckout::usesDemo()) {
+            $url = $checkout->start($request->user(), $creditPackage);
+
+            return $this->stripeRedirect($request, $url, route('customer.wallet'));
+        }
 
         $payment = DB::transaction(function () use ($request, $creditPackage): Payment {
             $payment = Payment::create([
@@ -150,6 +151,15 @@ class PaymentController extends Controller
         }
 
         return redirect()->route('customer.wallet')->with('success', $creditPackage->credits.' credits added to your wallet.');
+    }
+
+    private function stripeRedirect(Request $request, ?string $url, string $fallback): JsonResponse|RedirectResponse
+    {
+        if ($request->expectsJson()) {
+            return response()->json(['data' => ['checkout_url' => $url, 'return_url' => $fallback]]);
+        }
+
+        return $url === null ? redirect()->to($fallback) : redirect()->away($url);
     }
 
     public function reserveCredits(Request $request): JsonResponse

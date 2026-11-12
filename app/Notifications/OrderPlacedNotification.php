@@ -29,12 +29,19 @@ class OrderPlacedNotification extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject('Order '.$this->order->order_number.' payment update')
+        $successful = $this->payment->status === 'successful';
+        $message = (new MailMessage)
+            ->subject('Order '.$this->order->order_number.($successful ? ' confirmation' : ' payment update'))
             ->greeting('Hello '.$notifiable->name.'!')
             ->line('Payment status: '.ucfirst($this->payment->status).'.')
-            ->line('Order total: $'.number_format((float) $this->payment->amount, 2).'.')
-            ->action('View order', route('orders.show', $this->order));
+            ->line('Order total: $'.number_format((float) $this->payment->amount, 2).'.');
+
+        if ($successful && $coupon = $this->order->rewardCoupon) {
+            $message->line('Your payment is confirmed. Your order is awaiting admin approval.')
+                ->line('Use '.$coupon->code.' for 10% off your next order. This one-use code expires on '.$coupon->expires_at->format('M j, Y').'.');
+        }
+
+        return $message->action('View order and invoice', route('orders.show', $this->order));
     }
 
     /**

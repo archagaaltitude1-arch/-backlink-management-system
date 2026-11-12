@@ -31,6 +31,7 @@ class CustomerAccountController extends Controller
             'wallet' => $wallet,
             'orders' => $orders,
             'projects' => $projects,
+            'savedCard' => PaymentMethod::query()->where('customer_id', $customer->id)->orderByDesc('is_default')->latest()->first(),
             'orderCount' => $customer->orders()->count(),
             'savedWebsiteCount' => $customer->savedWebsites()->count(),
             'unreadNotificationCount' => $customer->unreadNotifications()->count(),

@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class OrderController extends Controller
@@ -17,7 +18,7 @@ class OrderController extends Controller
     /**
      * @var list<string>
      */
-    private array $orderStatuses = ['pending', 'processing', 'completed'];
+    private array $orderStatuses = ['pending', 'awaiting_approval', 'processing', 'completed'];
 
     /**
      * @var array<string, string>
@@ -90,9 +91,31 @@ class OrderController extends Controller
         ]);
     }
 
+    public function approve(Order $order): RedirectResponse
+    {
+        $approved = DB::transaction(function () use ($order): bool {
+            $lockedOrder = Order::query()->lockForUpdate()->findOrFail($order->id);
+            if ($lockedOrder->payment_status !== 'paid' || $lockedOrder->order_status !== 'awaiting_approval') {
+                return false;
+            }
+
+            $lockedOrder->update(['order_status' => 'processing']);
+
+            return true;
+        });
+
+        return back()->with($approved ? 'success' : 'error', $approved
+            ? 'Order approved. You can now assign the content work.'
+            : 'Only paid orders awaiting approval can be approved.');
+    }
+
     public function assign(Request $request, Order $order, OrderItem $orderItem): RedirectResponse
     {
         abort_unless($orderItem->order_id === $order->id, 404);
+
+        if ($order->payment_status !== 'paid' || ! in_array($order->order_status, ['processing', 'completed'], true)) {
+            return back()->withErrors(['staff_id' => 'Approve the paid order before assigning content work.']);
+        }
 
         $data = $request->validate([
             'staff_id' => ['required', 'integer'],
@@ -113,10 +136,6 @@ class OrderController extends Controller
                 'notes' => $data['notes'] ?? null,
             ],
         );
-
-        if ($order->order_status === 'pending') {
-            $order->update(['order_status' => 'processing']);
-        }
 
         return back()->with('success', 'Assigned '.$orderItem->item_name.' to '.$staff->name.'.');
     }
