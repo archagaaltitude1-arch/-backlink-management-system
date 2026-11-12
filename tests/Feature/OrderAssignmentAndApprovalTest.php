@@ -133,6 +133,15 @@ class OrderAssignmentAndApprovalTest extends TestCase
             'status' => 'assigned',
         ]);
 
+        $this->actingAs($customer)
+            ->put(route('seo.orders.status', 'BM-ASSIGN-0001'), [
+                'order_item_id' => $item->id,
+                'status' => 'published',
+                'published_url' => 'https://publisher.example/approved-placement',
+            ])
+            ->assertForbidden();
+        $this->assertDatabaseMissing('customer_projects', ['order_item_id' => $item->id]);
+
         $this->actingAs($staff)
             ->put(route('seo.orders.status', 'BM-ASSIGN-0001'), [
                 'order_item_id' => $item->id,

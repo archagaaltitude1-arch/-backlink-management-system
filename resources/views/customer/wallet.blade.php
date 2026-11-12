@@ -3,6 +3,10 @@
 @section('title', 'Wallet')
 
 @section('content')
+    @php
+        $demo = \App\Http\StripeCheckout::usesDemo();
+        $stripe = \App\Http\StripeCheckout::isConfigured();
+    @endphp
     <div class="mx-auto max-w-6xl space-y-6">
         <div class="flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -29,16 +33,33 @@
 
         <section id="credit-packages" class="space-y-4">
             <h2 class="text-xl font-semibold">Credit packages</h2>
+            @if ($demo)
+                <p class="text-sm text-navy/65">Stripe payment demo. No money will be charged.</p>
+            @endif
+            @if (! $stripe && ! $demo)
+                <p class="text-sm text-navy/65" role="status">Stripe checkout is currently unavailable.</p>
+            @endif
             <div class="grid gap-4 md:grid-cols-3">
                 @forelse ($packages as $package)
                     <article class="panel p-5">
                         <div class="flex justify-between gap-3"><h3 class="font-semibold">{{ $package->name }}</h3><span class="font-display text-xl font-semibold">{{ number_format($package->credits) }}</span></div>
                         <p class="mt-1 text-xs text-navy/55">credits</p>
                         <p class="mt-4 text-2xl font-semibold">${{ number_format($package->price, 2) }}</p>
-                        <form method="POST" action="{{ route('customer.wallet.purchase', $package) }}" class="mt-4">
-                            @csrf
-                            <button class="btn-primary w-full" type="submit">{{ \App\Http\StripeCheckout::usesDemo() ? 'Buy demo credits' : 'Buy with Stripe' }}</button>
-                        </form>
+                        <div class="mt-4 space-y-2">
+                            @if ($stripe)
+                                <form method="POST" action="{{ route('customer.wallet.purchase', $package) }}">
+                                    @csrf
+                                    <input type="hidden" name="payment_method" value="stripe">
+                                    <button class="btn-primary w-full" type="submit">Buy with Stripe</button>
+                                </form>
+                            @endif
+                            @if ($demo)
+                                <form method="POST" action="{{ route('customer.wallet.purchase', $package) }}">
+                                    @csrf
+                                    <button class="btn-primary w-full" type="submit">Simulate Stripe purchase</button>
+                                </form>
+                            @endif
+                        </div>
                     </article>
                 @empty
                     <p class="text-sm text-navy/55">No active credit packages.</p>

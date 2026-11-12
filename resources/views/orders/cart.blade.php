@@ -5,7 +5,6 @@
 @section('content')
     <div class="mx-auto max-w-6xl space-y-6">
         <div>
-            <p class="text-xs font-semibold tracking-wider text-brand uppercase">Anchuga · Cart</p>
             <h1 class="mt-2 text-3xl font-semibold">Shopping cart</h1>
             <p class="mt-2 text-sm text-navy/70">Review your backlink services before adding the order details.</p>
         </div>

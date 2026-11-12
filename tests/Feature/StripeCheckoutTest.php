@@ -82,6 +82,35 @@ class StripeCheckoutTest extends TestCase
         $this->assertDatabaseCount('credit_transactions', 1);
     }
 
+    public function test_customer_can_choose_stripe_while_demo_payments_are_enabled(): void
+    {
+        config(['services.stripe.demo' => true]);
+        $customer = User::factory()->create();
+        $order = $customer->orders()->create([
+            'order_number' => 'BM-STRIPE-CHOICE', 'session_id' => 'stripe-choice', 'total_amount' => 100,
+        ]);
+        $package = CreditPackage::create(['name' => 'Starter credits', 'credits' => 100, 'price' => 29, 'is_active' => true]);
+
+        $this->actingAs($customer)->get(route('orders.payment', $order))
+            ->assertOk()->assertSee('Pay with Stripe')->assertSee('Simulate Stripe payment');
+        $this->get(route('customer.wallet'))
+            ->assertOk()->assertSee('Buy with Stripe')->assertSee('Simulate Stripe purchase');
+
+        $this->post(route('orders.payment.process', $order), ['payment_method' => 'stripe'])
+            ->assertRedirect('https://checkout.stripe.com/c/pay/cs_test_order');
+        $this->postJson(route('orders.payment.process', $order), [
+            'payment_method' => 'demo_card', 'demo_result' => 'success',
+        ])->assertUnprocessable()->assertJsonValidationErrors('payment');
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => 'pending']);
+
+        $this->post(route('customer.wallet.purchase', $package), ['payment_method' => 'stripe'])
+            ->assertRedirect('https://checkout.stripe.com/c/pay/cs_test_order');
+        $this->assertDatabaseHas('payments', [
+            'customer_id' => $customer->id, 'credit_package_id' => $package->id, 'gateway' => 'stripe', 'status' => 'pending',
+        ]);
+        $this->assertDatabaseCount('credit_transactions', 0);
+    }
+
     public function test_expired_checkout_can_be_retried_with_a_new_payment_reference(): void
     {
         $customer = User::factory()->create();

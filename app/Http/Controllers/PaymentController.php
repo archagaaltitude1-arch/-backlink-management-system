@@ -16,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class PaymentController extends Controller
@@ -42,7 +43,7 @@ class PaymentController extends Controller
     public function payOrder(Request $request, Order $order, StripeCheckout $checkout): RedirectResponse|JsonResponse
     {
         abort_unless($order->customer_id === $request->user()->id, 404);
-        if (! StripeCheckout::usesDemo()) {
+        if (! StripeCheckout::usesDemo() || $request->input('payment_method') === 'stripe') {
             $url = $checkout->start($request->user(), $order);
 
             return $this->stripeRedirect($request, $url, route('orders.show', $order));
@@ -57,6 +58,10 @@ class PaymentController extends Controller
             $lockedOrder = $request->user()->orders()->whereKey($order->id)->lockForUpdate()->firstOrFail();
             if ($lockedOrder->payment_status === 'paid') {
                 return $lockedOrder->payments()->latest()->firstOrFail();
+            }
+
+            if ($lockedOrder->payments()->where('gateway', 'stripe')->where('status', 'pending')->exists()) {
+                throw ValidationException::withMessages(['payment' => 'A Stripe checkout is pending for this order. Complete it or wait for it to expire.']);
             }
 
             $isSuccessful = $data['demo_result'] === 'success';
@@ -115,7 +120,7 @@ class PaymentController extends Controller
     {
         abort_unless($creditPackage->is_active, 404);
 
-        if (! StripeCheckout::usesDemo()) {
+        if (! StripeCheckout::usesDemo() || $request->input('payment_method') === 'stripe') {
             $url = $checkout->start($request->user(), $creditPackage);
 
             return $this->stripeRedirect($request, $url, route('customer.wallet'));
