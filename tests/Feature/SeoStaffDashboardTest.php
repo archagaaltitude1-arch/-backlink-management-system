@@ -81,7 +81,7 @@ class SeoStaffDashboardTest extends TestCase
         $this->actingAs($staffOne)
             ->get(route('seo.articles'))
             ->assertOk()
-            ->assertSee('Article Review');
+            ->assertSee('Send for Admin Approval');
 
         $this->actingAs($staffOne)
             ->get(route('seo.submissions'))
