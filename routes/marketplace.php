@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Customer\MarketplaceController;
 use App\Http\Controllers\Customer\NicheController;
 use App\Http\Controllers\Customer\PageController;
 use App\Http\Controllers\Customer\PublisherController;
@@ -17,6 +18,7 @@ Route::get('/tools/{slug}', [ToolController::class, 'show'])->where('slug', '[a-
 Route::get('/publishers', [PublisherController::class, 'index'])->name('publishers.index');
 Route::get('/sites', [SiteController::class, 'index'])->name('sites.index');
 Route::get('/sites/{slug}', [SiteController::class, 'show'])->where('slug', '[a-z0-9\-]+')->name('sites.show');
+Route::get('/marketplace/{website}', [MarketplaceController::class, 'show'])->name('marketplace.show');
 Route::get('/niches', [NicheController::class, 'index'])->name('niches.index');
 Route::get('/niches/{slug}', [NicheController::class, 'show'])->name('niches.show');
 

@@ -1,7 +1,7 @@
 {{-- SEO team shell. Pages use @extends('layouts.seo') with @section('title') and @section('content'). --}}
 @php
     $portal = 'SEO Team';
-    $userName = 'SEO User';
+    $userName = auth()->user()?->name ?? 'SEO User';
     $userRole = 'SEO Team';
 @endphp
 <!DOCTYPE html>

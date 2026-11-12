@@ -8,20 +8,26 @@
         'niche' => ['M3 12V4h8l9 9-8 8-9-9z', 'M7.5 7.5h.01'],
         'package' => ['M12 3 20 7.5v9L12 21 4 16.5v-9L12 3z', 'M12 12l8-4.5', 'M12 12v9', 'M12 12 4 7.5'],
         'orders' => ['M9 3h6v4H9z', 'M8 5H6v15h12V5h-2', 'M9 12h6', 'M9 16h4'],
+        'articles' => ['M7 3h7l5 5v13H7z', 'M14 3v5h5', 'M10 13h6', 'M10 17h6'],
         'payments' => ['M3 6h18v12H3z', 'M3 10h18', 'M7 15h5'],
         'reports' => ['M4 19V9', 'M10 19V5', 'M16 19v-6', 'M22 19H2'],
+        'performance' => ['M4 19V10', 'M9 19V5', 'M14 19v-7', 'M19 19V8'],
         'settings' => ['M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7', 'M12 2.5v2.5', 'M12 19v2.5', 'M2.5 12H5', 'M19 12h2.5', 'M5.4 5.4l1.8 1.8', 'M16.8 16.8l1.8 1.8', 'M18.6 5.4l-1.8 1.8', 'M7.2 16.8l-1.8 1.8'],
+        'roles' => ['M12 3l8 4v5c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V7l8-4z'],
     ];
 
     $navigation = [
         ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'dashboard'],
         ['label' => 'Customer Management', 'route' => 'admin.customers', 'icon' => 'customers'],
         ['label' => 'Staff Management', 'route' => 'admin.staff', 'icon' => 'staff'],
+        ['label' => 'SEO Staff Performance', 'route' => 'admin.staff-performance', 'icon' => 'performance'],
+        ['label' => 'Roles & Permissions', 'route' => 'admin.roles', 'icon' => 'roles'],
         ['label' => 'Website Management', 'route' => 'admin.websites', 'icon' => 'websites'],
         ['label' => 'Service Management', 'route' => 'admin.services', 'icon' => 'services'],
         ['label' => 'Niche Management', 'route' => 'admin.niches', 'icon' => 'niche'],
         ['label' => 'Package Management', 'route' => 'admin.packages', 'icon' => 'package'],
         ['label' => 'Order Management', 'route' => 'admin.orders', 'icon' => 'orders'],
+        ['label' => 'Blog Approvals', 'route' => 'admin.articles', 'icon' => 'articles'],
         ['label' => 'Payment Management', 'route' => 'admin.payments', 'icon' => 'payments'],
         ['label' => 'Reports & Analytics', 'route' => 'admin.reports', 'icon' => 'reports'],
         ['label' => 'Settings', 'route' => 'admin.settings', 'icon' => 'settings'],
@@ -47,10 +53,10 @@
                 href="{{ route($item['route']) }}"
                 @class([
                     'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
-                    'bg-brand text-white' => request()->routeIs($item['route']),
-                    'text-white/75 hover:bg-white/10 hover:text-white' => ! request()->routeIs($item['route']),
+                    'bg-brand text-white' => request()->routeIs($item['route'], $item['route'].'.*'),
+                    'text-white/75 hover:bg-white/10 hover:text-white' => ! request()->routeIs($item['route'], $item['route'].'.*'),
                 ])
-                @if (request()->routeIs($item['route'])) aria-current="page" @endif
+                @if (request()->routeIs($item['route'], $item['route'].'.*')) aria-current="page" @endif
             >
                 <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     @foreach ($icons[$item['icon']] ?? [] as $path)
