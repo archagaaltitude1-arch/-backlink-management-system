@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\StaffPerformanceController;
 use App\Http\Controllers\Admin\WebsiteController as AdminWebsiteController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Customer\PageController;
 use App\Http\Controllers\CustomerAccountController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
@@ -32,9 +33,11 @@ use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return auth()->check()
-        ? redirect()->to(auth()->user()->dashboardUrl())
-        : redirect()->route('auth.login');
+    if (auth()->check()) {
+        return redirect()->to(auth()->user()->dashboardUrl());
+    }
+
+    return app(PageController::class)->home();
 });
 
 Route::middleware('guest')->group(function () {
@@ -269,3 +272,5 @@ Route::post('/seo/articles/{orderItem}/approval', [ArticleController::class, 'su
 Route::post('/seo/articles/{article}/publish', [ArticleController::class, 'publish'])->name('seo.articles.publish');
 Route::view('/seo/submissions', 'seo.submissions')->name('seo.submissions');
 Route::view('/seo/completed-orders', 'seo.completed-orders')->name('seo.completed-orders');
+
+require __DIR__.'/marketplace.php';

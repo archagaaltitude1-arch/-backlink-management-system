@@ -35,10 +35,11 @@ class CustomerAccountTest extends TestCase
             ->assertRedirect(route('auth.login'));
     }
 
-    public function test_guest_root_enters_the_customer_login_flow(): void
+    public function test_guest_root_shows_the_public_home_page(): void
     {
         $this->get('/')
-            ->assertRedirect(route('auth.login'));
+            ->assertOk()
+            ->assertSee('Real, Traffic-Driven Websites', false);
     }
 
     public function test_guest_login_page_hides_customer_navigation(): void
