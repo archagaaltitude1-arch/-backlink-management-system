@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Article;
 use App\Models\CustomerProject;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -121,6 +122,15 @@ class OrderAssignmentAndApprovalTest extends TestCase
             'staff_id' => $staff->id,
             'assigned_by' => $this->admin()->id,
             'status' => 'assigned',
+        ]);
+        Article::query()->create([
+            'order_item_id' => $item->id,
+            'staff_id' => $staff->id,
+            'title' => 'Search growth',
+            'body' => 'A staff written blog that an admin has already approved for publishing.',
+            'status' => 'admin_approved',
+            'submitted_at' => now(),
+            'approved_at' => now(),
         ]);
 
         $this->actingAs($staff)

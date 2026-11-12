@@ -32,7 +32,8 @@
                                 </td>
                                 <td class="max-w-xs px-5 py-4 break-all">{{ $backlink->target_url }}</td>
                                 <td class="max-w-xs px-5 py-4 break-all">
-                                    <a class="text-brand hover:underline" href="{{ $backlink->published_url }}" target="_blank" rel="noopener noreferrer">{{ $backlink->published_url }}</a>
+                                    @php($placementUrl = $backlink->orderItem?->article?->viewUrl())
+                                    <a class="text-brand hover:underline" href="{{ $placementUrl ?: $backlink->published_url }}" @if (! $placementUrl || $placementUrl === $backlink->published_url) target="_blank" rel="noopener noreferrer" @endif>{{ $placementUrl ?: $backlink->published_url }}</a>
                                 </td>
                                 <td class="px-5 py-4">
                                     <p class="font-medium">{{ ucfirst(str_replace('_', ' ', $backlink->verification_status)) }}</p>

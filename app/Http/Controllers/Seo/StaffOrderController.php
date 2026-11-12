@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Seo;
 
 use App\Http\Controllers\Controller;
+use App\Models\Article;
 use App\Models\CustomerProject;
 use App\Models\OrderAssignment;
 use App\Models\OrderItem;
@@ -62,13 +63,35 @@ class StaffOrderController extends Controller
             abort(403);
         }
 
+        $article = null;
+        if ($data['status'] === 'published') {
+            if (! in_array($viewer->role?->role_name, ['Staff', 'SEO'], true)) {
+                abort(403);
+            }
+
+            $article = Article::query()->where('order_item_id', $data['order_item_id'])->first();
+            if (! in_array($article?->status, ['admin_approved', 'published'], true)) {
+                return back()->withErrors([
+                    'status' => 'Admin must approve the blog before it can be published.',
+                ])->withInput();
+            }
+        }
+
         $assignment->update([
             'status' => $data['status'],
             'notes' => $data['notes'] ?? $assignment->notes,
         ]);
 
-        if ($data['status'] === 'published' && ! $this->publishBacklink($assignment, $data['published_url'])) {
+        if ($data['status'] === 'published' && ! $this->recordPublication($assignment, $data['published_url'])) {
             return back()->withErrors(['published_url' => 'This order has no customer account to approve the backlink.'])->withInput();
+        }
+
+        if ($data['status'] === 'published' && $article?->status === 'admin_approved') {
+            $article->update([
+                'status' => 'published',
+                'published_url' => $data['published_url'],
+                'published_at' => now(),
+            ]);
         }
 
         return back()->with('success', 'Order '.$orderId.' is now '.str_replace('_', ' ', $data['status']).'.');
@@ -80,7 +103,7 @@ class StaffOrderController extends Controller
     public function cards(User $viewer): Collection
     {
         $items = OrderItem::query()
-            ->with(['order.customer', 'assignment.staff', 'assignment.assignedBy', 'website', 'project'])
+            ->with(['order.customer', 'assignment.staff', 'assignment.assignedBy', 'website', 'project', 'article'])
             ->when($viewer->role?->role_name !== 'Admin', function ($query) use ($viewer): void {
                 $query->whereHas('assignment', fn ($query) => $query->where('staff_id', $viewer->id));
             })
@@ -90,7 +113,7 @@ class StaffOrderController extends Controller
         return $items->map(fn (OrderItem $item): array => $this->card($item));
     }
 
-    private function publishBacklink(OrderAssignment $assignment, string $publishedUrl): bool
+    public function recordPublication(OrderAssignment $assignment, string $publishedUrl): bool
     {
         $item = $assignment->orderItem()->with('order')->firstOrFail();
         $order = $item->order;
@@ -153,6 +176,8 @@ class StaffOrderController extends Controller
             },
             'due_date' => $item->order?->created_at?->addDays(7)->format('M d, Y') ?? '—',
             'notes' => $item->assignment?->notes,
+            'article_status' => $item->article?->status,
+            'article_status_label' => $item->article?->statusLabel(),
             'published_url' => $item->project?->published_url,
             'verification_status' => $item->project?->verification_status,
         ];

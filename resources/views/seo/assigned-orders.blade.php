@@ -199,6 +199,14 @@
                                 <button type="submit" class="btn-primary w-full text-xs py-1.5">
                                     Save Status
                                 </button>
+                                <p class="text-[11px] leading-5 text-navy/55">
+                                    @if ($order['article_status_label'])
+                                        Blog: {{ $order['article_status_label'] }}.
+                                    @else
+                                        Write the blog from Articles.
+                                    @endif
+                                    An admin must approve it before SEO staff can publish.
+                                </p>
                             </form>
                         </div>
                     </div>

@@ -258,7 +258,7 @@ class CustomerAccountController extends Controller
     public function backlinks(Request $request): View
     {
         $backlinks = $request->user()->hasMany(CustomerProject::class, 'customer_id')
-            ->with('order')
+            ->with(['order', 'orderItem.article'])
             ->whereNotNull('published_url')
             ->latest()
             ->paginate(10);

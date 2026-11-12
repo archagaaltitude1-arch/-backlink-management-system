@@ -15,6 +15,22 @@ class SeoStaffDashboardTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_seo_entry_url_stays_separate_from_the_admin_blog_page(): void
+    {
+        $this->get('/seo')->assertRedirect(route('seo.login'));
+        $this->get(route('seo.login'))->assertOk();
+
+        $staff = $this->staff('Rae Staff', 'rae.staff@example.test');
+
+        $this->actingAs($staff)
+            ->get(route('seo.home'))
+            ->assertRedirect(route('seo.dashboard'));
+
+        $this->actingAs($this->admin())
+            ->get(route('seo.home'))
+            ->assertRedirect(route('admin.dashboard'));
+    }
+
     public function test_seo_staff_dashboard_displays_only_orders_assigned_to_authenticated_staff_member(): void
     {
         $staffOne = $this->staff('Rae Staff', 'rae.staff@example.test');
@@ -81,7 +97,10 @@ class SeoStaffDashboardTest extends TestCase
         $this->actingAs($staffOne)
             ->get(route('seo.articles'))
             ->assertOk()
-            ->assertSee('Article Review');
+            ->assertSee('Article Review')
+            ->assertSee('Customer Submitted')
+            ->assertSee('Approve Article')
+            ->assertSee('Request Edits');
 
         $this->actingAs($staffOne)
             ->get(route('seo.submissions'))

@@ -39,4 +39,9 @@ class OrderItem extends Model
     {
         return $this->hasOne(CustomerProject::class);
     }
+
+    public function article(): HasOne
+    {
+        return $this->hasOne(Article::class);
+    }
 }

@@ -18,8 +18,8 @@
             'anchor_text' => 'enterprise AI marketing',
             'published_url' => '',
             'link_type' => 'Dofollow',
-            'status' => 'ready_to_publish',
-            'status_label' => 'Ready to Publish',
+            'status' => 'awaiting_admin',
+            'status_label' => 'Awaiting Admin Approval',
             'http_check' => 'Pending',
             'target_match' => false,
             'anchor_match' => false,
@@ -89,7 +89,7 @@
 
     $stats = [
         'total' => count($submissions),
-        'ready' => collect($submissions)->where('status', 'ready_to_publish')->count(),
+        'ready' => collect($submissions)->where('status', 'awaiting_admin')->count(),
         'pending' => collect($submissions)->where('status', 'pending_verification')->count(),
         'verified' => collect($submissions)->where('status', 'verified_live')->count(),
     ];
@@ -103,7 +103,7 @@
                 <p class="text-xs font-semibold tracking-wider text-brand uppercase">Publishing & Backlink Verification</p>
                 <h1 class="mt-1 text-2xl font-bold text-navy">Submissions</h1>
                 <p class="mt-1.5 max-w-2xl text-sm text-navy/70">
-                    Submit live published article URLs, run backlink verification for target URL & anchor text matches, and confirm placements for reporting.
+                    Verify live placements after an admin approves the blog and SEO staff publishes it. Customers cannot submit or publish blogs.
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
@@ -136,9 +136,9 @@
             <p class="mt-2 text-xs text-navy/55">Publishing & link checks</p>
         </div>
         <div class="panel p-5 border-t-4 border-t-sky-500">
-            <p class="text-xs font-semibold uppercase tracking-wider text-navy/60">Ready to Publish</p>
-            <p class="mt-1 font-display text-3xl font-bold text-sky-600" data-sub-count="ready_to_publish">{{ $stats['ready'] }}</p>
-            <p class="mt-2 text-xs text-navy/55">Awaiting published URL</p>
+            <p class="text-xs font-semibold uppercase tracking-wider text-navy/60">Awaiting Admin</p>
+            <p class="mt-1 font-display text-3xl font-bold text-sky-600" data-sub-count="awaiting_admin">{{ $stats['ready'] }}</p>
+            <p class="mt-2 text-xs text-navy/55">SEO staff cannot publish yet</p>
         </div>
         <div class="panel p-5 border-t-4 border-t-amber-500">
             <p class="text-xs font-semibold uppercase tracking-wider text-navy/60">Pending Verification</p>
@@ -158,7 +158,7 @@
             @php
                 $tabs = [
                     'all' => 'All Submissions',
-                    'ready_to_publish' => 'Ready to Publish',
+                    'awaiting_admin' => 'Awaiting Admin',
                     'pending_verification' => 'Pending Verification',
                     'verified_live' => 'Verified Live',
                     'issue_flagged' => 'Issue Flagged',
@@ -202,6 +202,7 @@
                     'verified_live' => 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
                     'pending_verification' => 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
                     'issue_flagged' => 'bg-rose-50 text-rose-700 ring-1 ring-rose-200',
+                    'awaiting_admin' => 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
                     default => 'bg-sky-50 text-sky-700 ring-1 ring-sky-200',
                 };
             @endphp
@@ -265,6 +266,12 @@
                     <!-- Right: Submit Published URL & Verify Backlink -->
                     <div class="w-full xl:w-96 shrink-0 rounded-xl bg-canvas/50 p-4 border border-navy/10 space-y-3">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-navy">Published URL & Verification</h3>
+                        @if ($item['status'] === 'awaiting_admin')
+                            <p class="rounded-xl bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800 ring-1 ring-amber-200">
+                                This blog is waiting for admin approval. Only the assigned SEO staff can publish it after approval, from Articles.
+                            </p>
+                            <a href="{{ route('seo.articles') }}" class="btn-primary inline-flex text-xs py-2">Open Articles</a>
+                        @else
 
                         <div>
                             <label class="block text-[11px] font-semibold uppercase tracking-wider text-navy/55 mb-1">
@@ -302,6 +309,7 @@
                             </button>
                             <span class="text-[11px] text-navy/55">Triggers customer update & credit confirmation</span>
                         </div>
+                        @endif
                     </div>
                 </div>
             </article>
@@ -330,11 +338,12 @@ document.addEventListener('DOMContentLoaded', () => {
         verified_live: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
         pending_verification: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
         issue_flagged: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200',
+        awaiting_admin: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
         ready_to_publish: 'bg-sky-50 text-sky-700 ring-1 ring-sky-200',
     };
 
     const refreshCounts = () => {
-        ['ready_to_publish', 'pending_verification', 'verified_live'].forEach((status) => {
+        ['awaiting_admin', 'pending_verification', 'verified_live'].forEach((status) => {
             const el = document.querySelector(`[data-sub-count="${status}"]`);
             if (el) {
                 el.textContent = cards.filter((c) => c.dataset.status === status).length;

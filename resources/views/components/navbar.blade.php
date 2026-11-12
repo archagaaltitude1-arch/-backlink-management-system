@@ -44,7 +44,7 @@
             </span>
         @endif
         @auth
-            <form method="POST" action="{{ route(($portal ?? null) === 'Admin' ? 'logout' : 'auth.logout') }}">
+            <form method="POST" action="{{ route(match ($portal ?? null) { 'Admin' => 'logout', 'SEO Team' => 'seo.logout', default => 'auth.logout' }) }}">
                 @csrf
                 <button class="btn rounded-xl text-sm text-navy hover:bg-canvas" type="submit">Sign out</button>
             </form>
