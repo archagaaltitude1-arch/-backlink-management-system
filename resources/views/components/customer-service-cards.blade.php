@@ -7,28 +7,28 @@
     ];
 @endphp
 
-<section aria-labelledby="guest-posting-title" class="space-y-5 border border-slate-200 p-4 sm:p-6 lg:p-7">
+<section aria-labelledby="guest-posting-title" class="panel space-y-4 p-4 sm:space-y-5 sm:p-6 lg:p-7">
     <a href="{{ route('customer.services') }}" class="flex items-center gap-3 rounded-sm bg-sky-50 px-4 py-3 text-sm text-sky-900 hover:bg-sky-100">
         <svg class="size-5 shrink-0 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5m0-8h.01" /></svg>
         <span>Compare backlink services before placing an order.</span>
     </a>
 
-    <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 id="guest-posting-title" class="flex items-center gap-2 text-xl font-semibold text-black">
-            <svg class="size-6 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h16v15H5z M5 19H3V7h2 M8 7h4v4H8z M15 8h3m-3 3h3m-10 4h10" /></svg>
+            <svg class="size-6 shrink-0 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h16v15H5z M5 19H3V7h2 M8 7h4v4H8z M15 8h3m-3 3h3m-10 4h10" /></svg>
             Guest posting service
         </h2>
-        <a href="{{ route('customer.websites').'#search' }}" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Search sites</a>
+        <a href="{{ route('customer.websites').'#search' }}" class="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 sm:w-auto">Search sites</a>
     </div>
 
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         @foreach ($services as [$title, $description, $filters, $colors, $icon])
-            <a href="{{ route('customer.websites', $filters) }}" class="{{ $colors }} flex min-h-36 items-center justify-between gap-4 rounded-xl p-5 transition hover:ring-1 hover:ring-current focus-visible:outline-2 focus-visible:outline-offset-2">
-                <div>
+            <a href="{{ route('customer.websites', $filters) }}" class="{{ $colors }} flex min-w-0 items-center justify-between gap-3 rounded-xl p-4 transition hover:ring-1 hover:ring-current focus-visible:outline-2 focus-visible:outline-offset-2 sm:min-h-36 sm:p-5">
+                <div class="min-w-0">
                     <h3 class="text-base font-bold">{{ $title }}</h3>
                     <p class="mt-2 text-sm leading-5">{{ $description }}</p>
                 </div>
-                <svg class="size-9 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ $icon }}" /></svg>
+                <svg class="size-7 shrink-0 lg:size-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ $icon }}" /></svg>
             </a>
         @endforeach
     </div>
