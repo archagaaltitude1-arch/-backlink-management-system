@@ -7,7 +7,6 @@ use App\Models\CartItem;
 use App\Models\Coupon;
 use App\Models\CouponUsage;
 use App\Models\Order;
-use App\Models\User;
 use App\Models\Website;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -117,7 +116,7 @@ class OrderController extends Controller
         $coupon = Coupon::query()->where('code', Str::upper(trim($data['coupon_code'])))->first();
         $subtotal = $this->cartSubtotal($cart);
 
-        if (! $coupon || ! $this->couponIsAvailable($coupon, $request->user(), $subtotal)) {
+        if (! $coupon || ! $coupon->isAvailableTo($request->user(), $subtotal)) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'This coupon is not valid for this purchase.'], 422);
             }
@@ -187,7 +186,7 @@ class OrderController extends Controller
             $subtotal = $this->cartSubtotal($cart);
             $coupon = $cart->coupon_code ? Coupon::query()->where('code', $cart->coupon_code)->lockForUpdate()->first() : null;
 
-            if ($cart->coupon_code && (! $coupon || ! $this->couponIsAvailable($coupon, $request->user(), $subtotal))) {
+            if ($cart->coupon_code && (! $coupon || ! $coupon->isAvailableTo($request->user(), $subtotal))) {
                 throw ValidationException::withMessages(['coupon_code' => 'This coupon is no longer available.']);
             }
 
@@ -252,7 +251,7 @@ class OrderController extends Controller
             return response()->json(['data' => $order->load('items', 'payments')]);
         }
 
-        return view('orders.order-detail', compact('order'));
+        return view('orders.order-detail', ['order' => $order->load('items', 'invoice', 'rewardCoupon')]);
     }
 
     private function cartFor(Request $request): Cart
@@ -288,19 +287,6 @@ class OrderController extends Controller
     private function cartSubtotal(Cart $cart): float
     {
         return (float) $cart->items->sum(fn (CartItem $item): float => (float) $item->unit_price * $item->quantity);
-    }
-
-    private function couponIsAvailable(Coupon $coupon, User $customer, float $subtotal): bool
-    {
-        if (! $coupon->is_active || ($coupon->expires_at && $coupon->expires_at->isPast()) || $subtotal < (float) $coupon->minimum_order_amount) {
-            return false;
-        }
-
-        if ($coupon->usage_limit !== null && $coupon->usages()->count() >= $coupon->usage_limit) {
-            return false;
-        }
-
-        return $coupon->usages()->where('customer_id', $customer->id)->count() < $coupon->per_customer_limit;
     }
 
     private function uniqueOrderNumber(): string

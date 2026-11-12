@@ -23,7 +23,7 @@
             </article>
             <article class="panel p-5">
                 <p class="text-sm text-navy/60">Order status</p>
-                <p class="mt-3 text-lg font-semibold">{{ ucfirst($order->order_status) }}</p>
+                <p class="mt-3 text-lg font-semibold">{{ str($order->order_status)->headline() }}</p>
             </article>
             <article class="panel p-5">
                 <p class="text-sm text-navy/60">Payment status</p>
@@ -37,6 +37,13 @@
                 @endif
             </article>
         </section>
+        @if ($order->payment_status === 'paid' && $order->order_status === 'awaiting_approval')
+            <form method="POST" action="{{ route('admin.orders.approve', $order) }}" class="panel flex flex-wrap items-center justify-between gap-4 p-5">
+                @csrf
+                <p class="text-sm">Payment confirmed. Approve this order to release it for content assignment.</p>
+                <button type="submit" class="btn-primary">Approve order</button>
+            </form>
+        @endif
         <section class="panel overflow-hidden">
             <div class="border-b border-navy/10 px-5 py-4 sm:px-6">
                 <h2 class="text-lg font-semibold">Line items</h2>
@@ -71,6 +78,7 @@
                     </tbody>
                 </table>
             </div>
+            @if ($order->payment_status === 'paid' && in_array($order->order_status, ['processing', 'completed'], true))
             <div class="divide-y divide-navy/10 border-t border-navy/10">
                 @foreach ($order->items as $item)
                     <form method="POST" action="{{ route('admin.orders.assign', [$order, $item]) }}" class="grid gap-3 px-5 py-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_16rem_auto] lg:items-end">
@@ -95,6 +103,7 @@
                     </form>
                 @endforeach
             </div>
+            @endif
         </section>
         <section class="grid grid-cols-1 gap-6 xl:grid-cols-2">
             <article class="panel overflow-hidden">

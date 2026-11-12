@@ -18,13 +18,16 @@
         @if ($errors->any())
             <div class="rounded-xl bg-red-50 p-4 text-sm text-red-800">{{ $errors->first() }}</div>
         @endif
+        @if (request()->query('stripe') === 'returned')
+            <p class="rounded-xl bg-sky-50 p-4 text-sm text-sky-900" role="status">Credits appear in your wallet once Stripe confirms payment.</p>
+        @endif
 
         <div class="grid gap-4 sm:grid-cols-2">
             <section class="panel p-6"><p class="text-sm text-navy/55">Available credits</p><p class="mt-2 text-4xl font-semibold">{{ number_format($wallet->available_balance) }}</p></section>
             <section class="panel p-6"><p class="text-sm text-navy/55">Reserved credits</p><p class="mt-2 text-4xl font-semibold">{{ number_format($wallet->reserved_balance) }}</p></section>
         </div>
 
-        <section class="space-y-4">
+        <section id="credit-packages" class="space-y-4">
             <h2 class="text-xl font-semibold">Credit packages</h2>
             <div class="grid gap-4 md:grid-cols-3">
                 @forelse ($packages as $package)
@@ -34,7 +37,7 @@
                         <p class="mt-4 text-2xl font-semibold">${{ number_format($package->price, 2) }}</p>
                         <form method="POST" action="{{ route('customer.wallet.purchase', $package) }}" class="mt-4">
                             @csrf
-                            <button class="btn-primary w-full" type="submit">Buy credits</button>
+                            <button class="btn-primary w-full" type="submit">{{ \App\Http\StripeCheckout::usesDemo() ? 'Buy demo credits' : 'Buy with Stripe' }}</button>
                         </form>
                     </article>
                 @empty

@@ -57,9 +57,39 @@ class CustomerPurchaseTest extends TestCase
         ])->assertRedirect(route('orders.show', $order));
 
         $this->assertDatabaseHas('payments', ['order_id' => $order->id, 'status' => 'successful', 'gateway' => 'demo']);
-        $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => 'paid', 'order_status' => 'processing']);
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => 'paid', 'order_status' => 'awaiting_approval']);
         $this->assertDatabaseHas('invoices', ['order_id' => $order->id, 'customer_id' => $customer->id]);
-        Notification::assertSentTo($customer, OrderPlacedNotification::class);
+        $coupon = $order->rewardCoupon()->firstOrFail();
+        Notification::assertSentTo($customer, OrderPlacedNotification::class, function (OrderPlacedNotification $notice) use ($customer, $coupon): bool {
+            return str_contains(implode(' ', $notice->toMail($customer)->introLines), $coupon->code);
+        });
+        $this->get(route('customer.invoices.download', $order->invoice))->assertOk()->assertDownload();
+
+        $this->post(route('orders.payment.process', $order), [
+            'payment_method' => 'demo_card',
+            'demo_result' => 'success',
+        ])->assertRedirect();
+        $this->assertDatabaseCount('payments', 1);
+        $this->assertDatabaseCount('coupons', 1);
+
+        $this->post(route('orders.cart.items.store'), ['product_key' => 'guest_post', 'quantity' => 1])->assertRedirect();
+        $this->postJson(route('api.cart.coupon'), ['coupon_code' => $coupon->code])
+            ->assertOk()->assertJsonPath('data.discount', 12);
+        $this->post(route('orders.store'), [
+            'items' => [[
+                'target_url' => 'https://customer.example.test/second',
+                'anchor_text' => 'next campaign',
+                'article_topic' => 'Planning a second campaign',
+            ]],
+        ])->assertRedirect();
+        $nextOrder = $customer->orders()->where('id', '!=', $order->id)->firstOrFail();
+        $this->postJson(route('api.payments.orders.store', $nextOrder), [
+            'payment_method' => 'demo_card',
+            'demo_result' => 'success',
+        ])->assertOk()->assertJsonPath('data.payment.amount', '108.00');
+
+        $this->post(route('orders.cart.items.store'), ['product_key' => 'guest_post', 'quantity' => 1])->assertRedirect();
+        $this->postJson(route('api.cart.coupon'), ['coupon_code' => $coupon->code])->assertUnprocessable();
     }
 
     public function test_coupon_discount_is_calculated_by_the_server(): void

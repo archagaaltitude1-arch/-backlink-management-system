@@ -36,8 +36,8 @@
             </form>
         </section>
 
-        <section class="panel p-6">
-            <h2 class="text-lg font-semibold">Security</h2>
+        <section id="security-settings" class="panel p-6">
+            <h2 class="text-lg font-semibold">Security settings</h2>
             <form method="POST" action="{{ route('customer.password.update') }}" class="mt-5 grid gap-4 sm:grid-cols-2">
                 @csrf
                 @method('PATCH')
@@ -54,10 +54,6 @@
                     <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required class="mt-1 w-full rounded-lg border border-navy/15 px-3 py-2.5 text-sm">
                 </div>
                 <div><button class="btn-navy" type="submit">Update password</button></div>
-            </form>
-            <form method="POST" action="{{ route('auth.logout') }}" class="mt-6 border-t border-navy/10 pt-5">
-                @csrf
-                <button class="btn rounded-xl text-red-700 hover:bg-red-50" type="submit">Sign out</button>
             </form>
         </section>
     </div>

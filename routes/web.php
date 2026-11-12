@@ -39,6 +39,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:6,1')->name('auth.register.store');
     Route::get('/login', [AuthController::class, 'showLogin'])->name('auth.login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1')->name('auth.authenticate');
+    Route::get('/login/google', [AuthController::class, 'redirectToGoogle'])->middleware('throttle:10,1')->name('auth.google');
+    Route::get('/login/google/callback', [AuthController::class, 'handleGoogleCallback'])->middleware('throttle:10,1')->name('auth.google.callback');
+    Route::post('/login/google/firebase', [AuthController::class, 'loginWithFirebase'])->middleware('throttle:10,1')->name('auth.google.firebase');
 });
 
 Route::prefix('/api/auth')->name('api.auth.')->middleware('guest')->group(function () {
@@ -130,6 +133,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::get('/admin/orders', [AdminOrderController::class, 'index'])->name('admin.orders');
     Route::get('/admin/orders/{order}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
+    Route::post('/admin/orders/{order}/approve', [AdminOrderController::class, 'approve'])->name('admin.orders.approve');
     Route::post('/admin/orders/{order}/items/{orderItem}/assign', [AdminOrderController::class, 'assign'])->name('admin.orders.assign');
     Route::get('/admin/payments', [AdminPaymentController::class, 'index'])->name('admin.payments');
     Route::get('/admin/payments/{payment}', [AdminPaymentController::class, 'show'])->name('admin.payments.show');
