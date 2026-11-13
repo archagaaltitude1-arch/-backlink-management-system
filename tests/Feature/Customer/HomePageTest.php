@@ -14,7 +14,8 @@ class HomePageTest extends TestCase
     {
         $this->get('/')
             ->assertOk()
-            ->assertSee('Real, Traffic-Driven Websites', false);
+            ->assertSee('Real, Traffic-Driven Websites', false)
+            ->assertSee('href="'.route('auth.login').'">Start Your Order</a>', false);
     }
 
     public function test_logged_in_customer_is_redirected_to_the_dashboard(): void

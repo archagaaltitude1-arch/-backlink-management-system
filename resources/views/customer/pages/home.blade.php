@@ -9,7 +9,7 @@
         $publishers = $publisherCount === null ? '[N]+' : number_format($publisherCount).'+';
         $startHref = auth()->check()
             ? url('/marketplace')
-            : (Route::has('auth.register') ? route('auth.register') : url('/register'));
+            : route('auth.login');
         $accountHref = Route::has('customer.dashboard')
             ? route('customer.dashboard')
             : (Route::has('auth.login') ? route('auth.login') : url('/login'));

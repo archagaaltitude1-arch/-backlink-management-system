@@ -63,6 +63,20 @@ class StripeCheckoutTest extends TestCase
         $this->assertDatabaseCount('invoices', 1);
         $this->assertDatabaseCount('coupons', 1);
         Notification::assertSentToTimes($customer, OrderPlacedNotification::class, 1);
+        Notification::assertSentTo($customer, OrderPlacedNotification::class, function (OrderPlacedNotification $notice) use ($customer, $order, $payment): bool {
+            $mail = $notice->toMail($customer);
+            $body = implode(' ', $mail->introLines);
+            $receipt = $mail->rawAttachments[0];
+
+            $this->assertStringContainsString($order->rewardCoupon()->firstOrFail()->code, $body);
+            $this->assertStringContainsString($payment->transaction_id, $body);
+            $this->assertSame($order->invoice()->firstOrFail()->invoice_number.'.html', $receipt['name']);
+            $this->assertStringContainsString('Backlink Management', $receipt['data']);
+            $this->assertStringContainsString($order->order_number, $receipt['data']);
+            $this->assertStringContainsString($payment->transaction_id, $receipt['data']);
+
+            return true;
+        });
     }
 
     public function test_stripe_credits_are_added_once_after_confirmation(): void
