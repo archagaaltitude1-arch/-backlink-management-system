@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AccountController;
+use App\Http\Controllers\Admin\ArticleApprovalController;
 use App\Http\Controllers\Admin\CreditPricingController;
 use App\Http\Controllers\Admin\CustomerStatisticController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -19,19 +20,24 @@ use App\Http\Controllers\Admin\StaffPerformanceController;
 use App\Http\Controllers\Admin\WebsiteController as AdminWebsiteController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Customer\PageController;
 use App\Http\Controllers\CustomerAccountController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Seo\ArticleController;
 use App\Http\Controllers\Seo\SeoDashboardController;
 use App\Http\Controllers\Seo\StaffAuthController;
 use App\Http\Controllers\Seo\StaffOrderController;
 use App\Http\Controllers\WebsiteController;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return auth()->check()
-        ? redirect()->to(auth()->user()->dashboardUrl())
-        : redirect()->route('auth.login');
+    if (auth()->check()) {
+        return redirect()->to(auth()->user()->dashboardUrl());
+    }
+
+    return app(PageController::class)->home();
 });
 
 Route::middleware('guest')->group(function () {
@@ -130,6 +136,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/credit-pricing/{creditPricing}/edit', [CreditPricingController::class, 'edit'])->name('admin.credit-pricing.edit');
     Route::put('/admin/credit-pricing/{creditPricing}', [CreditPricingController::class, 'update'])->name('admin.credit-pricing.update');
     Route::delete('/admin/credit-pricing/{creditPricing}', [CreditPricingController::class, 'destroy'])->name('admin.credit-pricing.destroy');
+
+    Route::get('/admin/articles', [ArticleApprovalController::class, 'index'])->name('admin.articles');
+    Route::post('/admin/articles/{article}/decision', [ArticleApprovalController::class, 'decide'])->name('admin.articles.decide');
 
     Route::get('/admin/orders', [AdminOrderController::class, 'index'])->name('admin.orders');
     Route::get('/admin/orders/{order}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
@@ -230,6 +239,18 @@ Route::middleware('auth')->group(function () {
 | Staff Dashboard, Authentication, Order Management & Verification
 |--------------------------------------------------------------------------
 */
+Route::get('/seo', function () {
+    $user = auth()->user();
+
+    if (! $user instanceof User) {
+        return redirect()->route('seo.login');
+    }
+
+    $user->loadMissing('role');
+
+    return redirect()->to($user->dashboardUrl());
+})->name('seo.home');
+
 // Staff Authentication
 Route::get('/seo/login', [StaffAuthController::class, 'showLogin'])->name('seo.login');
 Route::post('/seo/login', [StaffAuthController::class, 'login'])->name('seo.login.post');
@@ -247,5 +268,9 @@ Route::match(['put', 'patch'], '/seo/orders/{id}/status', [StaffOrderController:
 
 // SEO Operations Views
 Route::view('/seo/articles', 'seo.articles')->name('seo.articles');
+Route::post('/seo/articles/{orderItem}/approval', [ArticleController::class, 'submitForApproval'])->name('seo.articles.approval');
+Route::post('/seo/articles/{article}/publish', [ArticleController::class, 'publish'])->name('seo.articles.publish');
 Route::view('/seo/submissions', 'seo.submissions')->name('seo.submissions');
 Route::view('/seo/completed-orders', 'seo.completed-orders')->name('seo.completed-orders');
+
+require __DIR__.'/marketplace.php';

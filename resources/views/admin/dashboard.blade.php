@@ -20,6 +20,22 @@
     @endphp
 
     <div class="space-y-6">
+        @if (session('success'))
+            <div class="rounded-xl bg-emerald-50 p-4 text-sm font-medium text-emerald-800 ring-1 ring-emerald-200">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="rounded-xl bg-rose-50 p-4 text-sm text-rose-800 ring-1 ring-rose-200">
+                <ul class="list-disc space-y-1 pl-5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <section class="overflow-hidden rounded-2xl bg-navy text-white shadow-sm">
             <div class="h-1.5 bg-brand"></div>
             <div class="flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
@@ -85,6 +101,38 @@
                     </div>
                     <button type="button" class="btn-navy" disabled>Assign to SEO staff</button>
                 </div>
+            @endforelse
+        </section>
+
+        <section class="panel overflow-hidden" id="blog-reviews">
+            <div class="flex flex-col gap-3 border-b border-navy/10 px-5 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-6">
+                <div>
+                    <h2 class="text-lg font-semibold">Blog</h2>
+                    <p class="mt-1 text-sm text-navy/60">Blogs sent from the SEO staff Articles page. Review, approve, or reject them here.</p>
+                </div>
+                <a href="{{ route('admin.articles') }}" class="text-sm font-semibold text-brand">All blog reviews</a>
+            </div>
+            @forelse ($pendingBlogs as $article)
+                <form method="POST" action="{{ route('admin.articles.decide', $article) }}" class="grid gap-3 border-b border-navy/10 px-5 py-4 last:border-b-0 sm:px-6">
+                    @csrf
+                    <div class="min-w-0">
+                        <p class="font-medium">{{ $article->title }}</p>
+                        <p class="mt-1 text-xs text-navy/55">{{ $article->staff?->name ?? 'SEO staff' }} · {{ $article->orderItem?->order?->order_number ?? 'Order' }}</p>
+                        <p class="mt-2 text-sm leading-6 text-navy/70">{{ \Illuminate\Support\Str::limit($article->body, 220) }}</p>
+                    </div>
+                    <div>
+                        <label for="blog-feedback-{{ $article->id }}" class="text-sm font-medium">Reviewer feedback</label>
+                        <textarea id="blog-feedback-{{ $article->id }}" name="feedback" rows="2" placeholder="Required when you reject this blog" class="mt-2 w-full rounded-xl border border-navy/15 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/30">{{ (string) old('_article_id') === (string) $article->id ? old('feedback') : '' }}</textarea>
+                    </div>
+                    <input type="hidden" name="_article_id" value="{{ $article->id }}">
+                    <div class="flex flex-wrap gap-2">
+                        <button type="submit" name="decision" value="review" class="btn bg-white text-navy ring-1 ring-navy/15 hover:bg-canvas">Review</button>
+                        <button type="submit" name="decision" value="rejected" class="btn bg-rose-50 text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100">Reject</button>
+                        <button type="submit" name="decision" value="approve" class="btn-primary">Approval</button>
+                    </div>
+                </form>
+            @empty
+                <p class="px-5 py-6 text-sm text-navy/60 sm:px-6">No blogs are waiting. SEO staff send a blog from their own Articles page.</p>
             @endforelse
         </section>
 

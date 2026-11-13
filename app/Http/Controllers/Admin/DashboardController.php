@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Article;
 use App\Models\Niche;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -38,6 +39,12 @@ class DashboardController extends Controller
                 ['label' => 'Total Orders', 'value' => Order::query()->count(), 'hint' => 'Orders placed by customers'],
                 ['label' => 'Total Payments', 'value' => Payment::query()->count(), 'hint' => 'Payments recorded for orders and credits'],
             ],
+            'pendingBlogs' => Article::query()
+                ->with(['staff:id,name', 'orderItem.order:id,order_number'])
+                ->whereIn('status', ['pending_admin', 'in_review'])
+                ->latest('submitted_at')
+                ->limit(8)
+                ->get(),
             'unassignedItems' => OrderItem::query()
                 ->with(['order.customer:id,name', 'assignment.staff:id,name'])
                 ->whereDoesntHave('assignment')

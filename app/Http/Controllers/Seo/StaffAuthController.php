@@ -14,12 +14,24 @@ use Illuminate\View\View;
 class StaffAuthController extends Controller
 {
     /**
+     * Open the staff portal. Guests land on the login page.
+     */
+    public function home(): RedirectResponse
+    {
+        $user = Auth::user();
+
+        return $user === null
+            ? redirect()->route('seo.login')
+            : redirect()->to($this->destination($user));
+    }
+
+    /**
      * Show the staff login page.
      */
     public function showLogin(): View|RedirectResponse
     {
         if (Auth::check()) {
-            return redirect()->route('seo.dashboard');
+            return redirect()->to($this->destination(Auth::user()));
         }
 
         return view('seo.login');
@@ -40,9 +52,21 @@ class StaffAuthController extends Controller
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
-            // Ensure a staff profile exists for the logged in user
             $user = Auth::user();
-            if ($user && ! $user->staffProfile) {
+            $user?->loadMissing('role');
+
+            if ($user === null || ! in_array($user->role?->role_name, ['Staff', 'SEO', 'Admin'], true)) {
+                $email = $request->string('email')->toString();
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect()->route('seo.login')->withErrors([
+                    'email' => 'This account cannot access the SEO staff portal.',
+                ])->withInput(['email' => $email]);
+            }
+
+            if (! $user->staffProfile) {
                 StaffProfile::firstOrCreate(
                     ['user_id' => $user->id],
                     [
@@ -53,12 +77,21 @@ class StaffAuthController extends Controller
             }
 
             return redirect()->route('seo.dashboard')
-                ->with('success', 'Welcome back, '.Auth::user()->name.'!');
+                ->with('success', 'Welcome back, '.$user->name.'!');
         }
 
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ])->onlyInput('email');
+    }
+
+    private function destination(User $user): string
+    {
+        $user->loadMissing('role');
+
+        return in_array($user->role?->role_name, ['Staff', 'SEO', 'Admin'], true)
+            ? route('seo.dashboard')
+            : $user->dashboardUrl();
     }
 
     /**
