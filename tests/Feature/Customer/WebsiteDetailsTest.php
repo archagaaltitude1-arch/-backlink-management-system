@@ -2,10 +2,9 @@
 
 namespace Tests\Feature\Customer;
 
+use App\Models\Website;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class WebsiteDetailsModel extends Model
@@ -15,8 +14,8 @@ class WebsiteDetailsModel extends Model
     protected $guarded = [];
 }
 
-if (! class_exists(\App\Models\Website::class)) {
-    class_alias(WebsiteDetailsModel::class, \App\Models\Website::class);
+if (! class_exists(Website::class)) {
+    class_alias(WebsiteDetailsModel::class, Website::class);
 }
 
 class WebsiteDetailsTest extends TestCase
@@ -48,15 +47,17 @@ class WebsiteDetailsTest extends TestCase
 
     public function test_inactive_website_is_not_found(): void
     {
-        Schema::create('websites', function (Blueprint $table) {
-            $table->id();
-            $table->string('domain');
-            $table->string('status')->default('active');
-            $table->timestamps();
-        });
-
-        $id = \App\Models\Website::query()->create([
+        $id = Website::query()->create([
+            'website_name' => 'Paused',
             'domain' => 'paused.example',
+            'url' => 'https://paused.example',
+            'niche' => 'Technology',
+            'domain_rating' => 10,
+            'domain_authority' => 10,
+            'trust_flow' => 10,
+            'page_authority' => 10,
+            'monthly_traffic' => 100,
+            'price' => 10,
             'status' => 'inactive',
         ])->id;
 

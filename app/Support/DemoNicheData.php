@@ -44,6 +44,34 @@ class DemoNicheData
     }
 
     /**
+     * @return array<string, mixed>|null
+     */
+    public static function find(string $domain): ?array
+    {
+        foreach (self::rowsFor(self::names()[0]) as $row) {
+            if ($row['domain'] === $domain) {
+                return $row;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    public static function profileKey(array $row): string
+    {
+        $id = $row['id'] ?? null;
+
+        if (is_numeric($id)) {
+            return (string) $id;
+        }
+
+        return (string) ($row['domain'] ?? '');
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public static function rowsFor(string $niche): array

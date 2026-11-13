@@ -23,20 +23,20 @@
 @endphp
 
 <header class="border-b border-slate-200">
-    <nav aria-label="Marketplace" class="mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-7 gap-y-3 px-4 py-4 text-sm font-medium sm:px-6 lg:px-10">
+    <nav aria-label="Marketplace" class="relative mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 text-sm font-medium sm:gap-x-7 sm:px-6 lg:px-8">
         @foreach ($storeLinks as $label => $url)
-            <a class="hover:text-brand-dark" href="{{ $url }}">{{ $label }}</a>
+            <a class="inline-flex min-h-11 items-center hover:text-brand-dark" href="{{ $url }}">{{ $label }}</a>
         @endforeach
-        <details class="relative">
-            <summary class="cursor-pointer hover:text-brand-dark">Tools</summary>
-            <div class="absolute right-0 z-20 mt-2 grid min-w-40 gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <details class="sm:relative">
+            <summary class="cursor-pointer py-3 hover:text-brand-dark">Tools</summary>
+            <div class="absolute inset-x-4 z-20 grid min-w-40 gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:right-auto sm:left-0">
                 <a class="hover:text-brand-dark" href="{{ route('customer.saved-websites') }}">Saved websites</a>
                 <a class="hover:text-brand-dark" href="{{ route('customer.backlinks') }}">Backlinks</a>
                 <a class="hover:text-brand-dark" href="{{ route('customer.reports') }}">SEO reports</a>
                 <a class="hover:text-brand-dark" href="{{ route('customer.payment-history') }}">Payment history</a>
             </div>
         </details>
-        <a class="hover:text-brand-dark" href="{{ route('orders.cart') }}">Cart</a>
+        <a class="inline-flex min-h-11 items-center hover:text-brand-dark" href="{{ route('orders.cart') }}">Cart</a>
     </nav>
 </header>
 
@@ -52,7 +52,7 @@
         <p class="mt-5 font-display text-3xl font-bold tracking-tight text-black">My account</p>
     @endif
 
-    <nav aria-label="My account" class="mt-7 flex flex-wrap justify-center gap-x-5 gap-y-1 lg:mt-14">
+    <nav aria-label="My account" class="mt-4 grid grid-cols-2 gap-x-2 gap-y-1 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-5 lg:mt-8">
         @foreach ($accountLinks as $link)
             @php
                 [$label, $routeName, $icon] = $link;
@@ -60,17 +60,17 @@
                 $active = ! $fragment && (request()->routeIs($routeName) || ($routeName === 'orders.index' && request()->routeIs('orders.show')));
             @endphp
             <a href="{{ route($routeName).$fragment }}"
-                @class(['inline-flex items-center gap-1.5 border-b py-2 text-sm font-medium text-brand-dark hover:border-brand-dark', 'border-navy' => $active, 'border-transparent' => ! $active])
+                @class(['inline-flex min-h-11 min-w-0 items-center gap-1.5 border-b px-2 py-2 text-sm font-medium text-brand-dark hover:border-brand-dark sm:px-0', 'border-navy' => $active, 'border-transparent' => ! $active])
                 @if ($active) aria-current="page" @endif>
-                <svg class="size-4 text-navy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ $icon }}" /></svg>
+                <svg class="size-4 shrink-0 text-navy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ $icon }}" /></svg>
                 {{ $label }}
             </a>
         @endforeach
     </nav>
 
-    <form method="POST" action="{{ route('auth.logout') }}" class="mb-8 mt-4 flex justify-center lg:mb-9 lg:mt-6">
+    <form method="POST" action="{{ route('auth.logout') }}" class="mb-5 mt-2 flex justify-end sm:mb-7 sm:justify-center">
         @csrf
-        <button type="submit" class="inline-flex items-center gap-1.5 py-2 text-sm font-medium text-brand-dark hover:underline">
+        <button type="submit" class="inline-flex min-h-11 items-center gap-1.5 px-2 py-2 text-sm font-medium text-brand-dark hover:underline">
             <svg class="size-4 text-navy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H4v16h6m4-12 4 4-4 4m4-4H8" /></svg>
             Logout
         </button>
