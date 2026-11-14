@@ -51,7 +51,7 @@
 @php
     $loginHref = \Illuminate\Support\Facades\Route::has('auth.login') ? route('auth.login') : url('/login');
     $canSave = auth()->check() && \Illuminate\Support\Facades\Route::has('customer.saved-websites.store');
-    $canCart = auth()->check() && \Illuminate\Support\Facades\Route::has('orders.cart.items.store');
+    $canCart = \Illuminate\Support\Facades\Route::has('orders.cart.items.store');
     $ahrefsMax = 0;
     $semrushMax = 0;
     foreach ($rows as $publisher) {

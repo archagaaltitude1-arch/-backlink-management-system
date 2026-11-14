@@ -7,7 +7,9 @@ use App\Models\CartItem;
 use App\Models\Coupon;
 use App\Models\CouponUsage;
 use App\Models\Order;
+use App\Models\User;
 use App\Models\Website;
+use App\Notifications\CheckoutNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -80,6 +82,10 @@ class OrderController extends Controller
             return response()->json(['data' => $cart->fresh('items')->items], 201);
         }
 
+        if (! $request->user()) {
+            return redirect()->guest(route('auth.login'))->with('url.intended', route('orders.checkout'));
+        }
+
         return back()->with('success', 'Item added to your cart.');
     }
 
@@ -116,7 +122,8 @@ class OrderController extends Controller
         $coupon = Coupon::query()->where('code', Str::upper(trim($data['coupon_code'])))->first();
         $subtotal = $this->cartSubtotal($cart);
 
-        if (! $coupon || ! $coupon->isAvailableTo($request->user(), $subtotal)) {
+        if (! $coupon || ! $coupon->isAvailableTo($request->user(), $subtotal)
+            || ($coupon->id !== (int) $cart->checkout_coupon_id && str_starts_with($coupon->code, 'CHECKOUT-'))) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'This coupon is not valid for this purchase.'], 422);
             }
@@ -165,28 +172,89 @@ class OrderController extends Controller
             return response()->json(['data' => ['items' => $cart->items, 'subtotal' => $subtotal, 'discount' => (float) $cart->coupon_discount, 'total' => max(0, $subtotal - (float) $cart->coupon_discount)]]);
         }
 
-        return view('orders.checkout', ['cart' => $cart, 'total' => max(0, $subtotal - (float) $cart->coupon_discount)]);
+        return view('orders.checkout', ['cart' => $cart, 'subtotal' => $subtotal, 'total' => max(0, $subtotal - (float) $cart->coupon_discount)]);
+    }
+
+    public function emailCheckoutCoupon(Request $request): RedirectResponse
+    {
+        $cart = $this->cartFor($request);
+        abort_if($cart->items->isEmpty(), 422);
+
+        $coupon = DB::transaction(function () use ($cart, $request): Coupon {
+            $lockedCart = Cart::query()->lockForUpdate()->findOrFail($cart->id);
+            abort_unless($lockedCart->status === 'active' && $lockedCart->items()->exists(), 409);
+
+            $coupon = Coupon::find($lockedCart->checkout_coupon_id);
+            if ($coupon?->isAvailableTo($request->user(), $this->cartSubtotal($lockedCart))) {
+                return $coupon;
+            }
+
+            $coupon = Coupon::create([
+                'code' => 'CHECKOUT-'.Str::upper(Str::random(16)),
+                'customer_id' => $request->user()->id,
+                'discount_type' => 'percentage',
+                'discount_value' => 10,
+                'usage_limit' => 1,
+                'per_customer_limit' => 1,
+                'expires_at' => now()->addDay(),
+                'is_active' => true,
+            ]);
+            $lockedCart->update(['checkout_coupon_id' => $coupon->id]);
+
+            return $coupon;
+        });
+
+        $sent = rescue(function () use ($coupon, $request): bool {
+            $request->user()->notify(new CheckoutNotification($coupon));
+
+            return ! in_array(config('mail.default'), ['log', 'array'], true);
+        }, false);
+
+        return back()->with($sent ? 'success' : 'error', $sent
+            ? 'Check your email for your checkout coupon.'
+            : 'The website could not send the coupon. You can try again or continue to payment.');
     }
 
     public function placeOrder(Request $request): RedirectResponse|JsonResponse
     {
-        $data = $request->validate([
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.target_url' => ['required', 'url', 'max:2048'],
+        return $this->createOrder($request, $request->validate($this->publishingRules())['items']);
+    }
+
+    public function startPayment(Request $request): RedirectResponse|JsonResponse
+    {
+        return $this->createOrder($request, []);
+    }
+
+    private function publishingRules(): array
+    {
+        return [
+            'items' => ['required', 'array', 'list', 'min:1'],
+            'items.*.target_url' => ['required', 'url:http,https', 'max:2048'],
             'items.*.anchor_text' => ['required', 'string', 'max:255'],
             'items.*.article_topic' => ['required', 'string', 'max:255'],
             'items.*.requirements' => ['nullable', 'string', 'max:5000'],
-        ]);
+        ];
+    }
+
+    private function createOrder(Request $request, array $details): RedirectResponse|JsonResponse
+    {
         $cart = $this->cartFor($request);
         if ($cart->items->isEmpty()) {
             return redirect()->route('orders.cart')->with('error', 'Your cart is empty.');
         }
 
-        $order = DB::transaction(function () use ($request, $cart, $data) {
+        $order = DB::transaction(function () use ($request, $cart, $details): Order {
+            $cart = Cart::query()->lockForUpdate()->findOrFail($cart->id)->load('items');
+            if ($cart->status !== 'active' || $cart->items->isEmpty()
+                || ($details !== [] && count($details) !== $cart->items->count())) {
+                throw ValidationException::withMessages(['items' => 'Your cart changed. Review it before continuing.']);
+            }
+
             $subtotal = $this->cartSubtotal($cart);
             $coupon = $cart->coupon_code ? Coupon::query()->where('code', $cart->coupon_code)->lockForUpdate()->first() : null;
 
-            if ($cart->coupon_code && (! $coupon || ! $coupon->isAvailableTo($request->user(), $subtotal))) {
+            if ($cart->coupon_code && (! $coupon || ! $coupon->isAvailableTo($request->user(), $subtotal)
+                || (str_starts_with($coupon->code, 'CHECKOUT-') && $coupon->id !== (int) $cart->checkout_coupon_id))) {
                 throw ValidationException::withMessages(['coupon_code' => 'This coupon is no longer available.']);
             }
 
@@ -203,13 +271,13 @@ class OrderController extends Controller
                 'coupon_code' => $coupon?->code,
             ]);
             foreach ($cart->items as $index => $cartItem) {
-                $details = $data['items'][$index];
+                $itemDetails = $details[$index] ?? [];
                 $order->items()->create([
                     'website_id' => $cartItem->website_id, 'service_id' => $cartItem->service_id,
                     'item_name' => $cartItem->item_name, 'unit_price' => $cartItem->unit_price, 'quantity' => $cartItem->quantity,
                     'credit_cost' => $cartItem->credit_cost * $cartItem->quantity,
-                    'target_url' => $details['target_url'], 'anchor_text' => $details['anchor_text'],
-                    'article_topic' => $details['article_topic'], 'requirements' => $details['requirements'] ?? null,
+                    'target_url' => $itemDetails['target_url'] ?? '', 'anchor_text' => $itemDetails['anchor_text'] ?? '',
+                    'article_topic' => $itemDetails['article_topic'] ?? '', 'requirements' => $itemDetails['requirements'] ?? null,
                 ]);
             }
             if ($coupon) {
@@ -220,7 +288,7 @@ class OrderController extends Controller
                     'discount_amount' => $discount,
                 ]);
             }
-            $cart->update(['status' => 'converted']);
+            $cart->update(['status' => 'converted', 'session_id' => (string) Str::uuid()]);
 
             return $order;
         });
@@ -229,7 +297,34 @@ class OrderController extends Controller
             return response()->json(['data' => $order->load('items'), 'payment_url' => route('orders.payment', $order)], 201);
         }
 
-        return redirect()->route('orders.payment', $order)->with('success', 'Order created. Complete payment to begin processing.');
+        return redirect()->route('orders.payment', $order);
+    }
+
+    public function submitDetails(Request $request, Order $order): RedirectResponse
+    {
+        abort_unless($order->customer_id === $request->user()->id, 404);
+        $details = $request->validate($this->publishingRules())['items'];
+
+        DB::transaction(function () use ($order, $details): void {
+            $order = Order::query()->lockForUpdate()->findOrFail($order->id);
+            abort_unless($order->payment_status === 'paid' && $order->order_status === 'awaiting_details', 409);
+            $items = $order->items()->orderBy('id')->get();
+            if ($items->count() !== count($details)) {
+                throw ValidationException::withMessages(['items' => 'Enter publishing details for each item.']);
+            }
+
+            foreach ($items as $index => $item) {
+                $item->update($details[$index]);
+            }
+
+            $order->update(['order_status' => 'awaiting_approval']);
+        });
+
+        rescue(fn () => $request->user()->notify(new CheckoutNotification($order)));
+        User::query()->where('status', 'active')->whereRelation('role', 'role_name', 'Admin')
+            ->each(fn (User $admin) => rescue(fn () => $admin->notify(new CheckoutNotification($order, forAdmin: true))));
+
+        return back()->with('success', 'Publishing details submitted. Your order is ready for admin review.');
     }
 
     public function index(Request $request): View|JsonResponse
@@ -251,25 +346,31 @@ class OrderController extends Controller
             return response()->json(['data' => $order->load('items', 'payments')]);
         }
 
-        return view('orders.order-detail', ['order' => $order->load('items', 'invoice', 'rewardCoupon')]);
+        return view('orders.order-detail', ['order' => $order->load(['items' => fn ($query) => $query->orderBy('id'), 'invoice', 'rewardCoupon'])]);
     }
 
     private function cartFor(Request $request): Cart
     {
+        $customerId = $request->user()?->id;
         $cart = Cart::query()
-            ->where('customer_id', $request->user()->id)
+            ->where('customer_id', $customerId)
             ->where('status', 'active')
+            ->when($customerId === null, fn ($query) => $query->where('session_id', $request->session()->getId()))
+            ->orderByRaw('case when session_id = ? then 0 else 1 end', [$request->session()->getId()])
             ->first();
 
         if (! $cart) {
             $cart = Cart::firstOrCreate(
                 ['session_id' => $request->session()->getId()],
-                ['customer_id' => $request->user()->id, 'status' => 'active']
+                ['customer_id' => $customerId, 'status' => 'active']
             );
         }
 
+        abort_unless((int) $cart->customer_id === (int) $customerId, 403);
+
         if ($cart->status !== 'active') {
-            $cart->update(['status' => 'active']);
+            $cart->items()->delete();
+            $cart->update(['status' => 'active', 'coupon_code' => null, 'coupon_discount' => 0, 'checkout_coupon_id' => null]);
         }
 
         if ($cart->session_id !== $request->session()->getId()) {

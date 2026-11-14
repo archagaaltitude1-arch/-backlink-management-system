@@ -106,7 +106,7 @@ class StripeCheckoutTest extends TestCase
         $package = CreditPackage::create(['name' => 'Starter credits', 'credits' => 100, 'price' => 29, 'is_active' => true]);
 
         $this->actingAs($customer)->get(route('orders.payment', $order))
-            ->assertOk()->assertSee('Pay with Stripe')->assertSee('Simulate Stripe payment');
+            ->assertOk()->assertSee('Pay with Stripe')->assertSee('Simulate payment');
         $this->get(route('customer.wallet'))
             ->assertOk()->assertSee('Buy with Stripe')->assertSee('Simulate Stripe purchase');
 

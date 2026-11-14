@@ -38,6 +38,7 @@ class OrderController extends Controller
         $assignment = $this->allowed($request->string('assignment')->toString(), array_keys($this->assignmentFilters));
 
         $orders = Order::query()
+            ->where('order_status', '!=', 'awaiting_details')
             ->with(['customer:id,name,email', 'items.assignment.staff:id,name', 'items.website:id,website_name,domain'])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($query) use ($search): void {
@@ -83,6 +84,8 @@ class OrderController extends Controller
 
     public function show(Order $order): View
     {
+        abort_if($order->order_status === 'awaiting_details', 404);
+
         $order->load(['customer', 'items.assignment.staff', 'items.website', 'payments', 'invoice']);
 
         return view('admin.orders.show', [
