@@ -69,50 +69,93 @@
             default => 'Preview',
         };
     @endphp
-    <section class="bg-[#F2F2F2]">
-        <div class="mx-auto max-w-[1240px] px-6 py-14 lg:py-16">
-            <nav aria-label="Breadcrumb" class="text-sm font-bold text-[#4A5560]">
-                <a href="{{ url('/') }}" class="hover:text-[#C0340D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Home</a>
+
+    <style>
+        .site-front { background: #fff; }
+        .site-front-wrap { max-width: 1100px; margin: 0 auto; padding: 28px 20px 8px; color: #152029; }
+        .site-front-crumb { margin: 0 0 18px; color: #4A5560; font-size: 14px; font-weight: 700; }
+        .site-front-crumb a { color: inherit; text-decoration: none; }
+        .site-front-crumb a:hover { color: #C0340D; }
+        .site-front h1 {
+            margin: 0;
+            font-family: Montserrat, sans-serif;
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 800;
+            line-height: 1.15;
+        }
+        .site-front-about, .site-front-detail {
+            margin: 16px 0 0;
+            max-width: 820px;
+            color: #4A5560;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+        .site-front h2 {
+            margin: 28px 0 0;
+            max-width: 820px;
+            font-family: Montserrat, sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            line-height: 1.3;
+        }
+        .site-front-checks {
+            margin: 16px 0 0;
+            max-width: 820px;
+            padding: 0;
+            list-style: none;
+            color: #4A5560;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+        .site-front-checks li + li { margin-top: 10px; }
+        .site-front-note {
+            margin: 16px 0 0;
+            max-width: 820px;
+            border-radius: 12px;
+            background: #FFF1EC;
+            padding: 12px 14px;
+            color: #C0340D;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+        .site-body { background: #F2F2F2; }
+        .site-body-wrap { max-width: 1240px; margin: 0 auto; padding: 28px 20px 72px; }
+    </style>
+
+    <section class="site-front">
+        <div class="site-front-wrap">
+            <nav class="site-front-crumb" aria-label="Breadcrumb">
+                <a href="{{ url('/') }}">Home</a>
                 <span aria-hidden="true"> / </span>
-                <a href="{{ route('sites.index') }}" class="hover:text-[#C0340D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Sites</a>
+                <a href="{{ route('sites.index') }}">Sites</a>
                 <span aria-hidden="true"> / </span>
-                <span class="text-navy">{{ $site['label'] }}</span>
+                <span>{{ $site['label'] }}</span>
             </nav>
 
-            <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-                <div class="min-w-0">
-                    <p class="text-[13px] font-extrabold tracking-wide text-[#C0340D] uppercase">Sites</p>
-                    <h1 class="mt-2 max-w-[900px] font-display text-[30px] leading-tight font-extrabold text-navy lg:text-[40px]">{{ $site['label'] }}</h1>
-                    <p class="mt-4 max-w-[760px] text-[17px] leading-8 text-[#4A5560]">{{ $site['about'] }}</p>
-                    <p class="mt-4 max-w-[760px] text-[17px] leading-8 text-[#4A5560]">{{ $site['detail'] }}</p>
-                    @if ($demo && $site['kind'] !== 'favorites')
-                        <p class="mt-4 max-w-[760px] rounded-xl bg-[#FFF1EC] px-4 py-3 text-[15px] leading-6 text-[#C0340D]">Sample data for preview. These figures belong to fictional .example publishers.</p>
-                    @endif
-                </div>
-                <aside class="min-w-0 rounded-[20px] border border-[#E3E5E8] bg-white p-5">
-                    <h2 class="font-display text-[18px] font-extrabold text-navy">What this list shows</h2>
-                    <ul class="mt-3 space-y-2">
-                        @foreach ($site['checks'] as $check)
-                            <li class="flex items-start gap-2 text-[15px] leading-6 text-[#4A5560]">
-                                <svg class="mt-1 h-4 w-4 shrink-0 text-[#D63A10]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7" /></svg>
-                                <span>{{ $check }}</span>
-                            </li>
-                        @endforeach
-                    </ul>
-                    <h2 class="mt-6 font-display text-[18px] font-extrabold text-navy">Other site lists</h2>
-                    <ul class="mt-3">
-                        @foreach ($sites as $other)
-                            @if ($other['slug'] !== $site['slug'])
-                                <li>
-                                    <a href="{{ route('sites.show', $other['slug']) }}" class="flex min-h-11 items-center rounded-xl px-2 text-[14px] leading-5 font-bold text-navy hover:bg-[#FFF1EC] hover:text-[#C0340D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">{{ $other['label'] }}</a>
-                                </li>
-                            @endif
-                        @endforeach
-                    </ul>
-                </aside>
-            </div>
+            <h1>{{ $site['label'] }}</h1>
+            <p class="site-front-about">{{ $site['about'] }}</p>
+            <h2>{{ $site['headline'] }}</h2>
+            <p class="site-front-detail">{{ $site['detail'] }}</p>
+            <ul class="site-front-checks">
+                @foreach ($site['checks'] as $check)
+                    <li>{{ $check }}</li>
+                @endforeach
+            </ul>
+            @if ($demo && $site['kind'] !== 'favorites')
+                <p class="site-front-note">Sample data for preview. These figures belong to fictional .example publishers.</p>
+            @endif
 
-            <div class="mt-6 rounded-[20px] border border-[#E3E5E8] bg-white p-5 sm:p-6">
+            @include('customer.sites.partials.also-check', [
+                'siteOptions' => $sites,
+                'currentSlug' => $site['slug'],
+            ])
+        </div>
+    </section>
+
+    <section class="site-body">
+        <div class="site-body-wrap">
+            <div class="rounded-[20px] border border-[#E3E5E8] bg-white p-5 sm:p-6">
                 <h2 class="font-display text-[22px] font-extrabold text-navy">Preview</h2>
                 @if ($site['chart'] === null)
                     <p class="mt-1 text-[15px] leading-6 text-[#4A5560]">Saved publishers appear here after you sign in.</p>

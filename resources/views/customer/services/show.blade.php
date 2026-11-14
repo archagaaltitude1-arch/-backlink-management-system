@@ -13,7 +13,7 @@
         $highlight = $page['h1_highlight'];
         $h1Before = e(\Illuminate\Support\Str::before($page['h1'], $highlight));
         $h1After = e(\Illuminate\Support\Str::after($page['h1'], $highlight));
-        $contact = 'mailto:[YOUR EMAIL]';
+        $contact = route('contact');
     @endphp
     <style>
         .svc-h1 { margin: 0; font-size: 34px; line-height: 1.1; font-weight: 800; }
@@ -89,10 +89,11 @@
         .price-card li { display: flex; align-items: flex-start; gap: 10px; margin-top: 12px; color: #152029; font-size: 14px; line-height: 1.45; }
         .price-check { display: grid; width: 20px; height: 20px; flex: 0 0 20px; place-items: center; margin-top: 1px; border-radius: 50%; background: #FFF1EC; color: #D63A10; }
         .price-check svg { width: 12px; height: 12px; }
-        .price-btn { display: flex; align-items: center; justify-content: center; min-height: 48px; margin-top: 28px; border: 1px solid #E3E5E8; border-radius: 999px; background: #fff; color: #152029; font-size: 15px; font-weight: 700; text-decoration: none; }
-        .price-btn:hover { border-color: #D63A10; color: #D63A10; }
-        .price-card.is-popular .price-btn { border-color: #D63A10; background: #D63A10; color: #fff; }
-        .price-card.is-popular .price-btn:hover { border-color: #FF4917; background: #FF4917; color: #fff; }
+        .price-actions { display: flex; flex-direction: column; gap: 8px; margin-top: auto; padding-top: 28px; }
+        .price-btn { display: flex; align-items: center; justify-content: center; min-height: 44px; border: 1.5px solid #D63A10; border-radius: 12px; background: #D63A10; color: #fff; font-size: 15px; font-weight: 700; text-decoration: none; }
+        .price-btn:hover { border-color: #FF4917; background: #FF4917; color: #fff; }
+        .price-btn-line { border-color: #152029; background: #fff; color: #152029; }
+        .price-btn-line:hover { border-color: #152029; background: #F2F2F2; color: #152029; }
         .price-btn:focus-visible { outline: 2px solid #D63A10; outline-offset: 2px; }
         .price-foot { margin: 28px 0 0; text-align: center; color: #4A5560; font-size: 15px; line-height: 1.7; }
         .price-foot a { color: #152029; font-weight: 700; text-underline-offset: 3px; }
@@ -101,33 +102,7 @@
             .price-sheet { padding: 56px 36px 40px; }
             .price-grid { grid-template-columns: repeat(var(--plans, 3), minmax(0, 1fr)); gap: 18px; }
         }
-        .svc-say { overflow: hidden; background: #fff; }
-        .svc-say-layout { display: grid; grid-template-columns: 1fr; gap: 28px; align-items: center; max-width: 1240px; margin: 0 auto; padding: 56px 24px; }
-        .svc-say-title { margin: 0; max-width: 280px; color: #152029; font-size: 36px; line-height: 1.12; font-weight: 800; }
-        .svc-say-nav { display: flex; gap: 10px; margin-top: 28px; }
-        .svc-say-btn { display: grid; width: 48px; height: 48px; place-items: center; border: 1.5px solid #E4E6EA; border-radius: 999px; background: #fff; color: #152029; cursor: pointer; }
-        .svc-say-btn:hover:not(:disabled) { border-color: #FF4917; color: #FF4917; }
-        .svc-say-btn:disabled { opacity: 0.35; cursor: default; }
-        .svc-say-btn:focus-visible { outline: 2px solid #D63A10; outline-offset: 2px; }
-        .svc-say-stage { position: relative; min-height: 420px; overflow: hidden; }
-        .svc-say-orb { position: absolute; top: 50%; right: -90px; width: 560px; height: 560px; border-radius: 50%; background: radial-gradient(circle at 38% 38%, #FF8A55 0%, #FF4917 48%, #E23B0C 100%); transform: translateY(-50%); }
-        .svc-say-track { position: relative; z-index: 1; display: flex; gap: 18px; padding: 24px 8px 8px; transition: transform 0.4s ease; }
-        .svc-say-card { width: 280px; flex: none; margin: 0; }
-        .svc-say-bubble { position: relative; margin: 0; border-radius: 16px; background: #fff; padding: 22px 20px 24px; color: #4A5560; font-size: 14.5px; line-height: 1.65; box-shadow: 0 14px 34px rgba(21, 32, 41, 0.1); }
-        .svc-say-bubble::after { content: ""; position: absolute; bottom: -8px; left: 26px; width: 16px; height: 16px; background: #fff; transform: rotate(45deg); }
-        .svc-say-person { display: flex; align-items: center; gap: 10px; margin-top: 20px; }
-        .svc-say-person img { width: 46px; height: 46px; flex: none; border-radius: 999px; object-fit: cover; box-shadow: 0 0 0 2px #fff; }
-        .svc-say-name { margin: 0; color: #152029; font-size: 15px; font-weight: 800; }
-        .svc-say-role { margin: 2px 0 0; color: #FF4917; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-        @media (min-width: 900px) {
-            .svc-say-layout { grid-template-columns: 280px minmax(0, 1fr); gap: 12px 28px; padding: 72px 24px 88px; }
-            .svc-say-title { font-size: 44px; }
-        }
-        @media (max-width: 899px) {
-            .svc-say-stage { min-height: 390px; }
-            .svc-say-orb { width: 420px; height: 420px; right: -140px; }
-            .svc-say-card { width: min(280px, 78vw); }
-        }
+}
         .faq-section { position: relative; overflow: hidden; background: #F6F5F3; }
         .faq-curve { position: absolute; width: 220px; height: 460px; color: #F0B39A; pointer-events: none; }
         .faq-curve-left { top: 24px; left: -40px; }
@@ -344,53 +319,22 @@
                                     </li>
                                 @endforeach
                             </ul>
-                            <a class="price-btn" href="{{ url('/marketplace?'.http_build_query(['service' => $page['slug'], 'dr_min' => $tier['dr_min']])) }}">Buy Now</a>
+                            <div class="price-actions">
+                                <a class="price-btn" href="{{ route('publishers.index') }}">Browse publishers</a>
+                                <a class="price-btn price-btn-line" href="{{ route('packages.index') }}">All packages</a>
+                            </div>
                         </article>
                     @endforeach
                 </div>
                 <p class="price-foot">
-                    <a href="{{ url('/marketplace?service='.$page['slug']) }}">Check out the publisher sites and individual pricing</a>
+                    <a href="{{ route('publishers.index') }}">Check out the publisher sites and individual pricing</a>
                 </p>
                 <p class="price-foot">Need a custom or bulk order? <a href="{{ $contact }}">Contact us</a></p>
             </div>
         </div>
     </section>
 
-    <section class="svc-say" aria-labelledby="reviews-heading" aria-roledescription="carousel">
-        <div class="svc-say-layout">
-            <div>
-                <h2 id="reviews-heading" class="svc-say-title font-display">What our customers are saying</h2>
-                <div class="svc-say-nav">
-                    <button type="button" class="svc-say-btn" data-svc-review-prev aria-label="Previous reviews">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3 5 8l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
-                    <button type="button" class="svc-say-btn" data-svc-review-next aria-label="Next reviews">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m6 3 5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
-                </div>
-            </div>
-            {{-- Sample reviews and portraits for the layout. Replace with real, approved customers before launch. --}}
-            <div class="svc-say-stage" data-svc-review-stage>
-                <div class="svc-say-orb" aria-hidden="true"></div>
-                <div class="svc-say-track" data-svc-review-track>
-                    @foreach ($page['reviews'] ?? [] as $review)
-                        <figure class="svc-say-card" data-svc-review-card>
-                            <blockquote class="svc-say-bubble">{{ $review['quote'] }}</blockquote>
-                            <figcaption class="svc-say-person">
-                                <img src="{{ asset('images/reviews/'.$review['photo']) }}" alt="" width="46" height="46">
-                                <div>
-                                    <p class="svc-say-name">{{ $review['name'] }}</p>
-                                    <p class="svc-say-role">{{ $review['role'] }}</p>
-                                </div>
-                            </figcaption>
-                        </figure>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="faq-section" aria-labelledby="faq-heading">
+<section class="faq-section" aria-labelledby="faq-heading">
         <svg class="faq-curve faq-curve-left" viewBox="0 0 180 420" fill="none" aria-hidden="true">
             <path d="M150 10C40 80 20 180 70 250C120 320 30 370 20 410" stroke="currentColor" stroke-width="1.5"/>
         </svg>
@@ -476,38 +420,7 @@
                 window.addEventListener('resize', update);
                 update();
             });
-
-            var reviewTrack = document.querySelector('[data-svc-review-track]');
-            var reviewStage = document.querySelector('[data-svc-review-stage]');
-            var reviewCards = reviewTrack ? Array.prototype.slice.call(reviewTrack.querySelectorAll('[data-svc-review-card]')) : [];
-            var reviewPrev = document.querySelector('[data-svc-review-prev]');
-            var reviewNext = document.querySelector('[data-svc-review-next]');
-            var reviewIndex = 0;
-
-            function reviewStep() {
-                if (!reviewCards.length) return 0;
-                var styles = window.getComputedStyle(reviewTrack);
-                var gap = parseFloat(styles.columnGap || styles.gap) || 0;
-                return reviewCards[0].getBoundingClientRect().width + gap;
-            }
-
-            function reviewMax() {
-                if (!reviewStage || !reviewCards.length) return 0;
-                var visible = Math.max(1, Math.floor((reviewStage.clientWidth + 8) / reviewStep()));
-                return Math.max(0, reviewCards.length - visible);
-            }
-
-            function showReview() {
-                if (!reviewTrack || !reviewCards.length) return;
-                var max = reviewMax();
-                if (reviewIndex > max) reviewIndex = max;
-                if (reviewIndex < 0) reviewIndex = 0;
-                reviewTrack.style.transform = 'translateX(' + (-reviewIndex * reviewStep()) + 'px)';
-                if (reviewPrev) reviewPrev.disabled = reviewIndex <= 0;
-                if (reviewNext) reviewNext.disabled = reviewIndex >= max;
-            }
-
-            if (reviewNext) reviewNext.addEventListener('click', function () { reviewIndex += 1; showReview(); });
+});
             if (reviewPrev) reviewPrev.addEventListener('click', function () { reviewIndex -= 1; showReview(); });
             window.addEventListener('resize', showReview);
             showReview();

@@ -7,10 +7,10 @@
             </button>
         @endif
         @if ($part !== 'save')
-            <button type="button" class="nd-publish" disabled title="Demo data">
+            <a class="nd-publish" href="{{ route('publish.show', $site['domain']) }}">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M6 6h15l-1.5 9h-12L6 6Z"/><path d="M6 6 5 3H2"/><circle cx="9" cy="20" r="1.2" fill="currentColor"/><circle cx="18" cy="20" r="1.2" fill="currentColor"/></svg>
                 Publish
-            </button>
+            </a>
         @endif
     @else
         @if ($part !== 'buy' && $canSave)
@@ -28,20 +28,10 @@
             </form>
         @endif
         @if ($part !== 'save')
-            @if ($canCart)
-                <form method="POST" action="{{ route('orders.cart.items.store') }}">
-                    @csrf
-                    <input type="hidden" name="product_key" value="guest_post">
-                    <input type="hidden" name="quantity" value="1">
-                    <input type="hidden" name="website_id" value="{{ $site['id'] }}">
-                    <button type="submit" class="nd-publish">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M6 6h15l-1.5 9h-12L6 6Z"/><path d="M6 6 5 3H2"/><circle cx="9" cy="20" r="1.2" fill="currentColor"/><circle cx="18" cy="20" r="1.2" fill="currentColor"/></svg>
-                        Publish
-                    </button>
-                </form>
-            @else
-                <a href="{{ $loginHref }}" class="nd-publish">Login to buy</a>
-            @endif
+            <a class="nd-publish" href="{{ route('publish.show', $site['id']) }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M6 6h15l-1.5 9h-12L6 6Z"/><path d="M6 6 5 3H2"/><circle cx="9" cy="20" r="1.2" fill="currentColor"/><circle cx="18" cy="20" r="1.2" fill="currentColor"/></svg>
+                Publish
+            </a>
         @endif
     @endif
 </div>

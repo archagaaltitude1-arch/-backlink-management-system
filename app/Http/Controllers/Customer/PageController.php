@@ -32,6 +32,13 @@ class PageController extends Controller
         ]);
     }
 
+    public function contact(): View
+    {
+        return view('customer.pages.contact', [
+            'hideTestimonials' => true,
+        ]);
+    }
+
     public function services(): View
     {
         $services = $this->activeModels('App\\Models\\Service', 'services', 'service_name')
@@ -229,13 +236,14 @@ class PageController extends Controller
                 'title' => 'Niche Edit',
                 'description' => 'Your link added to an existing, already-indexed article that has age and traffic.',
                 'best_for' => 'Faster results on pages that already rank.',
-                'button' => 'View Niche Edit Prices',
+                'button' => 'View Niche Edit',
                 'featured' => false,
+                'cta_href' => route('sites.show', 'link-insertions-niche-edits'),
                 'options' => [
-                    ['label' => 'Niche edits on aged content', 'href' => $market(['service' => 'niche-edit'])],
-                    ['label' => 'Niche edits on Technology sites', 'href' => $market(['service' => 'niche-edit', 'niche' => 'Technology'])],
-                    ['label' => 'DR 50+ niche edits', 'href' => $market(['service' => 'niche-edit', 'dr_min' => 50])],
-                    ['label' => 'DR 70+ niche edits', 'href' => $market(['service' => 'niche-edit', 'dr_min' => 70])],
+                    ['label' => 'Niche edits on aged content', 'href' => route('sites.show', 'link-insertions-niche-edits')],
+                    ['label' => 'Niche edits on Technology sites', 'href' => route('sites.show', ['slug' => 'link-insertions-niche-edits', 'niche' => 'Technology'])],
+                    ['label' => 'DR 50+ niche edits', 'href' => route('sites.show', ['slug' => 'link-insertions-niche-edits', 'dr_min' => 50])],
+                    ['label' => 'DR 70+ niche edits', 'href' => route('sites.show', ['slug' => 'link-insertions-niche-edits', 'dr_min' => 70])],
                 ],
             ],
         ];

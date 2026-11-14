@@ -26,9 +26,7 @@ class SiteListing
 
         $filtered = match ($kind) {
             'premium-guest' => $this->guestPosts($rows)->sortByDesc(fn (array $row) => $row['dr'] ?? -1),
-            'niche-edit' => $rows
-                ->filter(fn (array $row) => strcasecmp((string) ($row['link_type'] ?? ''), 'Niche edit') === 0)
-                ->sortByDesc(fn (array $row) => $row['dr'] ?? -1),
+            'niche-edit' => $rows->sortByDesc(fn (array $row) => $row['dr'] ?? -1),
             'guest-traffic' => $this->guestPosts($rows)
                 ->filter(fn (array $row) => (int) ($row['traffic'] ?? 0) > 0)
                 ->sortByDesc(fn (array $row) => $row['traffic'] ?? -1),

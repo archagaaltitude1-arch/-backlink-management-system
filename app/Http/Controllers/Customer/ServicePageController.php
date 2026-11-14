@@ -24,7 +24,7 @@ class ServicePageController extends Controller
                 'icon' => $this->iconFor($slug),
                 'menu' => $item['line'],
                 'turnaround' => $service['turnaround'] ?? '',
-                'price' => $this->fromPriceLabel($this->matchedService($slug)),
+                'price' => $this->fromPriceLabel($this->matchedService($slug), $slug),
             ];
         }
 
@@ -146,11 +146,11 @@ class ServicePageController extends Controller
     {
         $service = $this->matchedService($slug);
 
-        if ($service && is_numeric($service->base_price ?? null)) {
+        if ($service && is_numeric($service->base_price ?? null) && (float) $service->base_price > 0) {
             return $this->money($service->base_price);
         }
 
-        return '[PRICE]';
+        return $this->lowestTierPrice($slug) ?? '[PRICE]';
     }
 
     private function iconFor(string $slug): string
@@ -303,13 +303,37 @@ class ServicePageController extends Controller
         return '[PRICE]';
     }
 
-    private function fromPriceLabel(?object $service): string
+    private function fromPriceLabel(?object $service, string $slug): string
     {
-        if ($service && is_numeric($service->base_price ?? null)) {
+        if ($service && is_numeric($service->base_price ?? null) && (float) $service->base_price > 0) {
             return 'From '.$this->money($service->base_price);
         }
 
-        return 'From [PRICE]';
+        $lowest = $this->lowestTierPrice($slug);
+
+        return $lowest === null ? 'From [PRICE]' : 'From '.$lowest;
+    }
+
+    private function lowestTierPrice(string $slug): ?string
+    {
+        $tiers = config('backlink_services.'.$slug.'.tiers', []);
+        $lowest = null;
+
+        foreach (is_array($tiers) ? $tiers : [] as $tier) {
+            $price = (string) ($tier['price'] ?? '');
+
+            if (! preg_match('/\$([0-9,]+(?:\.[0-9]+)?)/', $price, $match)) {
+                continue;
+            }
+
+            $value = (float) str_replace(',', '', $match[1]);
+
+            if ($lowest === null || $value < $lowest) {
+                $lowest = $value;
+            }
+        }
+
+        return $lowest === null ? null : $this->money($lowest);
     }
 
     private function money(mixed $value): string

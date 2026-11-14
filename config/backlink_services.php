@@ -14,12 +14,12 @@ $niches = [
     'E-commerce', 'Automotive', 'Sports', 'Food', 'Agriculture & Farming',
 ];
 
-$tiers = function (array $features, string $premiumNote) {
+$tiers = function (array $features, string $premiumNote, array $prices) {
     return [
-        ['name' => 'Starter',      'dr_label' => 'DR 30–40', 'dr_min' => 30, 'links' => '5',      'price' => '[PRICE]', 'popular' => false, 'features' => $features],
-        ['name' => 'Growth',       'dr_label' => 'DR 40–50', 'dr_min' => 40, 'links' => '10',     'price' => '[PRICE]', 'popular' => true,  'features' => $features],
-        ['name' => 'Professional', 'dr_label' => 'DR 50–60', 'dr_min' => 50, 'links' => '25',     'price' => '[PRICE]', 'popular' => false, 'features' => $features],
-        ['name' => 'Premium',      'dr_label' => 'DR 60+',   'dr_min' => 60, 'links' => 'Custom', 'price' => '[PRICE]', 'popular' => false, 'features' => [$premiumNote, 'Priority delivery', 'Verified report']],
+        ['name' => 'Starter',      'dr_label' => 'DR 30–40', 'dr_min' => 30, 'links' => '5',      'price' => $prices[0], 'popular' => false, 'features' => $features],
+        ['name' => 'Growth',       'dr_label' => 'DR 40–50', 'dr_min' => 40, 'links' => '10',     'price' => $prices[1], 'popular' => true,  'features' => $features],
+        ['name' => 'Professional', 'dr_label' => 'DR 50–60', 'dr_min' => 50, 'links' => '25',     'price' => $prices[2], 'popular' => false, 'features' => $features],
+        ['name' => 'Premium',      'dr_label' => 'DR 60+',   'dr_min' => 60, 'links' => 'Custom', 'price' => $prices[3], 'popular' => false, 'features' => [$premiumNote, 'Priority delivery', 'Verified report']],
     ];
 };
 
@@ -44,7 +44,7 @@ return [
             ['label' => 'Anchor text',   'guest-post' => 'Your choice',            'niche-edit' => 'Your choice',           'contextual-link' => 'Your choice',          'text-link' => 'Brand, URL or keyword'],
             ['label' => 'Turnaround',    'guest-post' => '5–14 days',              'niche-edit' => '3–7 days',              'contextual-link' => '3–7 days',             'text-link' => '2–5 days'],
             ['label' => 'Best for',      'guest-post' => 'Topical authority',      'niche-edit' => 'Faster results',        'contextual-link' => 'Strong relevance',     'text-link' => 'Low-cost authority'],
-            ['label' => 'Price from',    'guest-post' => '[PRICE]',                'niche-edit' => '[PRICE]',               'contextual-link' => '[PRICE]',              'text-link' => '[PRICE]'],
+            ['label' => 'Price from',    'guest-post' => '$150',                   'niche-edit' => '$79',                   'contextual-link' => '$59',                  'text-link' => '$39'],
         ],
     ],
 
@@ -211,7 +211,7 @@ return [
             ['Verified report', "We confirm it's live and send you the details."],
         ],
         'packages_title' => 'Niche Edit Packages',
-        'tiers' => $tiers(['Aged article', 'Dofollow link', 'Verified report'], 'High-traffic aged pages'),
+        'tiers' => $tiers(['Aged article', 'Dofollow link', 'Verified report'], 'High-traffic aged pages', ['$79', '$129', '$279', 'From $349']),
         'reviews' => [
             ['photo' => 'review-amira.jpg', 'name' => 'Amira Shah', 'role' => 'Northline', 'quote' => 'The link was added to an article that was already indexed, so we did not wait for a new post to age.'],
             ['photo' => 'review-leo.jpg', 'name' => 'Leo Grant', 'role' => 'Harbor Digital', 'quote' => 'They matched our page to an existing article in the same niche before the publisher inserted the link.'],
@@ -263,7 +263,7 @@ return [
             ['Verified report', 'Live URL and metrics appear in your dashboard.'],
         ],
         'packages_title' => 'Contextual Link Packages',
-        'tiers' => $tiers(['In-content link', 'Niche match', 'Verified report'], 'High-authority sites'),
+        'tiers' => $tiers(['In-content link', 'Niche match', 'Verified report'], 'High-authority sites', ['$59', '$99', '$219', 'From $299']),
         'reviews' => [
             ['photo' => 'review-amira.jpg', 'name' => 'Amira Shah', 'role' => 'Northline', 'quote' => 'The link sits in the body of a related article, surrounded by text that mentions our topic.'],
             ['photo' => 'review-leo.jpg', 'name' => 'Leo Grant', 'role' => 'Harbor Digital', 'quote' => 'A contextual placement felt more natural for this page than a bare link on a resources list.'],
@@ -314,7 +314,7 @@ return [
             ['Verified report', 'We confirm the link and send you the live URL.'],
         ],
         'packages_title' => 'Text Link Packages',
-        'tiers' => $tiers(['Relevant page', 'Verified report'], 'High-authority sites'),
+        'tiers' => $tiers(['Relevant page', 'Verified report'], 'High-authority sites', ['$39', '$69', '$149', 'From $199']),
         'reviews' => [
             ['photo' => 'review-amira.jpg', 'name' => 'Amira Shah', 'role' => 'Northline', 'quote' => 'A simple text link on a relevant page was enough for this brief, and the live URL came back checked.'],
             ['photo' => 'review-leo.jpg', 'name' => 'Leo Grant', 'role' => 'Harbor Digital', 'quote' => 'We picked the site, sent the URL and anchor, and the publisher added the link without a full article.'],

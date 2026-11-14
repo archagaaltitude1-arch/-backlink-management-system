@@ -90,7 +90,7 @@
             <h2 class="font-display">Services</h2>
             <ul class="site-footer-links">
                 <li><a href="{{ url('/services/guest-post') }}">Guest Post</a></li>
-                <li><a href="{{ url('/services/niche-edit') }}">Niche Edit</a></li>
+                <li><a href="{{ route('sites.show', 'link-insertions-niche-edits') }}">Niche Edit</a></li>
                 <li><a href="{{ url('/services/contextual-link') }}">Contextual Link</a></li>
                 <li><a href="{{ url('/services/text-link') }}">Text Link</a></li>
             </ul>
@@ -111,6 +111,7 @@
         <div>
             <h2 class="font-display">Contact</h2>
             <div class="site-footer-contact">
+                <p><a href="{{ route('contact') }}">Contact page</a></p>
                 <p><a href="mailto:[YOUR EMAIL]">[YOUR EMAIL]</a></p>
                 <p>[YOUR PHONE]</p>
                 <p>[YOUR ADDRESS]</p>
