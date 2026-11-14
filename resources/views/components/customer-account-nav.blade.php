@@ -57,7 +57,7 @@
             @php
                 [$label, $routeName, $icon] = $link;
                 $fragment = $link[3] ?? '';
-                $active = ! $fragment && (request()->routeIs($routeName) || ($routeName === 'orders.index' && request()->routeIs('orders.show')));
+                $active = ! $fragment && (request()->routeIs($routeName) || ($routeName === 'orders.index' && request()->routeIs('orders.show', 'orders.payment')));
             @endphp
             <a href="{{ route($routeName).$fragment }}"
                 @class(['inline-flex min-h-11 min-w-0 items-center gap-1.5 border-b px-2 py-2 text-sm font-medium text-brand-dark hover:border-brand-dark sm:px-0', 'border-navy' => $active, 'border-transparent' => ! $active])

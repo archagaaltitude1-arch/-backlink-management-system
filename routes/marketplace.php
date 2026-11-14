@@ -35,6 +35,7 @@ Route::delete('/cart/coupon', [ShoppingController::class, 'removeCoupon'])->name
 Route::get('/cart/checkout', [ShoppingController::class, 'checkout'])->name('shopping.checkout');
 Route::get('/sites', [SiteController::class, 'index'])->name('sites.index');
 Route::get('/sites/{slug}', [SiteController::class, 'show'])->where('slug', '[a-z0-9\-]+')->name('sites.show');
+Route::redirect('/marketplace', '/publishers');
 Route::get('/marketplace/{website}', [MarketplaceController::class, 'show'])->name('marketplace.show');
 Route::get('/publish/{site}', [PublishController::class, 'show'])->name('publish.show');
 Route::post('/publish/{site}/reviews', [PublisherReviewController::class, 'store'])
