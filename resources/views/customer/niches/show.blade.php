@@ -11,7 +11,7 @@
     $meta = \Illuminate\Support\Str::limit($intro[0], 160, '');
     $loginHref = Route::has('auth.login') ? route('auth.login') : url('/login');
     $canSave = auth()->check() && Route::has('customer.saved-websites.store');
-    $canCart = auth()->check() && Route::has('orders.cart.items.store');
+    $canCart = Route::has('orders.cart.items.store');
     $viewMode = request('view') === 'cards' ? 'cards' : 'table';
     $from = $websites->firstItem() ?? 0;
     $to = $websites->lastItem() ?? 0;

@@ -46,33 +46,46 @@
         <span aria-hidden="true">›</span>
         <span>My account</span>
     </nav>
-    @if (request()->routeIs('customer.dashboard'))
-        <h1 class="mt-5 text-3xl font-bold tracking-tight text-black">My account</h1>
-    @else
-        <p class="mt-5 font-display text-3xl font-bold tracking-tight text-black">My account</p>
-    @endif
+    <div class="panel my-5 overflow-hidden">
+        <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-navy px-4 py-3 text-white sm:px-5">
+            <div class="min-w-0">
+                @if (request()->routeIs('customer.dashboard'))
+                    <h1 class="text-lg font-bold">My account</h1>
+                @else
+                    <p class="font-display text-lg font-bold">My account</p>
+                @endif
+                <p class="break-words text-sm text-white/75">{{ auth()->user()->name }}</p>
+            </div>
+            <form method="POST" action="{{ route('auth.logout') }}">
+                @csrf
+                <button type="submit" class="btn-inverse min-h-11 whitespace-nowrap">
+                    <svg class="size-4 shrink-0 text-orange-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M10 4H5v16h5m4-12 4 4-4 4m4-4H9" />
+                    </svg>
+                    Sign out
+                </button>
+            </form>
+        </div>
 
-    <nav aria-label="My account" class="mt-4 grid grid-cols-2 gap-x-2 gap-y-1 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-5 lg:mt-8">
-        @foreach ($accountLinks as $link)
-            @php
-                [$label, $routeName, $icon] = $link;
-                $fragment = $link[3] ?? '';
-                $active = ! $fragment && (request()->routeIs($routeName) || ($routeName === 'orders.index' && request()->routeIs('orders.show', 'orders.payment')));
-            @endphp
-            <a href="{{ route($routeName).$fragment }}"
-                @class(['inline-flex min-h-11 min-w-0 items-center gap-1.5 border-b px-2 py-2 text-sm font-medium text-brand-dark hover:border-brand-dark sm:px-0', 'border-navy' => $active, 'border-transparent' => ! $active])
-                @if ($active) aria-current="page" @endif>
-                <svg class="size-4 shrink-0 text-navy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ $icon }}" /></svg>
-                {{ $label }}
-            </a>
-        @endforeach
-    </nav>
-
-    <form method="POST" action="{{ route('auth.logout') }}" class="mb-5 mt-2 flex justify-end sm:mb-7 sm:justify-center">
-        @csrf
-        <button type="submit" class="inline-flex min-h-11 items-center gap-1.5 px-2 py-2 text-sm font-medium text-brand-dark hover:underline">
-            <svg class="size-4 text-navy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H4v16h6m4-12 4 4-4 4m4-4H8" /></svg>
-            Logout
-        </button>
-    </form>
+        <nav aria-label="My account" class="grid grid-cols-2 gap-2 p-2.5 sm:grid-cols-3 lg:grid-cols-5">
+            @foreach ($accountLinks as $link)
+                @php
+                    [$label, $routeName, $icon] = $link;
+                    $fragment = $link[3] ?? '';
+                    $active = ! $fragment && (request()->routeIs($routeName)
+                        || ($routeName === 'orders.index' && request()->routeIs('orders.show', 'orders.payment')));
+                @endphp
+                <a href="{{ route($routeName).$fragment }}"
+                    @class([
+                        'flex min-h-11 min-w-0 items-center gap-2 rounded-xl px-3 py-2 text-sm transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
+                        'bg-orange-50 font-bold text-orange-900 ring-1 ring-brand/35' => $active,
+                        'font-medium text-navy hover:bg-canvas' => ! $active,
+                    ])
+                    @if ($active) aria-current="page" @endif>
+                    <svg class="size-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ $icon }}" /></svg>
+                    {{ $label }}
+                </a>
+            @endforeach
+        </nav>
+    </div>
 </div>

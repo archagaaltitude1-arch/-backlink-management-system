@@ -160,6 +160,7 @@ Route::view('/customer/dashboard', 'customer.dashboard')->name('customer.dashboa
 Route::view('/customer/profile', 'customer.profile')->name('customer.profile');
 Route::get('/customer/websites', [WebsiteController::class, 'index'])->name('customer.websites');
 Route::view('/customer/services', 'customer.services')->name('customer.services');
+Route::post('/orders/cart/items', [OrderController::class, 'addToCart'])->name('orders.cart.items.store');
 
 Route::middleware('auth')->group(function () {
     Route::get('/customer/dashboard', [CustomerAccountController::class, 'dashboard'])->name('customer.dashboard');
@@ -189,17 +190,19 @@ Route::middleware('auth')->group(function () {
     Route::post('/customer/wallet/packages/{creditPackage}/purchase', [PaymentController::class, 'purchaseCredits'])->name('customer.wallet.purchase');
 
     Route::get('/orders/cart', [OrderController::class, 'cart'])->name('orders.cart');
-    Route::post('/orders/cart/items', [OrderController::class, 'addToCart'])->name('orders.cart.items.store');
     Route::patch('/orders/cart/items/{cartItem}', [OrderController::class, 'updateCartItem'])->name('orders.cart.items.update');
     Route::delete('/orders/cart/items/{cartItem}', [OrderController::class, 'removeCartItem'])->name('orders.cart.items.destroy');
     Route::post('/orders/cart/coupon', [OrderController::class, 'applyCoupon'])->name('orders.cart.coupon');
     Route::delete('/orders/cart/coupon', [OrderController::class, 'removeCoupon'])->name('orders.cart.coupon.destroy');
     Route::get('/orders/checkout', [OrderController::class, 'checkout'])->name('orders.checkout');
+    Route::post('/orders/checkout/coupon', [OrderController::class, 'emailCheckoutCoupon'])->middleware('throttle:3,1')->name('orders.checkout.coupon');
+    Route::post('/orders/checkout/payment', [OrderController::class, 'startPayment'])->name('orders.checkout.payment');
     Route::post('/orders', [OrderController::class, 'placeOrder'])->name('orders.store');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}/payment', [PaymentController::class, 'showOrderPayment'])->name('orders.payment');
     Route::post('/orders/{order}/payment', [PaymentController::class, 'payOrder'])->name('orders.payment.process');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order}/details', [OrderController::class, 'submitDetails'])->name('orders.details');
 
     Route::prefix('/api')->name('api.')->group(function () {
         Route::get('/cart', [OrderController::class, 'cart'])->name('cart');

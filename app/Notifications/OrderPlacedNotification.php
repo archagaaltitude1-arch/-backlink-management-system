@@ -31,13 +31,15 @@ class OrderPlacedNotification extends Notification
     {
         $successful = $this->payment->status === 'successful';
         $message = (new MailMessage)
-            ->subject('Order '.$this->order->order_number.($successful ? ' confirmation' : ' payment update'))
+            ->subject('Order '.$this->order->order_number.($this->order->order_status === 'awaiting_details' ? ' payment receipt' : ($successful ? ' confirmation' : ' payment update')))
             ->greeting('Hello '.$notifiable->name.'!')
             ->line('Payment status: '.ucfirst($this->payment->status).'.')
             ->line('Order total: $'.number_format((float) $this->payment->amount, 2).'.');
 
         if ($successful) {
-            $message->line('Your payment is confirmed. Your order is awaiting admin approval.')
+            $message->line($this->order->order_status === 'awaiting_details'
+                ? 'Your payment is confirmed. Add your publishing details to submit the order for admin review.'
+                : 'Your payment is confirmed. Your order is awaiting admin approval.')
                 ->line('Payment method: '.$this->payment->payment_method.'.')
                 ->line('Payment reference: '.$this->payment->transaction_id.'.');
 

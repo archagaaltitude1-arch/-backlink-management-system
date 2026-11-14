@@ -102,7 +102,7 @@ class PaymentController extends Controller
         }
 
         return redirect()->route('orders.show', $order)
-            ->with($payment->status === 'successful' ? 'success' : 'error', $payment->status === 'successful' ? 'Demo payment confirmed. Your order is awaiting admin approval.' : 'Demo payment declined. You can try again.');
+            ->with($payment->status === 'successful' ? 'success' : 'error', $payment->status === 'successful' ? 'Demo payment confirmed.' : 'Demo payment declined. You can try again.');
     }
 
     public function history(Request $request): View|JsonResponse

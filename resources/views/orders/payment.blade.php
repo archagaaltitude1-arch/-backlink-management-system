@@ -33,14 +33,14 @@
             @if ($demo)
                 <form method="POST" action="{{ route('orders.payment.process', $order) }}" class="space-y-4">
                     @csrf
-                    <p class="text-sm text-navy/65">Stripe payment demo. No money will be charged.</p>
+                    <p class="text-sm text-navy/65">Demo payment. No money will be charged.</p>
                     <label class="block text-sm font-medium" for="demo_result">Simulation result</label>
                     <select id="demo_result" name="demo_result" class="w-full rounded-lg border border-navy/15 px-3 py-2.5 text-sm">
                         <option value="success">Successful payment</option>
                         <option value="declined">Declined payment</option>
                     </select>
                     <input type="hidden" name="payment_method" value="demo_card">
-                    <button class="btn-primary w-full" type="submit">Simulate Stripe payment</button>
+                    <button class="btn-primary w-full" type="submit">Simulate payment</button>
                 </form>
             @endif
             @if (! $stripe && ! $demo)

@@ -166,7 +166,7 @@
                             <input id="order-quantity" type="number" min="1" max="10" value="1" disabled>
                         </label>
                         <button class="wd-btn wd-btn-primary" type="button" disabled title="Demo data">Add to cart</button>
-                    @elseif (auth()->check() && $cartReady)
+                    @elseif ($cartReady)
                         <form method="POST" action="{{ route('orders.cart.items.store') }}">
                             @csrf
                             <input type="hidden" name="website_id" value="{{ $profile['website_id'] }}">

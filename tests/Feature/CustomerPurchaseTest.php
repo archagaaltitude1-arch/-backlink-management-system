@@ -8,6 +8,7 @@ use App\Models\CreditReservation;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Notifications\CheckoutNotification;
 use App\Notifications\OrderPlacedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -16,6 +17,71 @@ use Tests\TestCase;
 class CustomerPurchaseTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_guest_cart_is_kept_when_the_customer_signs_in(): void
+    {
+        $customer = User::factory()->create();
+
+        $response = $this->post(route('orders.cart.items.store'), [
+            'product_key' => 'guest_post',
+            'quantity' => 1,
+        ])->assertRedirect(route('auth.login'));
+
+        $sessionCookie = config('session.cookie');
+        $this->withCookie($sessionCookie, $response->getCookie($sessionCookie)->getValue());
+        $response = $this->post(route('auth.login'), [
+            'email' => $customer->email,
+            'password' => 'password',
+        ])->assertRedirect(route('orders.checkout'));
+
+        $this->withCookie($sessionCookie, $response->getCookie($sessionCookie)->getValue());
+        $this->get(route('orders.checkout'))->assertOk()->assertSee('Guest Post Placement');
+    }
+
+    public function test_checkout_coupon_and_payment_precede_publishing_details_and_order_confirmation(): void
+    {
+        Notification::fake();
+        $customer = User::factory()->create();
+        $admin = User::factory()->create(['account_type' => 'admin']);
+
+        $this->actingAs($customer)->post(route('orders.cart.items.store'), [
+            'product_key' => 'guest_post',
+            'quantity' => 1,
+        ])->assertRedirect();
+
+        $this->from(route('orders.checkout'))->post(route('orders.checkout.coupon'))->assertRedirect();
+        $coupon = Coupon::where('customer_id', $customer->id)->sole();
+        Notification::assertSentTo($customer, CheckoutNotification::class, fn ($notice) => $notice->subject->is($coupon));
+
+        $this->post(route('orders.cart.coupon'), ['coupon_code' => $coupon->code])->assertRedirect();
+        $this->post(route('orders.checkout.payment'))->assertRedirect();
+        $order = $customer->orders()->sole();
+        $this->assertSame('108.00', $order->total_amount);
+
+        $details = ['items' => [[
+            'target_url' => 'https://customer.example.test/landing',
+            'anchor_text' => 'growth tools',
+            'article_topic' => 'A guide to growth',
+        ]]];
+        $this->post(route('orders.details', $order), $details)->assertConflict();
+
+        $this->post(route('orders.payment.process', $order), [
+            'payment_method' => 'demo_card',
+            'demo_result' => 'success',
+        ])->assertRedirect(route('orders.show', $order));
+
+        $this->assertSame('awaiting_details', $order->fresh()->order_status);
+        $this->assertNotNull($order->invoice);
+        $this->get(route('orders.show', $order))->assertOk()->assertSee('Submit for review');
+        Notification::assertNotSentTo($admin, CheckoutNotification::class);
+
+        $this->post(route('orders.details', $order), $details)->assertRedirect();
+        $this->assertSame('awaiting_approval', $order->fresh()->order_status);
+        $this->assertSame('growth tools', $order->items()->sole()->anchor_text);
+        Notification::assertSentTo($customer, CheckoutNotification::class, fn ($notice) => $notice->subject->is($order));
+        Notification::assertSentTo($admin, CheckoutNotification::class, fn ($notice) => $notice->forAdmin && $notice->subject->is($order));
+        $this->post(route('orders.details', $order), $details)->assertConflict();
+    }
 
     public function test_customer_can_create_order_and_complete_demo_payment(): void
     {
