@@ -34,6 +34,7 @@
             @endunless
             @include('components.public-footer')
         </div>
+        @include('components.public-cart-drawer')
         @stack('scripts')
     </body>
 </html>

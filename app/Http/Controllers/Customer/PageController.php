@@ -32,6 +32,13 @@ class PageController extends Controller
         ]);
     }
 
+    public function contact(): View
+    {
+        return view('customer.pages.contact', [
+            'hideTestimonials' => true,
+        ]);
+    }
+
     public function services(): View
     {
         $services = $this->activeModels('App\\Models\\Service', 'services', 'service_name')
@@ -229,7 +236,7 @@ class PageController extends Controller
                 'title' => 'Niche Edit',
                 'description' => 'Your link added to an existing, already-indexed article that has age and traffic.',
                 'best_for' => 'Faster results on pages that already rank.',
-                'button' => 'View Niche Edit Prices',
+                'button' => 'View Niche Edit',
                 'featured' => false,
                 'cta_href' => route('sites.show', 'link-insertions-niche-edits'),
                 'options' => [

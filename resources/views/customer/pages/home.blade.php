@@ -10,7 +10,7 @@
         $startHref = auth()->check()
             ? url('/marketplace')
             : (Route::has('auth.register') ? route('auth.register') : url('/register'));
-        $contactHref = 'mailto:[YOUR EMAIL]';
+        $contactHref = route('contact');
         $publisherListHref = route('publishers.index');
 
         $reasons = [
@@ -38,10 +38,57 @@
             : [];
     @endphp
 
-    <section class="bg-[#F2F2F2]" aria-labelledby="home-heading">
-        <div class="mx-auto flex max-w-[1240px] flex-col items-center gap-10 px-6 py-14 md:flex-row md:items-center md:justify-between md:gap-12 lg:py-[88px]">
+    <section class="home-hero" aria-labelledby="home-heading">
+        <style>
+            .home-hero {
+                position: relative;
+                overflow: hidden;
+                background-color: #F2F2F2;
+                background-image:
+                    radial-gradient(ellipse 70% 60% at 88% 12%, rgba(255, 73, 23, 0.22), transparent 58%),
+                    radial-gradient(ellipse 55% 50% at 8% 92%, rgba(21, 32, 41, 0.10), transparent 55%),
+                    linear-gradient(145deg, #F7F8FA 0%, #F2F2F2 48%, #EAECEF 100%),
+                    url("{{ asset('images/home-hero-bg.svg') }}");
+                background-repeat: no-repeat;
+                background-size: cover, cover, cover, cover;
+                background-position: center;
+            }
+            .home-hero::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background-image:
+                    linear-gradient(rgba(21, 32, 41, 0.035) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(21, 32, 41, 0.035) 1px, transparent 1px);
+                background-size: 48px 48px;
+                mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 92%);
+                pointer-events: none;
+            }
+            .home-hero::after {
+                content: "";
+                position: absolute;
+                right: -6%;
+                top: -18%;
+                width: min(420px, 55vw);
+                height: min(420px, 55vw);
+                border-radius: 50%;
+                background: #FF4917;
+                opacity: 0.16;
+                animation: home-hero-orb 9s ease-in-out infinite;
+                pointer-events: none;
+            }
+            .home-hero > .home-hero-inner { position: relative; z-index: 1; }
+            @keyframes home-hero-orb {
+                0%, 100% { transform: translate(0, 0) scale(1); }
+                50% { transform: translate(-22px, 28px) scale(1.06); }
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .home-hero::after { animation: none; }
+            }
+        </style>
+        <div class="home-hero-inner mx-auto flex max-w-[1240px] flex-col items-center gap-10 px-6 py-14 md:flex-row md:items-center md:justify-between md:gap-12 lg:py-[88px]">
             <div class="min-w-0 w-full md:max-w-[640px] md:flex-1">
-                <p class="inline-flex rounded-full border border-[#E3E5E8] bg-white px-4 py-2 text-sm font-bold text-[#C0340D]">Link Building Agency · White-Hat Only</p>
+                <p class="inline-flex rounded-full border border-[#E3E5E8] bg-white/90 px-4 py-2 text-sm font-bold text-[#C0340D] backdrop-blur-sm">Link Building Agency · White-Hat Only</p>
                 <h1 id="home-heading" class="mt-5 font-display text-[36px] leading-[1.08] font-extrabold text-balance text-navy lg:text-[56px]">Earn Higher Rankings with Backlinks from <span class="text-[#FF4917]">Real, Traffic-Driven Websites</span></h1>
                 <p class="mt-5 max-w-xl text-[17px] leading-8 text-[#4A5560] sm:text-[19px]">Pick from {{ $publishers }} checked publisher websites and grow your search visibility, visitors and sales with text links, contextual links, guest posts and niche edits. Every one is verified before you get your report.</p>
                 <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -685,7 +732,7 @@
             .home-cta h2 { margin: 12px 0 0; max-width: 560px; color: #152029; font-size: 36px; line-height: 1.12; font-weight: 800; }
             .home-cta-text { max-width: 520px; margin: 14px 0 0; color: #4A5560; font-size: 17px; line-height: 1.65; }
             .home-cta-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
-            .home-cta-primary, .home-cta-secondary, .home-cta-quiet {
+            .home-cta-primary, .home-cta-secondary {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
@@ -700,9 +747,7 @@
             .home-cta-primary:hover { background: #FF4917; }
             .home-cta-secondary { border: 1.5px solid #152029; background: #fff; color: #152029; }
             .home-cta-secondary:hover { background: #152029; color: #fff; }
-            .home-cta-quiet { color: #C0340D; padding-left: 8px; padding-right: 8px; }
-            .home-cta-quiet:hover { color: #D63A10; }
-            .home-cta-primary:focus-visible, .home-cta-secondary:focus-visible, .home-cta-quiet:focus-visible { outline: 2px solid #D63A10; outline-offset: 3px; }
+            .home-cta-primary:focus-visible, .home-cta-secondary:focus-visible { outline: 2px solid #D63A10; outline-offset: 3px; }
             .home-cta-side { background: #152029; padding: 40px 32px; color: #fff; }
             .home-cta-side h3 { margin: 0; color: #fff; font-size: 18px; font-weight: 800; }
             .home-cta-steps { margin: 22px 0 0; padding: 0; list-style: none; }
@@ -741,7 +786,6 @@
                     <div class="home-cta-actions">
                         <a class="home-cta-primary" href="{{ $startHref }}">Start Your Order</a>
                         <a class="home-cta-secondary" href="{{ $publisherListHref }}">See the publisher list</a>
-                        <a class="home-cta-quiet" href="{{ url('/services') }}">See Services</a>
                     </div>
                 </div>
                 <div class="home-cta-side">

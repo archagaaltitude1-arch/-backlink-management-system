@@ -179,7 +179,7 @@
                     @endif
 
                     <p class="pk-tat"><b>Estimated delivery</b> <span>{{ $story['delivery'] ?? 'Confirmed with the order' }}{{ isset($story['delivery_note']) ? '. '.$story['delivery_note'] : '' }}</span></p>
-                    <p class="pk-help"><strong>Questions?</strong> Our team replies within [HOURS] hours. <a href="mailto:[YOUR EMAIL]">Contact us</a></p>
+                    <p class="pk-help"><strong>Questions?</strong> Our team replies within [HOURS] hours. <a href="{{ route('contact') }}">Contact us</a></p>
                     @if ($package['slug'] === 'display-enterprise')
                         <p class="pk-help">Contact our team to discuss your custom backlink campaign.</p>
                     @endif

@@ -111,6 +111,7 @@
         <div>
             <h2 class="font-display">Contact</h2>
             <div class="site-footer-contact">
+                <p><a href="{{ route('contact') }}">Contact page</a></p>
                 <p><a href="mailto:[YOUR EMAIL]">[YOUR EMAIL]</a></p>
                 <p>[YOUR PHONE]</p>
                 <p>[YOUR ADDRESS]</p>

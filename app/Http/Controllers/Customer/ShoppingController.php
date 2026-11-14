@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\Coupon;
+use App\Models\CouponUsage;
+use App\Models\Order;
 use App\Services\Customer\NicheListingService;
 use App\Services\Customer\PublishOfferService;
 use App\Support\PublicPackages;
@@ -17,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ShoppingController extends Controller
 {
@@ -94,7 +97,8 @@ class ShoppingController extends Controller
         $items[$line] = $this->build($line, $details, $type, $topic, $project, $quantity);
         session(['shopping_cart' => $items]);
 
-        return redirect()->route('shopping.index')
+        return back()
+            ->with('open_cart', true)
             ->with('shopping_status', 'Publish Guest Post on '.$details['display_name'].' was added to your cart.');
     }
 
@@ -143,7 +147,9 @@ class ShoppingController extends Controller
             'niche' => 'Packages',
             'project' => $project,
             'order_type' => 'package',
-            'order_label' => $slug === 'display-enterprise' ? 'Custom campaign' : 'Backlink campaign',
+            'order_label' => $slug === 'display-enterprise'
+                ? 'Custom campaign (We review your goals and confirm the quotation.)'
+                : 'Backlink campaign (We place the links and send the report.)',
             'order_help' => $slug === 'display-enterprise'
                 ? 'We review your goals and confirm the quotation before work starts.'
                 : 'We place the backlinks and send the completion report.',
@@ -164,7 +170,8 @@ class ShoppingController extends Controller
 
         session(['shopping_cart' => $items]);
 
-        return redirect()->route('shopping.index')
+        return back()
+            ->with('open_cart', true)
             ->with('shopping_status', $item['label'].' was added to your cart.');
     }
 
@@ -228,7 +235,9 @@ class ShoppingController extends Controller
 
         session(['shopping_cart' => $items]);
 
-        return redirect()->route('shopping.index')->with('shopping_status', 'Removed from your cart.');
+        return back()
+            ->with('open_cart', true)
+            ->with('shopping_status', 'Removed from your cart.');
     }
 
     public function clear(): RedirectResponse
@@ -258,26 +267,30 @@ class ShoppingController extends Controller
                 && $subtotal >= (float) $coupon->minimum_order_amount));
 
         if (! $valid) {
-            return redirect()->route('shopping.index')->with('shopping_error', 'This coupon is not valid for this cart.');
+            return back()
+                ->withInput()
+                ->with('shopping_error', 'This coupon is not valid for this cart.');
         }
 
         session(['shopping_coupon' => $coupon->code]);
 
-        return redirect()->route('shopping.index')->with('shopping_status', 'Coupon '.$coupon->code.' applied.');
+        return back()->with('shopping_status', 'Coupon '.$coupon->code.' applied.');
     }
 
     public function removeCoupon(): RedirectResponse
     {
         session()->forget('shopping_coupon');
 
-        return redirect()->route('shopping.index')->with('shopping_status', 'Coupon removed.');
+        return back()->with('shopping_status', 'Coupon removed.');
     }
 
-    public function checkout(Request $request): RedirectResponse
+    public function checkout(Request $request): View|RedirectResponse
     {
-        $items = $this->sessionItems();
+        $items = collect($this->sessionItems())
+            ->filter(fn ($item) => is_array($item) && filled($item['domain'] ?? null) && is_numeric($item['price'] ?? null))
+            ->values();
 
-        if ($items === []) {
+        if ($items->isEmpty()) {
             return redirect()->route('shopping.index')->with('shopping_error', 'Add an item before checking out.');
         }
 
@@ -290,42 +303,167 @@ class ShoppingController extends Controller
                 : redirect()->route('shopping.index')->with('shopping_error', 'Sign in to finish your order.');
         }
 
-        if (! Route::has('orders.checkout') || ! Schema::hasTable('carts')) {
-            return redirect()->route('shopping.index')->with('shopping_error', 'Checkout is not available right now.');
+        $subtotal = $this->sessionSubtotal();
+        $discount = $this->discountFor($subtotal);
+
+        return view('customer.shopping.checkout', [
+            'items' => $items,
+            'quantity' => (int) $items->sum(fn (array $item) => (int) ($item['quantity'] ?? 1)),
+            'subtotal' => $subtotal,
+            'discount' => $discount,
+            'total' => max(0, $subtotal - $discount),
+            'coupon' => session('shopping_coupon'),
+            'loginHref' => Route::has('auth.login') ? route('auth.login') : url('/login'),
+        ]);
+    }
+
+    public function placeCheckout(Request $request): RedirectResponse
+    {
+        $sessionItems = collect($this->sessionItems())
+            ->filter(fn ($item) => is_array($item) && filled($item['domain'] ?? null) && is_numeric($item['price'] ?? null))
+            ->values();
+
+        if ($sessionItems->isEmpty()) {
+            return redirect()->route('shopping.index')->with('shopping_error', 'Add an item before checking out.');
         }
 
-        DB::transaction(function () use ($request, $items): void {
-            $cart = Cart::query()->firstOrCreate(
-                ['customer_id' => $request->user()->id, 'status' => 'active'],
-            );
+        if ($request->user() === null) {
+            session()->put('url.intended', route('shopping.checkout'));
 
-            foreach ($items as $item) {
-                if (! is_numeric($item['price'] ?? null)) {
-                    continue;
+            return redirect()->route(Route::has('auth.login') ? 'auth.login' : 'shopping.index')
+                ->with('status', 'Sign in to finish your order. Your cart is saved.');
+        }
+
+        if (! Schema::hasTable('orders') || ! Schema::hasTable('order_items')) {
+            return redirect()->route('shopping.checkout')->with('shopping_error', 'Checkout is not available right now.');
+        }
+
+        $data = $request->validate([
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.line' => ['required', 'string', 'max:64'],
+            'items.*.target_url' => ['required', 'url', 'max:2048'],
+            'items.*.anchor_text' => ['required', 'string', 'max:255'],
+            'items.*.article_topic' => ['required', 'string', 'max:255'],
+            'items.*.requirements' => ['nullable', 'string', 'max:5000'],
+            'coupon_code' => ['nullable', 'string', 'max:40'],
+        ]);
+
+        $detailsByLine = collect($data['items'])->keyBy('line');
+
+        foreach ($sessionItems as $item) {
+            $line = (string) ($item['line'] ?? '');
+            if ($line === '' || ! $detailsByLine->has($line)) {
+                throw ValidationException::withMessages([
+                    'items' => 'Please complete the requirements for every cart item.',
+                ]);
+            }
+        }
+
+        if (filled($data['coupon_code'] ?? null)) {
+            $code = Str::upper(trim((string) $data['coupon_code']));
+            session(['shopping_coupon' => $code]);
+        }
+
+        $subtotal = $this->sessionSubtotal();
+        $discount = $this->discountFor($subtotal);
+        $couponCode = session('shopping_coupon');
+
+        try {
+            $order = DB::transaction(function () use ($request, $sessionItems, $detailsByLine, $subtotal, $discount, $couponCode) {
+                $coupon = null;
+
+                if (is_string($couponCode) && $couponCode !== '' && Schema::hasTable('coupons')) {
+                    $coupon = Coupon::query()->where('code', $couponCode)->lockForUpdate()->first();
+
+                    if ($coupon === null || ! $coupon->isAvailableTo($request->user(), $subtotal)) {
+                        throw ValidationException::withMessages([
+                            'coupon_code' => 'This coupon is no longer available.',
+                        ]);
+                    }
                 }
 
-                $name = 'Publish Guest Post on '.$item['domain'].' — '.$item['order_label'].' ('.$item['content_topic'].')';
-                $name = ($item['kind'] ?? '') === 'package'
-                    ? (string) ($item['display_name'] ?? 'Backlink package')
-                    : 'Publish Guest Post on '.$item['domain'].' · '.($item['order_label'] ?? 'Publish my article').' · '.($item['content_topic'] ?? 'General');
+                $order = Order::query()->create([
+                    'order_number' => $this->uniqueOrderNumber(),
+                    'customer_id' => $request->user()->id,
+                    'session_id' => $request->session()->getId(),
+                    'total_amount' => max(0, $subtotal - $discount),
+                    'discount_amount' => $discount,
+                    'coupon_code' => $coupon?->code,
+                ]);
 
-                if ($existing) {
-                    $existing->update(['quantity' => (int) $item['quantity'], 'unit_price' => (float) $item['price']]);
-                } else {
-                    $cart->items()->create([
+                foreach ($sessionItems as $item) {
+                    $line = (string) $item['line'];
+                    $details = $detailsByLine->get($line);
+                    $name = ($item['kind'] ?? '') === 'package'
+                        ? (string) ($item['display_name'] ?? 'Backlink package')
+                        : 'Publish Guest Post on '.$item['domain'].' · '.($item['order_label'] ?? 'Publish my article').' · '.($item['content_topic'] ?? 'General');
+
+                    $order->items()->create([
+                        'website_id' => $item['website_id'] ?? null,
+                        'service_id' => null,
                         'item_name' => $name,
-                        'website_id' => $item['website_id'],
                         'unit_price' => (float) $item['price'],
-                        'credit_cost' => (int) ($item['credits'] ?? 0),
-                        'quantity' => (int) $item['quantity'],
+                        'quantity' => (int) ($item['quantity'] ?? 1),
+                        'credit_cost' => (int) ($item['credits'] ?? 0) * (int) ($item['quantity'] ?? 1),
+                        'target_url' => $details['target_url'],
+                        'anchor_text' => $details['anchor_text'],
+                        'article_topic' => $details['article_topic'],
+                        'requirements' => $details['requirements'] ?? null,
                     ]);
                 }
-            }
-        });
+
+                if ($coupon !== null && Schema::hasTable('coupon_usages')) {
+                    CouponUsage::query()->create([
+                        'coupon_id' => $coupon->id,
+                        'customer_id' => $request->user()->id,
+                        'order_id' => $order->id,
+                        'discount_amount' => $discount,
+                    ]);
+                }
+
+                if (Schema::hasTable('carts')) {
+                    $cart = Cart::query()
+                        ->where('customer_id', $request->user()->id)
+                        ->where('status', 'active')
+                        ->first();
+
+                    if ($cart !== null) {
+                        $cart->update([
+                            'status' => 'converted',
+                            'coupon_code' => $coupon?->code,
+                            'coupon_discount' => $discount,
+                        ]);
+                    }
+                }
+
+                return $order;
+            });
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (\Throwable) {
+            return redirect()->route('shopping.checkout')
+                ->withInput()
+                ->with('shopping_error', 'We could not create your order. Please try again.');
+        }
 
         session()->forget(['shopping_cart', 'shopping_coupon']);
 
-        return redirect()->route('orders.checkout');
+        if (Route::has('orders.payment')) {
+            return redirect()->route('orders.payment', $order)
+                ->with('success', 'Order created. Complete payment to begin processing.');
+        }
+
+        return redirect()->route('shopping.index')
+            ->with('shopping_status', 'Order '.$order->order_number.' created.');
+    }
+
+    private function uniqueOrderNumber(): string
+    {
+        do {
+            $number = 'BM-'.now()->format('Ymd').'-'.Str::upper(Str::random(6));
+        } while (Schema::hasTable('orders') && Order::query()->where('order_number', $number)->exists());
+
+        return $number;
     }
 
     /**
@@ -375,15 +513,16 @@ class ShoppingController extends Controller
                 $key = $item['line'];
             }
 
-            $domain = mb_strtolower((string) $item['domain']);
-            $match = $catalog->first(
-                fn (array $row) => mb_strtolower((string) ($row['domain'] ?? '')) === $domain
-            );
+            if (($item['kind'] ?? '') !== 'package') {
+                $domain = mb_strtolower((string) $item['domain']);
+                $match = $catalog->first(
+                    fn (array $row) => mb_strtolower((string) ($row['domain'] ?? '')) === $domain
+                );
 
-            if (is_array($match) && is_numeric($match['price'] ?? null)) {
-            if (($item['kind'] ?? '') !== 'package' && is_array($match) && is_numeric($match['price'] ?? null)) {
-                $item['price'] = $this->unitPrice($item['base_price'], $item['addon'] ?? false);
-                $item['dr'] = $match['dr'] ?? $item['dr'];
+                if (is_array($match) && is_numeric($match['price'] ?? null)) {
+                    $item['price'] = $this->unitPrice($item['base_price'] ?? $match['price'], $item['addon'] ?? false);
+                    $item['dr'] = $match['dr'] ?? ($item['dr'] ?? null);
+                }
             }
 
             $clean[$key] = $item;

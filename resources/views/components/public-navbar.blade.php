@@ -268,6 +268,7 @@
 
                 <a
                     href="{{ $cartHref }}"
+                    data-cart-open
                     class="relative inline-flex h-11 w-11 items-center justify-center rounded-xl text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]"
                 aria-label="Cart, {{ $cartCount }} {{ $cartCount === 1 ? 'item' : 'items' }}"
                 >

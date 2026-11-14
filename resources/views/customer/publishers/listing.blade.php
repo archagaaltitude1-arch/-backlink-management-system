@@ -36,6 +36,8 @@
     $breadcrumb = $breadcrumb ?? 'Publisher list';
     $title = $title ?? 'List of posting websites (All publishers)';
     $lead = $lead ?? 'Every publisher website on this list is included. Filter by the niche, language, metrics and price stored on each site, then open the one you want.';
+    $skipIntro = (bool) ($skipIntro ?? false);
+    $currentSlug = $currentSlug ?? null;
 @endphp
 
 <style>
@@ -82,32 +84,31 @@
 
 <section class="bg-[#F7F8FA]">
     <div class="pub-wrap">
-        <nav class="pub-crumb" aria-label="Breadcrumb">
-            <a href="{{ url('/') }}">Home</a>
-            <span aria-hidden="true"> / </span>
-            <span>{{ $breadcrumb }}</span>
-        </nav>
+        @unless ($skipIntro)
+            <nav class="pub-crumb" aria-label="Breadcrumb">
+                <a href="{{ url('/') }}">Home</a>
+                <span aria-hidden="true"> / </span>
+                <span>{{ $breadcrumb }}</span>
+            </nav>
 
-        <div class="pub-head">
-            <h1>{{ $title }}</h1>
-            <button class="pub-recent" type="button" id="recent-publishers">See recently added sites</button>
-        </div>
-        <p class="pub-lead">{{ $lead }}</p>
-        @if ($demo)
-            <p class="pub-note">Sample data for preview. These figures belong to fictional .example publishers.</p>
-        @endif
+            <div class="pub-head">
+                <h1>{{ $title }}</h1>
+                <button class="pub-recent" type="button" id="recent-publishers">See recently added sites</button>
+            </div>
+            <p class="pub-lead">{{ $lead }}</p>
+            @if ($demo)
+                <p class="pub-note">Sample data for preview. These figures belong to fictional .example publishers.</p>
+            @endif
 
-        <div class="pub-check">
-            <h2>Also check</h2>
-            <ul class="pub-options">
-                @foreach ($siteOptions as $option)
-                    <li><a href="{{ route('sites.show', $option['slug']) }}">{{ $option['label'] }}</a></li>
-                @endforeach
-                @foreach ($categories as $name => $slug)
-                    <li><a href="{{ route('niches.show', $slug) }}">{{ $name }}</a></li>
-                @endforeach
-            </ul>
-        </div>
+            @include('customer.sites.partials.also-check', [
+                'siteOptions' => $siteOptions,
+                'currentSlug' => $currentSlug,
+            ])
+        @else
+            <div class="pub-head" style="justify-content: flex-end;">
+                <button class="pub-recent" type="button" id="recent-publishers">See recently added sites</button>
+            </div>
+        @endunless
 
         <div class="pub-project">
             <div>

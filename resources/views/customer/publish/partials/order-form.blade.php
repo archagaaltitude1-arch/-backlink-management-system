@@ -121,7 +121,7 @@
         </li>
         <li>
             <strong>Questions?</strong>
-            <span>Our team replies within [HOURS] hours. <a href="mailto:[YOUR EMAIL]">Contact us</a></span>
+            <span>Our team replies within [HOURS] hours. <a href="{{ route('contact') }}">Contact us</a></span>
         </li>
     </ul>
 </section>

@@ -15,6 +15,7 @@ use App\Http\Controllers\Customer\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/home', [PageController::class, 'home'])->name('home');
+Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 Route::get('/services', [ServicePageController::class, 'index'])->name('services.index');
 Route::get('/services/{slug}', [ServicePageController::class, 'show'])->name('services.show');
 Route::get('/packages', [PackagePageController::class, 'index'])->name('packages.index');
@@ -33,6 +34,7 @@ Route::post('/cart/clear', [ShoppingController::class, 'clear'])->name('shopping
 Route::post('/cart/coupon', [ShoppingController::class, 'coupon'])->name('shopping.coupon');
 Route::delete('/cart/coupon', [ShoppingController::class, 'removeCoupon'])->name('shopping.coupon.destroy');
 Route::get('/cart/checkout', [ShoppingController::class, 'checkout'])->name('shopping.checkout');
+Route::post('/cart/checkout', [ShoppingController::class, 'placeCheckout'])->name('shopping.checkout.store');
 Route::get('/sites', [SiteController::class, 'index'])->name('sites.index');
 Route::get('/sites/{slug}', [SiteController::class, 'show'])->where('slug', '[a-z0-9\-]+')->name('sites.show');
 Route::redirect('/marketplace', '/publishers');

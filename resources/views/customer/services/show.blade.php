@@ -13,7 +13,7 @@
         $highlight = $page['h1_highlight'];
         $h1Before = e(\Illuminate\Support\Str::before($page['h1'], $highlight));
         $h1After = e(\Illuminate\Support\Str::after($page['h1'], $highlight));
-        $contact = 'mailto:[YOUR EMAIL]';
+        $contact = route('contact');
     @endphp
     <style>
         .svc-h1 { margin: 0; font-size: 34px; line-height: 1.1; font-weight: 800; }
