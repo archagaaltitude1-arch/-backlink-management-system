@@ -36,12 +36,26 @@ class OrderPlacedNotification extends Notification
             ->line('Payment status: '.ucfirst($this->payment->status).'.')
             ->line('Order total: $'.number_format((float) $this->payment->amount, 2).'.');
 
-        if ($successful && $coupon = $this->order->rewardCoupon) {
+        if ($successful) {
             $message->line('Your payment is confirmed. Your order is awaiting admin approval.')
-                ->line('Use '.$coupon->code.' for 10% off your next order. This one-use code expires on '.$coupon->expires_at->format('M j, Y').'.');
+                ->line('Payment method: '.$this->payment->payment_method.'.')
+                ->line('Payment reference: '.$this->payment->transaction_id.'.');
+
+            if ($invoice = $this->order->invoice) {
+                $invoice->loadMissing('customer', 'order.items');
+                $message->attachData(
+                    view('orders.invoice', ['invoice' => $invoice, 'payment' => $this->payment])->render(),
+                    $invoice->invoice_number.'.html',
+                    ['mime' => 'text/html'],
+                );
+            }
+
+            if ($coupon = $this->order->rewardCoupon) {
+                $message->line('Use '.$coupon->code.' for 10% off your next order. This one-use code expires on '.$coupon->expires_at->format('M j, Y').'.');
+            }
         }
 
-        return $message->action('View order and invoice', route('orders.show', $this->order));
+        return $message->action($successful ? 'View order and invoice' : 'View order', route('orders.show', $this->order));
     }
 
     /**

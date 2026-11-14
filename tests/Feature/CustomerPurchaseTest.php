@@ -22,7 +22,7 @@ class CustomerPurchaseTest extends TestCase
         Notification::fake();
         $customer = User::factory()->create();
 
-        $this->actingAs($customer)->get(route('orders.cart'))->assertOk();
+        $this->actingAs($customer)->get(route('orders.cart'))->assertOk()->assertSee('aria-label="My account"', false);
         $this->post(route('orders.cart.items.store'), [
             'product_key' => 'guest_post',
             'quantity' => 1,
@@ -30,6 +30,8 @@ class CustomerPurchaseTest extends TestCase
         ])->assertRedirect();
 
         $this->assertDatabaseHas('cart_items', ['item_name' => 'Guest Post Placement', 'unit_price' => 120]);
+
+        $this->get(route('orders.checkout'))->assertOk()->assertSee('aria-label="My account"', false);
 
         $this->post(route('orders.store'), [
             'items' => [[
@@ -42,6 +44,11 @@ class CustomerPurchaseTest extends TestCase
 
         $order = Order::query()->where('customer_id', $customer->id)->firstOrFail();
         $this->assertMatchesRegularExpression('/^BM-\d{8}-[A-Z0-9]{6}$/', $order->order_number);
+        foreach (['orders.payment', 'orders.index', 'orders.show'] as $routeName) {
+            $url = $routeName === 'orders.index' ? route($routeName) : route($routeName, $order);
+            $this->get($url)->assertOk()->assertSee('aria-label="My account"', false)->assertSee($order->order_number);
+        }
+
         $this->assertSame('120.00', $order->total_amount);
         $this->assertDatabaseHas('order_items', [
             'order_id' => $order->id,

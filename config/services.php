@@ -12,10 +12,13 @@ return [
         'redirect_uri' => env('GOOGLE_REDIRECT_URI'),
     ],
     'firebase' => [
-        'apiKey' => env('FIREBASE_API_KEY', 'AIzaSyCaCSGMtU6xsikLqCeLQNXKPcUDpCFFZDo'),
-        'authDomain' => env('FIREBASE_AUTH_DOMAIN', 'backlinks-81c8e.firebaseapp.com'),
-        'projectId' => env('FIREBASE_PROJECT_ID', 'backlinks-81c8e'),
-        'appId' => env('FIREBASE_APP_ID', '1:913875740350:web:b9aa985c10d44571a460ef'),
+        'apiKey' => env('FIREBASE_API_KEY', 'AIzaSyBJ9zqfp7Iv5OKX7_jcZwRYujkTggpqNQo'),
+        'authDomain' => env('FIREBASE_AUTH_DOMAIN', 'blacklinks-196ac.firebaseapp.com'),
+        'projectId' => env('FIREBASE_PROJECT_ID', 'blacklinks-196ac'),
+        'storageBucket' => env('FIREBASE_STORAGE_BUCKET', 'blacklinks-196ac.firebasestorage.app'),
+        'messagingSenderId' => env('FIREBASE_MESSAGING_SENDER_ID', '823294920330'),
+        'appId' => env('FIREBASE_APP_ID', '1:823294920330:web:f21d6813503f63736e8f73'),
+        'measurementId' => env('FIREBASE_MEASUREMENT_ID', 'G-TZR6FNSM5K'),
     ],
 
     /*

@@ -73,6 +73,8 @@ class CustomerAccountTest extends TestCase
 
         foreach ([
             'customer.dashboard',
+            'customer.services',
+            'customer.websites',
             'customer.profile',
             'customer.wallet',
             'customer.payment-history',
@@ -87,7 +89,7 @@ class CustomerAccountTest extends TestCase
             'orders.cart',
             'orders.index',
         ] as $routeName) {
-            $this->get(route($routeName))->assertOk();
+            $this->get(route($routeName))->assertOk()->assertSee('aria-label="My account"', false);
         }
     }
 }

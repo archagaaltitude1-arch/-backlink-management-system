@@ -4,8 +4,7 @@
     $userName = auth()->user()?->name ?? 'Guest';
     $userRole = 'Customer';
     $isAccountPage = auth()->check()
-        && request()->routeIs('customer.*', 'orders.index', 'orders.show')
-        && ! request()->routeIs('customer.websites', 'customer.services');
+        && request()->routeIs('customer.*', 'orders.cart', 'orders.checkout', 'orders.index', 'orders.show', 'orders.payment');
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
