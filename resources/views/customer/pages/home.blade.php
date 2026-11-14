@@ -10,9 +10,6 @@
         $startHref = auth()->check()
             ? url('/marketplace')
             : (Route::has('auth.register') ? route('auth.register') : url('/register'));
-        $accountHref = Route::has('customer.dashboard')
-            ? route('customer.dashboard')
-            : (Route::has('auth.login') ? route('auth.login') : url('/login'));
         $contactHref = 'mailto:[YOUR EMAIL]';
         $publisherListHref = route('publishers.index');
 
@@ -134,21 +131,6 @@
                 font-weight: 800;
             }
             .why-copy { margin: 0; color: #4A5560; font-size: 16px; line-height: 1.65; }
-            .why-start {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                min-height: 44px;
-                margin-top: 14px;
-                padding: 10px 18px;
-                border-radius: 12px;
-                background: #D63A10;
-                color: #fff;
-                font-size: 15px;
-                font-weight: 700;
-            }
-            .why-start:hover { background: #FF4917; color: #fff; }
-            .why-start:focus-visible { outline: 2px solid #D63A10; outline-offset: 2px; }
             .why-stats {
                 display: grid;
                 grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -211,13 +193,6 @@
                 </div>
                 <div>
                     <p class="why-copy">Why brands and agencies rely on BacklinkPro for safe, lasting link building.</p>
-                    <a class="why-start" href="{{ $accountHref }}">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
-                            <circle cx="12" cy="8" r="3.25" />
-                            <path d="M5.5 19.25a6.5 6.5 0 0 1 13 0" />
-                        </svg>
-                        My Account
-                    </a>
                 </div>
                 </div>
 
@@ -384,7 +359,7 @@
                             @endforeach
                         </ul>
                         <div class="mt-auto pt-5">
-                            <a href="{{ url('/services/'.$card['slug']) }}" class="service-price-btn" style="--tone: {{ $tone['ink'] }};">
+                            <a href="{{ $card['cta_href'] ?? url('/services/'.$card['slug']) }}" class="service-price-btn" style="--tone: {{ $tone['ink'] }};">
                                 <span>{{ $card['button'] }}<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                             </a>
                         </div>
@@ -545,7 +520,7 @@
                             @if (array_key_exists('count', $control) && $control['count'] !== null)
                                 <p class="font-bold text-[#C0340D]">{{ number_format($control['count']) }} active {{ (int) $control['count'] === 1 ? 'niche' : 'niches' }}</p>
                             @endif
-                        </div>
+                </div>
                     </article>
                 @endforeach
 
@@ -560,7 +535,7 @@
                         <span class="control-chip">Niche</span>
                         <span class="control-chip">Price</span>
                         <span class="control-sample" style="margin-left:auto">Sample</span>
-                    </div>
+            </div>
                     <div class="diy-scroll">
                         <table class="diy-table">
                             <colgroup>
@@ -639,8 +614,8 @@
                                 @endforeach
                             </tbody>
                         </table>
-                    </div>
-                </div>
+            </div>
+        </div>
 
                 <div class="control-foot">
                     <ul class="flex flex-wrap gap-2">
@@ -655,158 +630,16 @@
                     {{-- Confirm this offer with the team before turning it on. Leave marketing.promo_code empty until then. --}}
                     @if (filled(config('marketing.promo_code')))
                         <p class="mt-6 text-base font-bold text-navy">New customer? Use code {{ config('marketing.promo_code') }} at checkout for {{ config('marketing.promo_percent') }}% off your first order.</p>
-                    @endif
+                @endif
 
                     <div class="mt-6">
-                        <x-ui.button variant="primary" :href="$publisherListHref">See the publisher list</x-ui.button>
+                        <x-ui.button variant="primary" :href="$publisherListHref.'#all-publishers'">See the publisher list</x-ui.button>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="say-section" aria-labelledby="reviews-heading" aria-roledescription="carousel">
-        <style>
-            .say-section { overflow: hidden; background: #fff; }
-            .say-layout {
-                display: grid;
-                grid-template-columns: 280px minmax(0, 1fr);
-                gap: 12px 28px;
-                align-items: center;
-                max-width: 1240px;
-                margin: 0 auto;
-                padding: 72px 24px 88px;
-            }
-            .say-title {
-                margin: 0;
-                color: #241B4B;
-                font-size: 44px;
-                line-height: 1.12;
-                font-weight: 800;
-            }
-            .say-nav { display: flex; gap: 10px; margin-top: 28px; }
-            .say-btn {
-                display: grid;
-                width: 48px;
-                height: 48px;
-                place-items: center;
-                border: 1.5px solid #E4E6EA;
-                border-radius: 999px;
-                background: #fff;
-                color: #241B4B;
-                cursor: pointer;
-            }
-            .say-btn:hover { border-color: #FF4917; color: #FF4917; }
-            .say-btn:focus-visible { outline: 2px solid #D63A10; outline-offset: 2px; }
-            .say-stage { position: relative; min-height: 430px; overflow: hidden; }
-            .say-orb {
-                position: absolute;
-                top: 50%;
-                right: -90px;
-                width: 620px;
-                height: 620px;
-                border-radius: 50%;
-                background: radial-gradient(circle at 38% 38%, #FF8A55 0%, #FF4917 48%, #E23B0C 100%);
-                transform: translateY(-50%);
-            }
-            .say-track {
-                position: relative;
-                z-index: 1;
-                display: flex;
-                gap: 18px;
-                padding: 24px 8px 8px;
-                transition: transform .4s ease;
-            }
-            .say-card { width: 280px; flex: none; margin: 0; }
-            .say-bubble {
-                position: relative;
-                border-radius: 16px;
-                background: #fff;
-                padding: 22px 20px 24px;
-                color: #3C4660;
-                font-size: 14.5px;
-                line-height: 1.65;
-                box-shadow: 0 14px 34px rgba(21, 32, 41, .1);
-            }
-            .say-bubble::after {
-                content: "";
-                position: absolute;
-                bottom: -8px;
-                left: 26px;
-                width: 16px;
-                height: 16px;
-                background: #fff;
-                transform: rotate(45deg);
-            }
-            .say-person { display: flex; align-items: center; gap: 10px; margin-top: 20px; }
-            .say-person img {
-                width: 46px;
-                height: 46px;
-                flex: none;
-                border-radius: 999px;
-                object-fit: cover;
-                box-shadow: 0 0 0 2px #fff;
-            }
-            .say-name { margin: 0; color: #241B4B; font-size: 15px; font-weight: 800; }
-            .say-role {
-                margin: 2px 0 0;
-                color: #FF4917;
-                font-size: 11px;
-                font-weight: 700;
-                letter-spacing: .06em;
-                text-transform: uppercase;
-            }
-            @media (max-width: 860px) {
-                .say-layout { grid-template-columns: 1fr; padding: 48px 20px 64px; }
-                .say-title { font-size: 34px; }
-                .say-stage { min-height: 390px; }
-                .say-orb { width: 420px; height: 420px; right: -120px; }
-                .say-card { width: min(280px, 78vw); }
-            }
-        </style>
-        <div class="say-layout">
-                <div>
-                <h2 id="reviews-heading" class="say-title font-display">What our customers are saying</h2>
-                <div class="say-nav">
-                    <button type="button" class="say-btn" data-review-prev aria-label="Previous review">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3 5 8l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
-                    <button type="button" class="say-btn" data-review-next aria-label="Next review">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m6 3 5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
-                </div>
-            </div>
-
-            {{-- Sample reviews and portraits for the layout. Replace with real, approved customers before launch. --}}
-            @php
-                $reviews = [
-                    ['photo' => 'review-amira.jpg', 'name' => 'Amira Shah', 'role' => 'Northline', 'quote' => 'Contextual links went onto checked publisher sites, and the live URL was in our report the same week.'],
-                    ['photo' => 'review-leo.jpg', 'name' => 'Leo Grant', 'role' => 'Harbor Digital', 'quote' => 'Filtering by niche and DR made the shortlist simple. Every site we ordered was a real publisher.'],
-                    ['photo' => 'review-priya.jpg', 'name' => 'Priya Nair', 'role' => 'Field & Co', 'quote' => 'Guest posts went live inside the delivery window, and the verified report was ready for our client.'],
-                    ['photo' => 'review-jonah.jpg', 'name' => 'Jonah Ellis', 'role' => 'Brightpath', 'quote' => 'Niche edits on older articles gave us a faster start than waiting for brand-new posts to index.'],
-                    ['photo' => 'review-sofia.jpg', 'name' => 'Sofia Marquez', 'role' => 'Lumen SEO', 'quote' => 'Traffic, spam score and price are on every listing, so we stopped guessing which sites were worth buying.'],
-                    ['photo' => 'review-kenji.jpg', 'name' => 'Kenji Sato', 'role' => 'Atlas Links', 'quote' => 'The white-label report was clean enough to send to our clients without rebuilding it.'],
-                ];
-            @endphp
-            <div class="say-stage" data-review-stage>
-                <div class="say-orb" aria-hidden="true"></div>
-                <div class="say-track" data-review-track>
-                    @foreach ($reviews as $review)
-                        <figure class="say-card" data-review-card>
-                            <blockquote class="say-bubble">{{ $review['quote'] }}</blockquote>
-                            <figcaption class="say-person">
-                                <img src="{{ asset('images/reviews/'.$review['photo']) }}" alt="" width="46" height="46">
-                                <div>
-                                    <p class="say-name">{{ $review['name'] }}</p>
-                                    <p class="say-role">{{ $review['role'] }}</p>
-                                </div>
-                            </figcaption>
-                        </figure>
-                @endforeach
-                </div>
-            </div>
-        </div>
-    </section>
 
     <section class="bg-[#F2F2F2]" aria-labelledby="home-niches-heading">
         <div class="mx-auto max-w-[1240px] px-6 py-14 lg:py-[88px]">
@@ -927,46 +760,9 @@
                             <p><strong>Get the live URL</strong><span>We send the verified page address once the link is published.</span></p>
                         </li>
                     </ol>
-                </div>
+        </div>
             </div>
         </div>
     </section>
 @endsection
 
-@push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var reviewTrack = document.querySelector('[data-review-track]');
-            var reviewStage = document.querySelector('[data-review-stage]');
-            var reviewCards = reviewTrack ? Array.prototype.slice.call(reviewTrack.querySelectorAll('[data-review-card]')) : [];
-            var reviewIndex = 0;
-
-            function reviewStep() {
-                if (!reviewCards.length) return 0;
-                var card = reviewCards[0].getBoundingClientRect().width;
-                var gap = 18;
-                return card + gap;
-            }
-
-            function reviewMax() {
-                if (!reviewStage || !reviewCards.length) return 0;
-                var visible = Math.max(1, Math.floor(reviewStage.clientWidth / reviewStep()));
-                return Math.max(0, reviewCards.length - visible);
-            }
-
-            function showReview(next) {
-                if (!reviewTrack || !reviewCards.length) return;
-                var max = reviewMax();
-                reviewIndex = next > max ? 0 : next < 0 ? max : next;
-                reviewTrack.style.transform = 'translateX(' + (-reviewIndex * reviewStep()) + 'px)';
-            }
-
-            var prevReview = document.querySelector('[data-review-prev]');
-            var nextReview = document.querySelector('[data-review-next]');
-            if (prevReview) prevReview.addEventListener('click', function () { showReview(reviewIndex - 1); });
-            if (nextReview) nextReview.addEventListener('click', function () { showReview(reviewIndex + 1); });
-            window.addEventListener('resize', function () { showReview(reviewIndex); });
-            showReview(0);
-        });
-    </script>
-@endpush

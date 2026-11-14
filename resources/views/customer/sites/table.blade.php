@@ -104,8 +104,11 @@
                     $rowSlug = \Illuminate\Support\Str::slug((string) ($publisher['domain'] ?? 'site'));
                     $ahrefs = is_numeric($publisher['traffic'] ?? null) ? (int) $publisher['traffic'] : 0;
                     $semrush = is_numeric($publisher['semrush_traffic'] ?? null) ? (int) $publisher['semrush_traffic'] : 0;
+                    $addedAt = $publisher['added_at'] ?? null;
+                    $addedStamp = $addedAt instanceof \DateTimeInterface ? $addedAt->getTimestamp() : 0;
+                    $countryCode = strtoupper((string) ($publisher['top_countries'][0][0] ?? ''));
                 @endphp
-                <tr id="site-row-{{ $rowSlug !== '' ? $rowSlug : 'site' }}">
+                <tr id="site-row-{{ $rowSlug !== '' ? $rowSlug : 'site' }}" @if (! empty($filterable)) data-publisher-row data-as="{{ (int) ($publisher['as'] ?? 0) }}" data-da="{{ (int) ($publisher['da'] ?? 0) }}" data-dr="{{ (int) ($publisher['dr'] ?? 0) }}" data-traffic="{{ (int) ($publisher['traffic'] ?? 0) }}" data-keywords="{{ (int) ($publisher['keywords'] ?? 0) }}" data-backlinks="{{ (int) ($publisher['backlinks'] ?? 0) }}" data-price="{{ is_numeric($publisher['price'] ?? null) ? (float) $publisher['price'] : 0 }}" data-added="{{ $addedStamp }}" data-language="{{ $publisher['language'] ?? '' }}" data-country="{{ $countryCode }}" data-type="{{ $publisher['link_type'] ?? '' }}" data-validity="{{ $publisher['link_validity'] ?? '' }}" data-niche="{{ implode('|', $publisher['niches'] ?? []) }}" data-search="{{ mb_strtolower(trim(($publisher['domain'] ?? '').' '.implode(' ', $publisher['niches'] ?? []).' '.($publisher['language'] ?? ''))) }}" @endif>
                     <td>
                         <div class="nd-url">
                             <a href="{{ ! empty($publisher['demo']) || empty($publisher['id']) ? '#' : url('/marketplace/'.$publisher['id']) }}" class="font-bold text-navy underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">{{ $publisher['domain'] }}</a>

@@ -148,6 +148,9 @@
 
                 <aside class="wd-order" aria-label="Order">
                     <p class="wd-price">{{ $priceLabel }}</p>
+                    @if (\Illuminate\Support\Facades\Route::has('publish.show'))
+                        <a class="wd-btn wd-btn-primary" href="{{ route('publish.show', $profile['key']) }}">Publish</a>
+                    @endif
                     @if ($profile['credits'] !== null)
                         <p class="wd-credits">or {{ $profile['credits'] }} credits</p>
                     @endif

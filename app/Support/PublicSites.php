@@ -23,10 +23,10 @@ class PublicSites
                 'label' => 'Link Insertions (Niche Edits) Sites List',
                 'slug' => 'link-insertions-niche-edits',
                 'kind' => 'niche-edit',
-                'about' => 'These publishers accept a link inserted into an article that is already on the site. The list uses websites whose stored link type is Niche edit.',
-                'detail' => 'They are ordered by stored Domain Rating, highest first. Traffic and keyword counts on each row are the figures already stored for that publisher.',
+                'about' => 'Browse every publisher website here, with Niche edit selected by default so you can buy link insertions into aged articles.',
+                'detail' => 'Clear or change the Link type filter to see all sites. Use Niche and the other filters to narrow the chart, then open the site you want.',
                 'chart' => 'dr',
-                'checks' => ['Niche edit publishers only', 'Ordered by stored Domain Rating', 'Existing-article placements', 'Niche shown for each website'],
+                'checks' => ['All publishers on one chart', 'Niche edit pre-selected', 'Niches filterable', 'Change filters to see every site'],
             ],
             [
                 'label' => 'List of Guest Posting Sites with Organic Traffic',

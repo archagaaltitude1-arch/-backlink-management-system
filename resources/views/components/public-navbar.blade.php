@@ -59,8 +59,16 @@
         ['label' => 'Agriculture & Farming', 'query' => 'Agriculture & Farming'],
     ];
 
-    $savedHref = Route::has('customer.saved-websites') ? route('customer.saved-websites') : '#';
-    $cartHref = Route::has('orders.cart') ? route('orders.cart') : '#';
+    $wishlistCount = 0;
+
+    foreach (session('wishlist', []) as $savedItem) {
+        if (is_array($savedItem) && filled($savedItem['domain'] ?? null)) {
+            $wishlistCount++;
+        }
+    }
+
+    $savedHref = Route::has('wishlist.index') ? route('wishlist.index') : (Route::has('customer.saved-websites') ? route('customer.saved-websites') : '#');
+    $cartHref = Route::has('shopping.index') ? route('shopping.index') : (Route::has('orders.cart') ? route('orders.cart') : '#');
     $loginHref = Route::has('auth.login') ? route('auth.login') : url('/login');
     $accountHref = Route::has('customer.dashboard') ? route('customer.dashboard') : $loginHref;
     $logoutHref = Route::has('auth.logout') ? route('auth.logout') : null;
@@ -79,29 +87,9 @@
 
     $cartCount = 0;
 
-    if (auth()->check()) {
-        try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('cart_items')) {
-                $items = \Illuminate\Support\Facades\DB::table('cart_items');
-
-                if (\Illuminate\Support\Facades\Schema::hasTable('carts') && \Illuminate\Support\Facades\Schema::hasColumn('cart_items', 'cart_id')) {
-                    $carts = \Illuminate\Support\Facades\DB::table('carts')->where('user_id', auth()->id());
-
-                    if (\Illuminate\Support\Facades\Schema::hasColumn('carts', 'status')) {
-                        $carts->where('status', 'active');
-                    }
-
-                    $items->whereIn('cart_id', $carts->pluck('id'));
-                } elseif (\Illuminate\Support\Facades\Schema::hasColumn('cart_items', 'user_id')) {
-                    $items->where('user_id', auth()->id());
-                }
-
-                $cartCount = \Illuminate\Support\Facades\Schema::hasColumn('cart_items', 'quantity')
-                    ? (int) $items->sum('quantity')
-                    : (int) $items->count();
-            }
-        } catch (\Throwable $exception) {
-            $cartCount = 0;
+    foreach (session('shopping_cart', []) as $cartItem) {
+        if (is_array($cartItem) && filled($cartItem['domain'] ?? null)) {
+            $cartCount += max(1, (int) ($cartItem['quantity'] ?? 1));
         }
     }
 @endphp
@@ -190,26 +178,15 @@
                         </button>
                         <div id="packages-panel" class="absolute top-full z-50 hidden pt-2" style="left:0;width:min(380px,calc(100vw - 32px))" hidden>
                             <div class="rounded-[20px] border border-[#E3E5E8] bg-white p-4 shadow-lg">
-                                <div class="grid grid-cols-1 gap-4">
+                                <div class="grid grid-cols-1">
                                     @foreach ($packageMenu as $group)
-                                        <div>
-                                            <p class="px-3 text-[13px] font-extrabold uppercase tracking-wide text-[#C0340D]">{{ $group['title'] }}</p>
-                                            @foreach ($group['sections'] as $section)
-                                                @if ($section['title'])
-                                                    <p class="mt-2 px-3 text-[14px] font-extrabold text-navy">{{ $section['title'] }}</p>
-                                                @endif
-                                                @foreach ($section['items'] as $item)
-                                                    <a href="{{ route('packages.index') }}#{{ $item['slug'] }}" class="flex min-h-11 items-center gap-2 rounded-xl px-3 text-[14px] font-bold text-navy hover:bg-[#FFF1EC] hover:text-[#C0340D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
-                                                        @if ($item['flag'])
-                                                            <span class="inline-flex shrink-0 overflow-hidden rounded-[2px] ring-1 ring-black/10" style="width:20px;height:14px">
-                                                                <x-ui.flag :code="$item['flag']" width="20" height="14" class="h-full w-full" />
-                                                            </span>
-                                                        @endif
-                                                        <span>{{ $item['label'] }}</span>
-                                                    </a>
-                                                @endforeach
+                                        @foreach ($group['sections'] as $section)
+                                            @foreach ($section['items'] as $item)
+                                                <a href="{{ route('packages.show', $item['slug']) }}" class="flex min-h-11 items-center rounded-xl px-3 text-[14px] font-bold text-navy hover:bg-[#FFF1EC] hover:text-[#C0340D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
+                                                    {{ $item['label'] }}
+                                                </a>
                                             @endforeach
-                                        </div>
+                                        @endforeach
                                     @endforeach
                                 </div>
                             </div>
@@ -260,17 +237,17 @@
                         </div>
                     </div>
                 @else
-                    <a
-                        href="{{ $link['url'] }}"
-                        @class([
-                            'inline-flex min-h-11 items-center rounded-lg px-3 text-[15px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]',
-                            'bg-[#FFF1EC] text-[#C0340D]' => $linkIsCurrent($link),
-                            'text-navy hover:bg-[#F2F2F2]' => ! $linkIsCurrent($link),
-                        ])
-                        @if ($linkIsCurrent($link)) aria-current="page" @endif
-                    >
-                        {{ $link['label'] }}
-                    </a>
+                <a
+                    href="{{ $link['url'] }}"
+                    @class([
+                        'inline-flex min-h-11 items-center rounded-lg px-3 text-[15px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]',
+                        'bg-[#FFF1EC] text-[#C0340D]' => $linkIsCurrent($link),
+                        'text-navy hover:bg-[#F2F2F2]' => ! $linkIsCurrent($link),
+                    ])
+                    @if ($linkIsCurrent($link)) aria-current="page" @endif
+                >
+                    {{ $link['label'] }}
+                </a>
                 @endif
             @endforeach
         </nav>
@@ -278,25 +255,28 @@
         <div class="flex items-center gap-1 sm:gap-2">
             <a
                     href="{{ $savedHref }}"
-                    class="inline-flex h-11 w-11 items-center justify-center rounded-xl text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]"
-                    aria-label="Saved websites"
+                    class="relative inline-flex h-11 w-11 items-center justify-center rounded-xl text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]"
+                    aria-label="Wishlist{{ $wishlistCount > 0 ? ', '.$wishlistCount.' saved' : '' }}"
                 >
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M19.5 12.6 12 20l-7.5-7.4a4.5 4.5 0 0 1 6.4-6.3L12 7.4l1.1-1.1a4.5 4.5 0 0 1 6.4 6.3Z" />
                     </svg>
+                    @if ($wishlistCount > 0)
+                        <span class="absolute top-0.5 right-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-[#D63A10] px-1 text-[11px] font-bold text-white">{{ $wishlistCount }}</span>
+                    @endif
                 </a>
 
-            <a
-                href="{{ $cartHref }}"
-                class="relative inline-flex h-11 w-11 items-center justify-center rounded-xl text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]"
-                aria-label="Cart, {{ $cartCount }} items"
-            >
-                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M6 7h15l-1.5 9h-12Z" />
-                    <path d="M6 7 5 4H2" />
-                    <circle cx="9" cy="20" r="1.25" fill="currentColor" stroke="none" />
-                    <circle cx="18" cy="20" r="1.25" fill="currentColor" stroke="none" />
-                </svg>
+                <a
+                    href="{{ $cartHref }}"
+                    class="relative inline-flex h-11 w-11 items-center justify-center rounded-xl text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]"
+                aria-label="Cart, {{ $cartCount }} {{ $cartCount === 1 ? 'item' : 'items' }}"
+                >
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M6 7h15l-1.5 9h-12Z" />
+                        <path d="M6 7 5 4H2" />
+                        <circle cx="9" cy="20" r="1.25" fill="currentColor" stroke="none" />
+                        <circle cx="18" cy="20" r="1.25" fill="currentColor" stroke="none" />
+                    </svg>
                 <span class="absolute top-0.5 right-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-[#D63A10] px-1 text-[11px] font-bold text-white">{{ $cartCount }}</span>
             </a>
 
@@ -407,26 +387,15 @@
                         Packages
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
                     </button>
-                    <div id="mobile-packages-panel" class="{{ $packagesCurrent ? '' : 'hidden' }} flex flex-col gap-3 pl-2" @unless ($packagesCurrent) hidden @endunless>
+                    <div id="mobile-packages-panel" class="{{ $packagesCurrent ? '' : 'hidden' }} flex flex-col pl-2" @unless ($packagesCurrent) hidden @endunless>
                         @foreach ($packageMenu as $group)
-                            <div>
-                                <p class="px-3 pt-1 text-[13px] font-extrabold uppercase tracking-wide text-[#C0340D]">{{ $group['title'] }}</p>
-                                @foreach ($group['sections'] as $section)
-                                    @if ($section['title'])
-                                        <p class="px-3 pt-1 text-[14px] font-extrabold text-navy">{{ $section['title'] }}</p>
-                                    @endif
-                                    @foreach ($section['items'] as $item)
-                                        <a href="{{ route('packages.index') }}#{{ $item['slug'] }}" class="flex min-h-11 items-center gap-2 rounded-lg px-3 text-[15px] font-bold text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
-                                            @if ($item['flag'])
-                                                <span class="inline-flex shrink-0 overflow-hidden rounded-[2px] ring-1 ring-black/10" style="width:20px;height:14px">
-                                                    <x-ui.flag :code="$item['flag']" width="20" height="14" class="h-full w-full" />
-                                                </span>
-                                            @endif
-                                            {{ $item['label'] }}
-                                        </a>
-                                    @endforeach
+                            @foreach ($group['sections'] as $section)
+                                @foreach ($section['items'] as $item)
+                                    <a href="{{ route('packages.show', $item['slug']) }}" class="flex min-h-11 items-center rounded-lg px-3 text-[15px] font-bold text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
+                                        {{ $item['label'] }}
+                                    </a>
                                 @endforeach
-                            </div>
+                            @endforeach
                         @endforeach
                     </div>
                 @elseif ($link['label'] === 'Sites')
@@ -463,17 +432,17 @@
                         @endforeach
                     </div>
                 @else
-                    <a
-                        href="{{ $link['url'] }}"
-                        @class([
-                            'flex min-h-11 items-center rounded-lg px-3 text-[15px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]',
-                            'bg-[#FFF1EC] text-[#C0340D]' => $linkIsCurrent($link),
-                            'text-navy hover:bg-[#F2F2F2]' => ! $linkIsCurrent($link),
-                        ])
-                        @if ($linkIsCurrent($link)) aria-current="page" @endif
-                    >
-                        {{ $link['label'] }}
-                    </a>
+                <a
+                    href="{{ $link['url'] }}"
+                    @class([
+                        'flex min-h-11 items-center rounded-lg px-3 text-[15px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]',
+                        'bg-[#FFF1EC] text-[#C0340D]' => $linkIsCurrent($link),
+                        'text-navy hover:bg-[#F2F2F2]' => ! $linkIsCurrent($link),
+                    ])
+                    @if ($linkIsCurrent($link)) aria-current="page" @endif
+                >
+                    {{ $link['label'] }}
+                </a>
                 @endif
             @endforeach
 
@@ -921,7 +890,7 @@
 
             if (sitesToggle && sitesPanel && sitesMenu) {
                 sitesToggle.addEventListener('click', function (event) {
-                    event.preventDefault();
+                        event.preventDefault();
                     event.stopPropagation();
                     sitesPinned = sitesPanel.classList.contains('hidden');
                     setSites(sitesPinned);
