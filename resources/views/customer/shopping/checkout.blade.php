@@ -6,7 +6,7 @@
 @section('content')
     <style>
         .ck { background: #F7F8FA; color: #152029; }
-        .ck-wrap { max-width: 1120px; margin: 0 auto; padding: 28px 20px 72px; }
+        .ck-wrap { max-width: none; margin: 0 auto; padding: 28px 20px 72px; }
         .ck-crumb { margin: 0 0 18px; color: #4A5560; font-size: 14px; font-weight: 700; }
         .ck-crumb a { color: inherit; text-decoration: none; }
         .ck-crumb a:hover { color: #C0340D; }

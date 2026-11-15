@@ -2,23 +2,13 @@
     $siteOptions = $siteOptions ?? \App\Support\PublicSites::items();
     $languages = [];
     $countries = [];
-    $linkTypes = [];
-    $validities = [];
 
     foreach ($rows as $row) {
         $language = trim((string) ($row['language'] ?? ''));
-        $type = trim((string) ($row['link_type'] ?? ''));
-        $validity = trim((string) ($row['link_validity'] ?? ''));
         $country = strtoupper((string) ($row['top_countries'][0][0] ?? ''));
 
         if ($language !== '') {
             $languages[$language] = $language;
-        }
-        if ($type !== '') {
-            $linkTypes[$type] = $type;
-        }
-        if ($validity !== '') {
-            $validities[$validity] = $validity;
         }
         if ($country !== '') {
             $countries[$country] = $country;
@@ -27,21 +17,26 @@
 
     ksort($languages);
     ksort($countries);
-    ksort($linkTypes);
-    ksort($validities);
     $total = count($rows);
     $defaultType = $defaultType ?? '';
     $defaultNiche = $defaultNiche ?? '';
     $defaultDr = $defaultDr ?? '';
+    $defaultCountry = $defaultCountry ?? '';
     $breadcrumb = $breadcrumb ?? 'Publisher list';
     $title = $title ?? 'List of posting websites (All publishers)';
     $lead = $lead ?? 'Every publisher website on this list is included. Filter by the niche, language, metrics and price stored on each site, then open the one you want.';
     $skipIntro = (bool) ($skipIntro ?? false);
+    $showRecent = (bool) ($showRecent ?? true);
+    $sectionId = $sectionId ?? null;
+    $embeddedTitle = $embeddedTitle ?? '';
+    $embeddedLead = $embeddedLead ?? '';
+    $insertionPrice = (bool) ($insertionPrice ?? false);
     $currentSlug = $currentSlug ?? null;
+    $paidLabel = $paidLabel ?? '';
 @endphp
 
 <style>
-    .pub-wrap { max-width: 1320px; margin: 0 auto; padding: 28px 20px 72px; color: #152029; }
+    .pub-wrap { max-width: none; margin: 0 auto; padding: 28px 20px 72px; color: #152029; }
     .pub-crumb { margin: 0 0 18px; color: #4A5560; font-size: 14px; font-weight: 700; }
     .pub-crumb a { color: inherit; text-decoration: none; }
     .pub-crumb a:hover { color: #C0340D; }
@@ -54,6 +49,7 @@
     .pub-create:hover { background: #FF4917; color: #fff; }
     .pub-lead { max-width: 860px; margin: 14px 0 0; font-size: 16px; line-height: 1.6; }
     .pub-note { margin: 12px 0 0; color: #C0340D; font-size: 14px; font-weight: 700; }
+    .pub-status { margin: 0 0 16px; border-radius: 12px; background: #FFF1EC; padding: 12px 14px; color: #C0340D; font-size: 14px; font-weight: 700; line-height: 1.5; }
     .pub-check { margin-top: 22px; }
     .pub-check h2, .pub-project h2 { margin: 0; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 800; }
     .pub-options { display: grid; gap: 8px 24px; margin: 12px 0 0; padding: 0; list-style: none; }
@@ -71,6 +67,10 @@
     .pub-count { margin: 0; font-weight: 800; }
     .pub-table { margin-top: 14px; }
     .pub-empty { margin: 0; padding: 18px; color: #4A5560; }
+    .pub-embed-head { margin: 8px 0 4px; text-align: center; }
+    .pub-kicker { margin: 0 0 12px; color: #C0340D; font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+    .pub-embed-head h2 { margin: 0; font-family: Montserrat, sans-serif; font-size: clamp(28px, 3vw, 40px); font-weight: 800; line-height: 1.12; }
+    .pub-embed-head p:last-child { max-width: 46rem; margin: 16px auto 0; color: #4A5560; font-size: 17px; line-height: 1.65; }
     .pub-wrap :focus-visible { outline: 2px solid #D63A10; outline-offset: 2px; }
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
     @media (min-width: 800px) {
@@ -82,8 +82,11 @@
     }
 </style>
 
-<section class="bg-[#F7F8FA]">
+<section @if ($sectionId) id="{{ $sectionId }}" @endif class="scroll-mt-24 bg-[#F7F8FA]" @if ($embeddedTitle !== '') aria-labelledby="publishers-heading" @endif>
     <div class="pub-wrap">
+        @if ($paidLabel !== '')
+            <p class="pub-status" role="status">Payment confirmed. These websites match your {{ $paidLabel }}.</p>
+        @endif
         @unless ($skipIntro)
             <nav class="pub-crumb" aria-label="Breadcrumb">
                 <a href="{{ url('/') }}">Home</a>
@@ -98,6 +101,8 @@
             <p class="pub-lead">{{ $lead }}</p>
             @if ($demo)
                 <p class="pub-note">Sample data for preview. These figures belong to fictional .example publishers.</p>
+            @elseif (collect($rows)->contains(fn (array $row): bool => ! empty($row['sample_metrics'])))
+                <p class="pub-note">Language, country, keywords, Semrush, referring domains and link details are sample figures until they are stored on each website.</p>
             @endif
 
             @include('customer.sites.partials.also-check', [
@@ -105,9 +110,20 @@
                 'currentSlug' => $currentSlug,
             ])
         @else
-            <div class="pub-head" style="justify-content: flex-end;">
-                <button class="pub-recent" type="button" id="recent-publishers">See recently added sites</button>
-            </div>
+            @if ($embeddedTitle !== '')
+                <div class="pub-embed-head">
+                    <p class="pub-kicker">Websites</p>
+                    <h2 id="publishers-heading">{{ $embeddedTitle }}</h2>
+                    @if ($embeddedLead !== '')
+                        <p>{{ $embeddedLead }}</p>
+                    @endif
+                </div>
+            @endif
+            @if ($showRecent)
+                <div class="pub-head" style="justify-content: flex-end;">
+                    <button class="pub-recent" type="button" id="recent-publishers">See recently added sites</button>
+                </div>
+            @endif
         @endunless
 
         <div class="pub-project">
@@ -132,78 +148,15 @@
             <p class="pub-empty">No publisher is listed yet.</p>
         @else
             <div class="pub-filters" aria-label="Publisher filters">
-                <select data-filter="as" aria-label="Authority score">
-                    <option value="">AS</option>
-                    @foreach ([20, 30, 40, 50, 60] as $min)
-                        <option value="{{ $min }}">AS {{ $min }}+</option>
-                    @endforeach
-                </select>
-                <select data-filter="da" aria-label="Domain authority">
-                    <option value="">DA</option>
-                    @foreach ([20, 30, 40, 50, 60] as $min)
-                        <option value="{{ $min }}">DA {{ $min }}+</option>
-                    @endforeach
-                </select>
-                <select data-filter="dr" aria-label="Domain rating">
-                    <option value="">DR</option>
-                    @foreach ([20, 30, 40, 50, 60] as $min)
-                        <option value="{{ $min }}" @selected((string) $defaultDr === (string) $min)>DR {{ $min }}+</option>
-                    @endforeach
-                </select>
-                <select data-filter="niche" aria-label="Niche">
-                    <option value="">Niche</option>
-                    @foreach ($categories as $name => $slug)
-                        <option value="{{ $name }}" @selected($defaultNiche === $name)>{{ $name }}</option>
-                    @endforeach
-                </select>
-                <select data-filter="language" aria-label="Language">
-                    <option value="">Language</option>
-                    @foreach ($languages as $language)
-                        <option value="{{ $language }}">{{ $language }}</option>
-                    @endforeach
-                </select>
-                <select data-filter="traffic" aria-label="Monthly traffic">
-                    <option value="">Traffic</option>
-                    @foreach ([1000, 5000, 10000, 50000] as $min)
-                        <option value="{{ $min }}">{{ number_format($min) }}+</option>
-                    @endforeach
-                </select>
-                <select data-filter="keywords" aria-label="Keywords">
-                    <option value="">Keywords</option>
-                    @foreach ([100, 1000, 10000] as $min)
-                        <option value="{{ $min }}">{{ number_format($min) }}+</option>
-                    @endforeach
-                </select>
-                <select data-filter="country" aria-label="Country">
-                    <option value="">Country</option>
-                    @foreach ($countries as $country)
-                        <option value="{{ $country }}">{{ $country }}</option>
-                    @endforeach
-                </select>
-                <select data-filter="backlinks" aria-label="Number of backlinks">
-                    <option value="">No. of backlinks</option>
-                    @foreach ([10, 50, 100, 500] as $min)
-                        <option value="{{ $min }}">{{ number_format($min) }}+</option>
-                    @endforeach
-                </select>
-                <select data-filter="type" aria-label="Link type">
-                    <option value="">Link type</option>
-                    @foreach ($linkTypes as $type)
-                        <option value="{{ $type }}" @selected($defaultType === $type)>{{ $type }}</option>
-                    @endforeach
-                </select>
-                <select data-filter="validity" aria-label="Link validity">
-                    <option value="">Link validity</option>
-                    @foreach ($validities as $validity)
-                        <option value="{{ $validity }}">{{ $validity }}</option>
-                    @endforeach
-                </select>
-                <select data-filter="price" aria-label="Price range">
-                    <option value="">Price range</option>
-                    @foreach ([100, 250, 500, 1000] as $max)
-                        <option value="{{ $max }}">Up to ${{ number_format($max) }}</option>
-                    @endforeach
-                </select>
+                @include('customer.sites.partials.spec-filters', [
+                    'languages' => $languages,
+                    'countries' => $countries,
+                    'categories' => $categories,
+                    'defaultNiche' => $defaultNiche,
+                    'defaultType' => $defaultType,
+                    'defaultDr' => $defaultDr,
+                    'defaultCountry' => $defaultCountry,
+                ])
             </div>
 
             <div class="pub-tools">
@@ -224,7 +177,7 @@
             </div>
 
             <div class="pub-table" id="all-publishers">
-                @include('customer.sites.table', ['rows' => $rows, 'demo' => $demo, 'filterable' => true])
+                @include('customer.sites.table', ['rows' => $rows, 'demo' => $demo, 'filterable' => true, 'insertionPrice' => $insertionPrice])
                 <p class="pub-empty" id="publisher-empty" hidden>No publisher matches these filters.</p>
             </div>
         @endif
@@ -252,14 +205,16 @@
     var matches = function (row) {
         var query = (search.value || '').trim().toLowerCase();
         if (query && (row.getAttribute('data-search') || '').indexOf(query) === -1) return false;
-        var minimums = ['as', 'da', 'dr', 'traffic', 'keywords', 'backlinks'];
+        var minimums = ['as', 'da', 'dr', 'pa', 'tf', 'traffic', 'semrush', 'keywords', 'backlinks', 'referring'];
         for (var i = 0; i < minimums.length; i++) {
             var min = selected(minimums[i]);
             if (min !== '' && number(row, 'data-' + minimums[i]) < Number(min)) return false;
         }
         var maxPrice = selected('price');
         if (maxPrice !== '' && number(row, 'data-price') > Number(maxPrice)) return false;
-        var exact = ['language', 'country', 'type', 'validity'];
+        var spamMax = selected('spam');
+        if (spamMax !== '' && number(row, 'data-spam') > Number(spamMax)) return false;
+        var exact = ['language', 'country', 'type', 'validity', 'sports', 'pharmacy', 'crypto', 'news', 'sponsored', 'foreign'];
         for (var j = 0; j < exact.length; j++) {
             var value = selected(exact[j]);
             if (value !== '' && row.getAttribute('data-' + exact[j]) !== value) return false;
@@ -293,12 +248,15 @@
     search.addEventListener('input', function () { page = 1; paint(); });
     sort.addEventListener('change', function () { page = 1; paint(); });
     pageSize.addEventListener('change', function () { page = 1; paint(); });
-    document.getElementById('recent-publishers').addEventListener('click', function () {
-        sort.value = 'added';
-        page = 1;
-        paint();
-        root.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+    var recent = document.getElementById('recent-publishers');
+    if (recent) {
+        recent.addEventListener('click', function () {
+            sort.value = 'added';
+            page = 1;
+            paint();
+            root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    }
     paint();
 })();
 

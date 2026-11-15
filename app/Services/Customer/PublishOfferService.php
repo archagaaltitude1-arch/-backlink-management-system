@@ -5,9 +5,12 @@ namespace App\Services\Customer;
 use App\Models\OrderItem;
 use App\Models\PublisherReview;
 use App\Models\User;
+use App\Models\Website;
+use App\Support\BrowseCountries;
 use App\Support\DemoNicheData;
 use App\Support\DemoPublisherData;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -19,11 +22,11 @@ class PublishOfferService
     public function resolve(string $site): ?array
     {
         if (ctype_digit($site)) {
-            if (! class_exists(\App\Models\Website::class) || ! Schema::hasTable('websites')) {
+            if (! class_exists(Website::class) || ! Schema::hasTable('websites')) {
                 return null;
             }
 
-            $model = \App\Models\Website::query()->find($site);
+            $model = Website::query()->find($site);
 
             if ($model === null) {
                 return null;
@@ -36,17 +39,64 @@ class PublishOfferService
             return $this->build($model);
         }
 
-        $demo = (bool) config('marketplace.demo')
-            || ! class_exists(\App\Models\Website::class)
-            || ! Schema::hasTable('websites');
+        $row = $this->comparisonRow($site);
 
-        if (! $demo) {
+        if ($row !== null) {
+            return $this->build($row);
+        }
+
+        if (! class_exists(Website::class) || ! Schema::hasTable('websites')) {
             return null;
         }
 
-        $row = DemoPublisherData::find($site);
+        $model = Website::query()->where('domain', $site)->first();
 
-        return $row === null ? null : $this->build($row);
+        if ($model === null) {
+            return null;
+        }
+
+        if (Schema::hasColumn('websites', 'status') && strtolower((string) ($model->status ?? '')) !== 'active') {
+            return null;
+        }
+
+        return $this->build($model);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function comparisonRow(string $domain): ?array
+    {
+        $domain = mb_strtolower(trim($domain));
+        $listed = DemoPublisherData::find($domain);
+
+        if ($listed !== null) {
+            return $listed;
+        }
+
+        $country = BrowseCountries::findChartRow($domain);
+
+        if ($country !== null) {
+            return $country;
+        }
+
+        if (! preg_match('/^[a-z]+-([a-z0-9-]+)\.example$/', $domain, $matches)) {
+            return null;
+        }
+
+        foreach (DemoNicheData::names() as $name) {
+            if (Str::slug($name) !== $matches[1]) {
+                continue;
+            }
+
+            foreach (DemoNicheData::extraRows($name) as $row) {
+                if (mb_strtolower((string) $row['domain']) === $domain) {
+                    return $row;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -150,7 +200,7 @@ class PublishOfferService
         ];
 
         $offer['lead'] = sprintf(
-            'Order a %s placement on %s, a %s-language website in %s. Publish your own article, let our writers create one, or add your link to an existing post.',
+            'Order a %s placement on %s, a %s-language website in %s. Our writers can create the article, or you can order a contextual link, text link, or niche edit.',
             $offer['link_type'],
             $offer['display_name'],
             $offer['language'],
@@ -475,7 +525,7 @@ class PublishOfferService
             return $empty;
         }
 
-        $query = \Illuminate\Support\Facades\DB::table('website_traffic_history')->where('website_id', $websiteId);
+        $query = DB::table('website_traffic_history')->where('website_id', $websiteId);
 
         if (in_array('recorded_at', $columns, true)) {
             $query->orderBy('recorded_at');
@@ -541,10 +591,9 @@ class PublishOfferService
         }
 
         return [
-            "Articles must be relevant to {$category} or closely related topics.",
-            'Topics the publisher does not accept are listed under Restricted topics below.',
-            'Adult content and hate speech are never accepted.',
-            "The publisher's editors may adjust titles, images or wording to match their quality and style.",
+            "Our team writes and publishes the article for {$category} or a closely related topic.",
+            'We do not publish adult content or hate speech.',
+            'Our team sets the title, images, and wording so the article matches the website.',
         ];
     }
 
@@ -681,11 +730,11 @@ class PublishOfferService
             return array_slice($cards, 0, 10);
         }
 
-        if ($id === null || $primary === '' || ! class_exists(\App\Models\Website::class) || ! Schema::hasTable('websites')) {
+        if ($id === null || $primary === '' || ! class_exists(Website::class) || ! Schema::hasTable('websites')) {
             return [];
         }
 
-        $query = \App\Models\Website::query()->where('id', '!=', $id);
+        $query = Website::query()->where('id', '!=', $id);
 
         if (Schema::hasColumn('websites', 'status')) {
             $query->where('status', 'active');

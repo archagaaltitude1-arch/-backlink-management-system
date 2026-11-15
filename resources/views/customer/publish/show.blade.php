@@ -42,7 +42,7 @@
         : null;
 @endphp
 <style>
-    .pb-page { max-width: 1320px; margin: 0 auto; padding: 28px 20px 8px; color: #152029; font-family: Ubuntu, sans-serif; }
+    .pb-page { max-width: none; margin: 0 auto; padding: 28px 20px 8px; color: #152029; font-family: Ubuntu, sans-serif; }
     .pb-page h1, .pb-page h2, .pb-page h3 { font-family: Montserrat, sans-serif; font-weight: 800; color: #152029; }
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
     .pb-crumb { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; color: #4A5560; font-size: 14px; font-weight: 700; }
@@ -155,19 +155,26 @@
     .pb-info { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 10px; }
     .pb-info strong { display: block; }
     .pb-info a { color: #C0340D; }
-    .pb-tabs { display: flex; gap: 18px; margin-top: 28px; border-bottom: 1px solid #E3E5E8; }
-    .pb-tabs [role="tab"] { min-height: 44px; border: 0; border-bottom: 3px solid transparent; background: transparent; padding: 0 2px; font-weight: 700; color: #4A5560; }
+    .pb-tabs { display: flex; gap: 4px; margin: 0; border-bottom: 1px solid #E3E5E8; }
+    .pb-tabs [role="tab"] { min-height: 52px; border: 0; border-bottom: 3px solid transparent; background: transparent; padding: 0 16px; font-family: Montserrat, sans-serif; font-weight: 800; color: #4A5560; }
     .pb-tabs [aria-selected="true"] { border-bottom-color: #FF4917; color: #152029; }
-    .pb-panel { padding: 20px 0 8px; }
-    .pb-panel h3 { margin: 22px 0 8px; font-size: 20px; }
-    .pb-lead { margin: 0; }
-    .pb-defs { display: grid; gap: 8px; margin: 0; }
-    .pb-defs div { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid #E3E5E8; padding-bottom: 6px; }
-    .pb-defs dt { color: #4A5560; }
-    .pb-defs dd { margin: 0; font-weight: 700; }
+    .pb-panel { margin-top: 32px; border: 1px solid #E3E5E8; border-radius: 20px; background: #fff; padding: 6px 22px 24px; box-shadow: 0 10px 28px rgba(21, 32, 41, .05); }
+    .pb-block { margin-top: 22px; }
+    .pb-block h3, .pb-story h3, .pb-write h3 { margin: 0 0 12px; font-size: 18px; }
+    .pb-lead { margin: 16px 0 0; border-left: 3px solid #FF4917; border-radius: 14px; background: #FFF8F6; padding: 16px 18px; color: #152029; font-size: 16px; line-height: 1.65; }
+    .pb-defs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
+    .pb-defs div { display: flex; flex-direction: column; gap: 6px; min-width: 0; border: 1px solid #E3E5E8; border-radius: 14px; background: #F6F7F9; padding: 14px 14px 12px; }
+    .pb-defs dt { color: #4A5560; font-size: 12px; font-weight: 700; line-height: 1.35; }
+    .pb-defs dd { margin: 0; color: #152029; font-family: Montserrat, sans-serif; font-size: 20px; font-weight: 800; line-height: 1.2; word-break: break-word; }
     .pb-cats { display: flex; flex-wrap: wrap; gap: 8px; }
-    .pb-cats a, .pb-cats span { display: inline-flex; min-height: 36px; align-items: center; border-radius: 999px; background: #F2F2F2; padding: 0 12px; color: #152029; font-weight: 700; }
-    .pb-review-top { display: grid; gap: 20px; }
+    .pb-cats a, .pb-cats span { display: inline-flex; min-height: 36px; align-items: center; border-radius: 999px; background: #FFF1EC; padding: 0 14px; color: #C0340D; font-weight: 800; text-decoration: none; }
+    .pb-cats a:hover { background: #FF4917; color: #fff; }
+    .pb-story { display: grid; gap: 12px; margin-top: 22px; }
+    .pb-story section { border-radius: 16px; background: #F6F7F9; padding: 16px 16px 18px; }
+    .pb-story p { margin: 0; color: #4A5560; font-size: 14px; line-height: 1.65; }
+    .pb-story a { color: #C0340D; font-weight: 800; }
+    .pb-review-top { display: grid; gap: 20px; margin-top: 18px; }
+    .pb-empty { margin: 18px 0 0; border: 1px dashed #E3E5E8; border-radius: 16px; padding: 28px 16px; color: #4A5560; text-align: center; }
     .pb-average { margin: 0; font-family: Montserrat, sans-serif; font-size: 48px; font-weight: 800; line-height: 1; }
     .pb-star-row { position: relative; display: inline-block; margin: 8px 0; color: #E3E5E8; letter-spacing: 2px; font-size: 22px; }
     .pb-star-fill { position: absolute; left: 0; top: 0; overflow: hidden; color: #FF4917; white-space: nowrap; }
@@ -175,11 +182,13 @@
     .pb-bars li { display: grid; grid-template-columns: 36px 1fr 28px; gap: 8px; align-items: center; }
     .pb-bar { height: 8px; border-radius: 999px; background: #E3E5E8; overflow: hidden; }
     .pb-bar span { display: block; height: 100%; background: #FF4917; }
-    .pb-write { background: #F2F2F2; border-radius: 16px; padding: 16px; }
+    .pb-write { border: 1px solid #E3E5E8; border-radius: 16px; background: #F6F7F9; padding: 18px; }
+    .pb-write p { margin: 0 0 14px; color: #4A5560; line-height: 1.55; }
     .pb-review-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border: 0; border-radius: 12px; background: #D63A10; color: #fff; padding: 8px 14px; font-weight: 700; text-decoration: none; }
     .pb-review-btn:disabled { background: #E3E5E8; color: #4A5560; }
     .pb-review-btn-line { background: #fff; color: #152029; border: 1px solid #E3E5E8; }
-    .pb-review-list { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 16px; }
+    .pb-review-list { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 12px; }
+    .pb-review-list li { border: 1px solid #E3E5E8; border-radius: 16px; padding: 16px; }
     .pb-review-name { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0; font-weight: 700; }
     .pb-flash { border-radius: 12px; background: #E7F5EC; color: #17663A; padding: 12px; }
     .pb-field { display: grid; gap: 6px; margin-top: 12px; font-weight: 700; }
@@ -189,23 +198,32 @@
     .pb-dialog-actions { display: flex; gap: 8px; margin-top: 14px; }
     dialog { border: 0; border-radius: 16px; padding: 20px; max-width: 520px; width: calc(100% - 32px); }
     dialog::backdrop { background: rgba(21, 32, 41, .45); }
-    .pb-similar { margin-top: 28px; }
+    .pb-similar { margin-top: 36px; }
     .pb-similar-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-    .pb-similar h2 { margin: 0; font-size: 26px; }
-    .pb-similar-head button { width: 44px; height: 44px; border: 1px solid #E3E5E8; border-radius: 12px; background: #fff; font-size: 22px; }
-    .pb-similar-row { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 12px 0 20px; }
-    .pb-similar-card { flex: 0 0 240px; scroll-snap-align: start; border: 1px solid #E3E5E8; border-radius: 16px; background: #fff; padding: 14px; }
-    .pb-similar-mark { display: grid; place-items: center; width: 100%; height: 72px; border-radius: 12px; background: #152029; color: #fff; font-family: Montserrat, sans-serif; font-weight: 800; font-size: 28px; }
-    .pb-similar-card h3 { margin: 8px 0; font-size: 16px; }
-    .pb-similar-price { margin: 8px 0; font-family: Montserrat, sans-serif; font-weight: 800; font-size: 20px; }
-    .pb-similar-btn { display: flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 10px; background: #D63A10; color: #fff; font-weight: 700; text-decoration: none; }
+    .pb-similar h2 { margin: 0; font-size: 28px; }
+    .pb-similar-head div { display: flex; gap: 8px; }
+    .pb-similar-head button { width: 40px; height: 40px; border: 1px solid #E3E5E8; border-radius: 999px; background: #fff; color: #152029; font-size: 22px; line-height: 1; }
+    .pb-similar-head button:hover { border-color: #152029; }
+    .pb-similar-row { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 16px 2px 8px; scrollbar-width: thin; }
+    .pb-similar-card { display: flex; flex: 0 0 260px; flex-direction: column; scroll-snap-align: start; border: 1px solid #E3E5E8; border-radius: 18px; background: #fff; padding: 16px; box-shadow: 0 8px 22px rgba(21, 32, 41, .04); }
+    .pb-similar-mark { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; background: #152029; color: #fff; font-family: Montserrat, sans-serif; font-weight: 800; font-size: 20px; }
+    .pb-similar-card .pb-pill { align-self: flex-start; margin: 12px 0 0; border: 0; background: #FFF1EC; color: #C0340D; }
+    .pb-similar-card h3 { margin: 10px 0 0; font-size: 15px; line-height: 1.35; }
+    .pb-similar-price { margin: 12px 0; font-family: Montserrat, sans-serif; font-weight: 800; font-size: 22px; }
+    .pb-similar-btn { display: flex; align-items: center; justify-content: center; min-height: 44px; margin-top: auto; border-radius: 12px; background: #D63A10; color: #fff; font-weight: 800; text-decoration: none; }
+    .pb-similar-btn:hover { background: #FF4917; color: #fff; }
     .pb-page :focus-visible { outline: 2px solid #D63A10; outline-offset: 2px; }
     @media (min-width: 700px) {
         .pb-metrics { grid-template-columns: 1fr 1fr; }
         .pb-mbox-wide { grid-column: 1 / -1; }
         .pb-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
         .pb-restricted-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        .pb-review-top { grid-template-columns: 1.2fr .8fr; }
+        .pb-review-top { grid-template-columns: 1.2fr .8fr; align-items: start; }
+        .pb-story { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 699px) {
+        .pb-defs { grid-template-columns: 1fr 1fr; }
+        .pb-panel { padding-left: 14px; padding-right: 14px; }
     }
     @media (max-width: 520px) {
         .pb-facts { grid-template-columns: 1fr 1fr; }
@@ -239,7 +257,6 @@
         <div class="pb-left">
             @include('customer.publish.partials.gallery')
             @include('customer.publish.partials.facts')
-            @include('customer.publish.partials.countries')
         </div>
         <div class="pb-right">
             <div class="pb-head">
@@ -313,7 +330,6 @@
 
     @include('customer.publish.partials.similar')
 </div>
-<x-ui.country-browser />
 @endsection
 
 @push('scripts')

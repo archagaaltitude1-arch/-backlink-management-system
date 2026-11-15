@@ -53,7 +53,7 @@
             0%, 100% { transform: translate(0, 0) scale(1); }
             50% { transform: translate(-18px, 22px) scale(1.05); }
         }
-        .contact-wrap { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; }
+        .contact-wrap { position: relative; z-index: 1; max-width: none; margin: 0 auto; }
         .contact-crumb { margin: 0 0 28px; color: rgba(255,255,255,0.72); font-size: 14px; font-weight: 700; }
         .contact-crumb a { color: inherit; text-decoration: none; }
         .contact-crumb a:hover { color: #fff; }
@@ -128,7 +128,7 @@
         .contact-panel {
             display: grid;
             gap: 20px;
-            max-width: 1120px;
+            max-width: none;
             margin: 0 auto;
             animation: contact-rise 0.75s ease 0.12s both;
         }

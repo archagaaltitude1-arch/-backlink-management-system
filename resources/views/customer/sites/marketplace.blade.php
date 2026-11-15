@@ -6,7 +6,7 @@
 @section('content')
     <style>
         .site-front { background: #fff; }
-        .site-front-wrap { max-width: 1100px; margin: 0 auto; padding: 28px 20px 8px; color: #152029; }
+        .site-front-wrap { max-width: none; margin: 0 auto; padding: 28px 20px 8px; color: #152029; }
         .site-front-crumb { margin: 0 0 18px; color: #4A5560; font-size: 14px; font-weight: 700; }
         .site-front-crumb a { color: inherit; text-decoration: none; }
         .site-front-crumb a:hover { color: #C0340D; }

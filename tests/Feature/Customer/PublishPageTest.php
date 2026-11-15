@@ -32,7 +32,13 @@ class PublishPageTest extends TestCase
             ->assertSee('Strength')
             ->assertSee('Link profile')
             ->assertSee('Publishing rules')
-            ->assertSee('Restricted topics')
+            ->assertSee('Our team writes and publishes the article')
+            ->assertDontSee("publisher's editors")
+            ->assertDontSee('Restricted topics')
+            ->assertDontSee('Top 5 visitor countries')
+            ->assertDontSee('Sample articles')
+            ->assertDontSee('Publish my article')
+            ->assertSee('Write and publish for me')
             ->assertSee('Order type')
             ->assertSee('Your article topic')
             ->assertSee('Subtotal')
@@ -45,6 +51,19 @@ class PublishPageTest extends TestCase
     public function test_unknown_publisher_is_not_found(): void
     {
         $this->get('/publish/unknown.example')->assertNotFound();
+    }
+
+    public function test_chart_row_opens_the_order_page(): void
+    {
+        config(['marketplace.demo' => false]);
+
+        $this->get('/publish/signaldesk-technology.example')
+            ->assertOk()
+            ->assertSee('Publish a Guest Post on signaldesk-technology.example')
+            ->assertSee('Add to cart')
+            ->assertSee('Publishing rules')
+            ->assertSee('Order type')
+            ->assertSee('Subtotal');
     }
 
     public function test_guest_review_redirects_to_login(): void
