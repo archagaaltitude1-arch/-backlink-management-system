@@ -32,11 +32,31 @@ class NichePageTest extends TestCase
             ->assertSee('farmpulse.example');
     }
 
+    public function test_minimum_page_authority_hides_weaker_pages(): void
+    {
+        $this->get('/niches/agriculture-farming?pa_min=30')
+            ->assertOk()
+            ->assertDontSee('taniharian.example')
+            ->assertSee('farmpulse.example');
+    }
+
     public function test_price_sort_puts_the_lowest_price_first(): void
     {
         $this->get('/niches/agriculture-farming?sort=price_asc')
             ->assertOk()
             ->assertSeeInOrder(['taniharian.example', 'farmpulse.example']);
+    }
+
+    public function test_legal_niche_is_listed_and_opens(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Legal');
+
+        $this->get('/niches/legal')
+            ->assertOk()
+            ->assertSee('Legal Guest Posting Sites')
+            ->assertSee('Reach people researching law firms, compliance and legal services');
     }
 
     public function test_unknown_niche_is_not_found(): void

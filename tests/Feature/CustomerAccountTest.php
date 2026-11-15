@@ -89,7 +89,16 @@ class CustomerAccountTest extends TestCase
             'orders.cart',
             'orders.index',
         ] as $routeName) {
-            $this->get(route($routeName))->assertOk()->assertSee('aria-label="My account"', false);
+            $response = $this->get(route($routeName))->assertOk()->assertSee('aria-label="My account"', false);
+
+            if ($routeName === 'customer.dashboard') {
+                $response
+                    ->assertSee('aria-label="Primary"', false)
+                    ->assertSee('href="'.route('home').'"', false)
+                    ->assertSee('BacklinkPro. All rights reserved.', false)
+                    ->assertSee('Find Publisher Websites by Country', false)
+                    ->assertDontSee('Operations workspace', false);
+            }
         }
     }
 }

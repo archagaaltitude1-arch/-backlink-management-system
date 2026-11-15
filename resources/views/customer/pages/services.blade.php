@@ -16,7 +16,7 @@
             <x-ui.section-heading
                 eyebrow="Services"
                 title="Choose how the link gets placed."
-                subtitle="Each service starts from a price and a credit cost. You provide the target URL, the anchor text, and either an article topic or your own article."
+                subtitle="Each service starts from a price and a credit cost. You provide the target URL, the anchor text, and the article topic. Our team publishes the placement."
                 level="h1"
             />
         </div>

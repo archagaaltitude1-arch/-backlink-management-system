@@ -23,7 +23,7 @@
 
     <style>
         .wl { background: #F2F2F2; }
-        .wl-wrap { max-width: 1240px; margin: 0 auto; padding: 28px 24px 72px; }
+        .wl-wrap { max-width: none; margin: 0 auto; padding: 28px 24px 72px; }
         .wl-crumb { margin: 0; color: #4A5560; font-size: 14px; font-weight: 700; }
         .wl-crumb a { color: inherit; }
         .wl-crumb a:hover { color: #C0340D; }

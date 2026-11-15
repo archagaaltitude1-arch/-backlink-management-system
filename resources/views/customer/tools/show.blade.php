@@ -35,7 +35,7 @@
         };
     @endphp
     <section class="bg-[#F2F2F2]">
-        <div class="mx-auto max-w-[1240px] px-6 py-14 lg:py-16">
+        <div class="mx-auto px-6 py-14 lg:py-16">
             <nav aria-label="Breadcrumb" class="text-sm font-bold text-[#4A5560]">
                 <a href="{{ url('/') }}" class="hover:text-[#C0340D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Home</a>
                 <span aria-hidden="true"> / </span>

@@ -18,9 +18,6 @@
         <div class="nd-site-offer">
             <div>
                 <span class="nd-metric">{{ $site['price'] === null ? '' : '$'.number_format($site['price'], 2) }}</span>
-                @if ($site['credits'] !== null)
-                    <span class="nd-site-credits">{{ $site['credits'] }} credits</span>
-                @endif
             </div>
             @include('customer.niches.actions', ['site' => $site, 'part' => 'buy', 'demo' => $demo, 'canSave' => $canSave, 'canCart' => $canCart, 'loginHref' => $loginHref])
         </div>
@@ -34,8 +31,7 @@
         </dl>
         <div class="nd-chart">
             <span class="nd-site-label">Ahrefs traffic</span>
-            <x-ui.sparkline :seed="$site['domain'].'-ahrefs'" color="#E24B4B" />
-            <span class="nd-metric">{{ \App\Support\DemoNicheData::compact($site['traffic']) }}</span>
+            <x-ui.sparkline :seed="$site['domain'].'-ahrefs'" color="#E98989" :value="$site['traffic']" :label="'Ahrefs traffic trend for '.$site['domain']" />
         </div>
         <div>
             <span class="nd-site-label">Countries</span>
@@ -58,8 +54,7 @@
         </div>
         <div class="nd-chart">
             <span class="nd-site-label">Semrush traffic</span>
-            <x-ui.sparkline :seed="$site['domain'].'-semrush'" color="#22A06B" />
-            <span class="nd-metric">{{ \App\Support\DemoNicheData::compact($site['semrush_traffic'] ?? null) }}</span>
+            <x-ui.sparkline :seed="$site['domain'].'-semrush'" color="#7DCEA0" :value="$site['semrush_traffic'] ?? null" :label="'Semrush traffic trend for '.$site['domain']" />
         </div>
     </div>
 </article>

@@ -2,7 +2,7 @@
     $placement = $offer['order_types']['content_placement'] ?? [];
     $insertion = $offer['order_types']['link_insertion'] ?? [];
     $topics = $offer['content_topics'] ?? [];
-    $defaultType = $placement[0] ?? ['key' => 'publish_only', 'label' => 'Publish my article', 'product_key' => 'guest_post', 'addon' => false];
+    $defaultType = $placement[0] ?? ['key' => 'write_and_publish', 'label' => 'Write and publish for me', 'product_key' => 'guest_post', 'addon' => false];
     $unit = is_numeric($offer['price']) ? (float) $offer['price'] : null;
     $line = $unit === null ? '—' : '$'.number_format($unit, 2);
     $cartPost = \Illuminate\Support\Facades\Route::has('shopping.store') ? route('shopping.store') : null;
@@ -100,7 +100,7 @@
             </div>
         </div>
 
-        <p class="pb-note">After checkout you'll add your article or topic, anchor text and target URL on the requirements page.</p>
+        <p class="pb-note">After checkout you'll add the topic, anchor text, and target URL on the requirements page. Our team writes and publishes the placement.</p>
 
         @if ($cartPost)
             <button class="pb-cart" type="submit">Add to cart</button>

@@ -2,6 +2,8 @@
 
 namespace App\Services\Customer;
 
+use App\Models\Niche;
+use App\Models\Website;
 use App\Support\DemoNicheData;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -31,7 +33,7 @@ class NicheListingService
 
             if ($live !== []) {
                 $demo = false;
-                $rows = $live;
+                $rows = $this->withComparisonRows($live, $name);
             }
         }
 
@@ -64,6 +66,7 @@ class NicheListingService
             'related' => $related,
             'intro_related' => array_slice($related, 0, 3),
             'custom_intro' => DemoNicheData::intros()[Str::slug($name)] ?? null,
+            'sample_metrics' => $all->contains(fn (array $row): bool => ! empty($row['sample_metrics'])),
         ];
     }
 
@@ -91,7 +94,7 @@ class NicheListingService
             $live = $this->liveRows($name);
 
             if ($live !== []) {
-                return count($live);
+                return count($this->withComparisonRows($live, $name));
             }
         }
 
@@ -110,7 +113,7 @@ class NicheListingService
             $live = $this->allLiveRows();
 
             if ($live !== []) {
-                return ['demo' => false, 'rows' => $live];
+                return ['demo' => false, 'rows' => $this->withCatalogComparisonRows($live)];
             }
         }
 
@@ -161,12 +164,12 @@ class NicheListingService
      */
     private function databaseNames(): array
     {
-        if (! class_exists(\App\Models\Niche::class) || ! Schema::hasTable('niches')) {
+        if (! class_exists(Niche::class) || ! Schema::hasTable('niches')) {
             return [];
         }
 
         try {
-            $query = \App\Models\Niche::query();
+            $query = Niche::query();
 
             if (Schema::hasColumn('niches', 'status')) {
                 $query->where('status', 'active');
@@ -186,19 +189,19 @@ class NicheListingService
      */
     private function liveRows(string $name): array
     {
-        if (! class_exists(\App\Models\Website::class) || ! Schema::hasTable('websites')) {
+        if (! class_exists(Website::class) || ! Schema::hasTable('websites')) {
             return [];
         }
 
         $hasNicheColumn = Schema::hasColumn('websites', 'niche');
-        $hasRelation = method_exists(\App\Models\Website::class, 'niches');
+        $hasRelation = method_exists(Website::class, 'niches');
 
         if (! $hasNicheColumn && ! $hasRelation) {
             return [];
         }
 
         try {
-            $query = \App\Models\Website::query();
+            $query = Website::query();
 
             if (Schema::hasColumn('websites', 'status')) {
                 $query->where('status', 'active');
@@ -216,7 +219,7 @@ class NicheListingService
                 }
             });
 
-            if (method_exists(\App\Models\Website::class, 'seoMetric')) {
+            if (method_exists(Website::class, 'seoMetric')) {
                 $query->with('seoMetric');
             }
 
@@ -231,22 +234,22 @@ class NicheListingService
      */
     private function allLiveRows(): array
     {
-        if (! class_exists(\App\Models\Website::class) || ! Schema::hasTable('websites')) {
+        if (! class_exists(Website::class) || ! Schema::hasTable('websites')) {
             return [];
         }
 
         try {
-            $query = \App\Models\Website::query();
+            $query = Website::query();
 
             if (Schema::hasColumn('websites', 'status')) {
                 $query->where('status', 'active');
             }
 
-            if (method_exists(\App\Models\Website::class, 'seoMetric')) {
+            if (method_exists(Website::class, 'seoMetric')) {
                 $query->with('seoMetric');
             }
 
-            if (method_exists(\App\Models\Website::class, 'niches')) {
+            if (method_exists(Website::class, 'niches')) {
                 $query->with('niches');
             }
 
@@ -270,6 +273,69 @@ class NicheListingService
         } catch (Throwable) {
             return [];
         }
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $live
+     * @return list<array<string, mixed>>
+     */
+    private function withComparisonRows(array $live, string $niche): array
+    {
+        $rows = $live;
+        $seen = [];
+
+        foreach ($live as $row) {
+            $seen[mb_strtolower((string) ($row['domain'] ?? ''))] = true;
+        }
+
+        foreach (DemoNicheData::extraRows($niche) as $row) {
+            $key = mb_strtolower((string) $row['domain']);
+
+            if ($key === '' || isset($seen[$key])) {
+                continue;
+            }
+
+            $seen[$key] = true;
+            $rows[] = $row;
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $live
+     * @return list<array<string, mixed>>
+     */
+    private function withCatalogComparisonRows(array $live): array
+    {
+        $rows = $live;
+        $seen = [];
+        $niches = [];
+
+        foreach ($live as $row) {
+            $seen[mb_strtolower((string) ($row['domain'] ?? ''))] = true;
+
+            foreach ($row['niches'] ?? [] as $niche) {
+                if (is_string($niche) && $niche !== '') {
+                    $niches[$niche] = true;
+                }
+            }
+        }
+
+        foreach (array_keys($niches) as $niche) {
+            foreach (DemoNicheData::extraRows($niche) as $row) {
+                $key = mb_strtolower((string) $row['domain']);
+
+                if ($key === '' || isset($seen[$key])) {
+                    continue;
+                }
+
+                $seen[$key] = true;
+                $rows[] = $row;
+            }
+        }
+
+        return $rows;
     }
 
     /**
@@ -305,11 +371,7 @@ class NicheListingService
             $niches = [$name];
         }
 
-        $language = '';
-
-        if (Schema::hasColumn('websites', 'language') && filled($website->language ?? null)) {
-            $language = (string) $website->language;
-        }
+        $language = $this->stringColumn($website, 'language') ?? '';
 
         $keywords = null;
 
@@ -324,13 +386,15 @@ class NicheListingService
             $countries = is_array($decoded) ? $decoded : [];
         }
 
-        return [
+        $row = [
             'id' => $website->id ?? null,
             'domain' => (string) ($website->domain ?? $website->website_name ?? ''),
             'niches' => $niches,
             'language' => $language,
             'dr' => is_numeric($website->domain_rating ?? null) ? (int) $website->domain_rating : null,
             'da' => is_numeric($website->domain_authority ?? null) ? (int) $website->domain_authority : null,
+            'pa' => is_numeric($website->page_authority ?? null) ? (int) $website->page_authority : null,
+            'tf' => is_numeric($website->trust_flow ?? null) ? (int) $website->trust_flow : null,
             'as' => $this->intColumn($website, 'authority_score'),
             'spam' => is_numeric($website->spam_score ?? null) ? (int) $website->spam_score : null,
             'traffic' => is_numeric($website->monthly_traffic ?? null) ? (int) $website->monthly_traffic : null,
@@ -351,7 +415,121 @@ class NicheListingService
             'credits' => is_numeric($website->credit_cost ?? null) ? (int) $website->credit_cost : null,
             'added_at' => $website->created_at ?? now(),
             'demo' => false,
+            'sample_metrics' => false,
         ];
+
+        return $this->sampleMetrics($row);
+    }
+
+    /**
+     * Live publisher columns do not store every filter yet.
+     * Missing language, country, keyword, Semrush and link fields get stable sample values
+     * so the filters and traffic charts stay visible.
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<string, mixed>
+     */
+    private function sampleMetrics(array $row): array
+    {
+        $seed = abs(crc32((string) ($row['domain'] !== '' ? $row['domain'] : $row['id'])));
+        $filled = false;
+        $languages = ['English', 'Spanish', 'German', 'French', 'Portuguese', 'Dutch', 'Italian'];
+        $types = ['Guest post', 'Niche edit', 'Contextual', 'Text link'];
+        $validity = ['Permanent', '12 months', '6 months'];
+        $countries = [
+            [['US', 54.0], ['UK', 18.0], ['CA', 9.0]],
+            [['DE', 71.0], ['AT', 12.0], ['CH', 6.0]],
+            [['FR', 68.0], ['BE', 11.0], ['CA', 7.0]],
+            [['IN', 62.0], ['US', 14.0], ['AE', 8.0]],
+            [['AU', 58.0], ['NZ', 16.0], ['UK', 9.0]],
+            [['BR', 74.0], ['PT', 8.0], ['US', 6.0]],
+            [['ES', 69.0], ['MX', 12.0], ['AR', 7.0]],
+            [['NL', 66.0], ['BE', 13.0], ['DE', 8.0]],
+        ];
+
+        if (! filled($row['language'] ?? null)) {
+            $row['language'] = $languages[$seed % count($languages)];
+            $filled = true;
+        }
+
+        if (! is_numeric($row['as'] ?? null)) {
+            $base = is_numeric($row['da'] ?? null) ? (int) $row['da'] : 36;
+            $row['as'] = max(1, $base - ($seed % 8));
+            $filled = true;
+        }
+
+        if (! is_numeric($row['traffic'] ?? null) || (int) $row['traffic'] <= 0) {
+            $row['traffic'] = 2800 + ($seed % 160000);
+            $filled = true;
+        }
+
+        if (! is_numeric($row['semrush_traffic'] ?? null) || (int) $row['semrush_traffic'] <= 0) {
+            $row['semrush_traffic'] = max(900, (int) round((int) $row['traffic'] * (0.42 + ($seed % 5) * 0.08)));
+            $filled = true;
+        }
+
+        if (! is_numeric($row['keywords'] ?? null) || (int) $row['keywords'] <= 0) {
+            $row['keywords'] = 420 + ($seed % 28000);
+            $filled = true;
+        }
+
+        if (! is_array($row['top_countries'] ?? null) || $row['top_countries'] === []) {
+            $row['top_countries'] = $countries[$seed % count($countries)];
+            $filled = true;
+        }
+
+        if (! is_numeric($row['backlinks'] ?? null) || (int) $row['backlinks'] <= 0) {
+            $row['backlinks'] = 24 + ($seed % 1400);
+            $filled = true;
+        }
+
+        if (! is_numeric($row['referring_domains'] ?? null) || (int) $row['referring_domains'] <= 0) {
+            $row['referring_domains'] = 18 + ($seed % 1800);
+            $filled = true;
+        }
+
+        if (! is_numeric($row['pa'] ?? null)) {
+            $base = is_numeric($row['da'] ?? null) ? (int) $row['da'] : 32;
+            $row['pa'] = max(1, $base - 4 - ($seed % 6));
+            $filled = true;
+        }
+
+        if (! is_numeric($row['tf'] ?? null)) {
+            $base = is_numeric($row['dr'] ?? null) ? (int) $row['dr'] : 30;
+            $row['tf'] = max(1, $base - 6 - ($seed % 7));
+            $filled = true;
+        }
+
+        if (! is_numeric($row['spam'] ?? null)) {
+            $row['spam'] = 1 + ($seed % 8);
+            $filled = true;
+        }
+
+        if (! filled($row['link_type'] ?? null)) {
+            $row['link_type'] = $types[$seed % count($types)];
+            $filled = true;
+        }
+
+        if (! filled($row['link_validity'] ?? null)) {
+            $row['link_validity'] = $validity[$seed % count($validity)];
+            $filled = true;
+        }
+
+        foreach (['sports_allowed', 'pharmacy_allowed', 'crypto_allowed', 'google_news', 'sponsored'] as $offset => $field) {
+            if (! is_bool($row[$field] ?? null)) {
+                $row[$field] = (($seed >> $offset) & 1) === 1;
+                $filled = true;
+            }
+        }
+
+        if (! is_bool($row['foreign_language'] ?? null)) {
+            $row['foreign_language'] = $row['language'] !== 'English';
+            $filled = true;
+        }
+
+        $row['sample_metrics'] = $filled || ($row['sample_metrics'] ?? false);
+
+        return $row;
     }
 
     /**
@@ -371,12 +549,16 @@ class NicheListingService
         $semrushMin = $this->number($filters['semrush_min'] ?? null);
         $priceMax = $this->number($filters['price_max'] ?? null);
         $backlinksMin = $this->number($filters['backlinks_min'] ?? null);
+        $paMin = $this->number($filters['pa_min'] ?? null);
+        $tfMin = $this->number($filters['tf_min'] ?? null);
+        $referringMin = $this->number($filters['referring_min'] ?? null);
+        $spamMax = $this->number($filters['spam_max'] ?? null);
         $language = trim((string) ($filters['language'] ?? ''));
         $country = trim((string) ($filters['country'] ?? ''));
         $linkType = trim((string) ($filters['link_type'] ?? ''));
         $linkValidity = trim((string) ($filters['link_validity'] ?? ''));
 
-        return $rows->filter(function (array $row) use ($search, $bulk, $drMin, $daMin, $asMin, $trafficMin, $semrushMin, $priceMax, $backlinksMin, $language, $country, $linkType, $linkValidity, $filters) {
+        return $rows->filter(function (array $row) use ($search, $bulk, $drMin, $daMin, $asMin, $paMin, $tfMin, $trafficMin, $semrushMin, $priceMax, $backlinksMin, $referringMin, $spamMax, $language, $country, $linkType, $linkValidity, $filters) {
             $domain = mb_strtolower((string) $row['domain']);
             $nicheText = mb_strtolower(implode(' ', $row['niches'] ?? []));
 
@@ -424,6 +606,22 @@ class NicheListingService
             }
 
             if ($backlinksMin !== null && (int) ($row['backlinks'] ?? -1) < $backlinksMin) {
+                return false;
+            }
+
+            if ($paMin !== null && (int) ($row['pa'] ?? -1) < $paMin) {
+                return false;
+            }
+
+            if ($tfMin !== null && (int) ($row['tf'] ?? -1) < $tfMin) {
+                return false;
+            }
+
+            if ($referringMin !== null && (int) ($row['referring_domains'] ?? -1) < $referringMin) {
+                return false;
+            }
+
+            if ($spamMax !== null && (int) ($row['spam'] ?? 101) > $spamMax) {
                 return false;
             }
 

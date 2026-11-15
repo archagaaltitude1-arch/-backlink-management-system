@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Services\Customer\NicheListingService;
+use App\Support\BrowseCountries;
 use App\Support\PublicSites;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -51,7 +52,11 @@ class WishlistController extends Controller
         );
 
         if ($row === null) {
-            return redirect()->route('wishlist.index')->with('wishlist_error', 'That publisher is not on the list.');
+            $row = BrowseCountries::findChartRow($domain);
+        }
+
+        if ($row === null) {
+            return back(fallback: route('wishlist.index'))->with('wishlist_error', 'That publisher is not on the list.');
         }
 
         $items = session('wishlist', []);
@@ -66,7 +71,7 @@ class WishlistController extends Controller
         ];
         session(['wishlist' => $items]);
 
-        return redirect()->route('wishlist.index')->with('wishlist_status', $row['domain'].' is on your wishlist.');
+        return back(fallback: route('wishlist.index'))->with('wishlist_status', $row['domain'].' is on your wishlist.');
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -79,7 +84,7 @@ class WishlistController extends Controller
         unset($items[$domain]);
         session(['wishlist' => $items]);
 
-        return redirect()->route('wishlist.index')->with('wishlist_status', 'Removed from your wishlist.');
+        return back(fallback: route('wishlist.index'))->with('wishlist_status', 'Removed from your wishlist.');
     }
 
     /**

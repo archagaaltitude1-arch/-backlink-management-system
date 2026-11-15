@@ -7,6 +7,7 @@ use App\Models\Cart;
 use App\Models\Coupon;
 use App\Models\CouponUsage;
 use App\Models\Order;
+use App\Models\Package;
 use App\Services\Customer\NicheListingService;
 use App\Services\Customer\PublishOfferService;
 use App\Support\PublicPackages;
@@ -118,8 +119,8 @@ class ShoppingController extends Controller
         $price = isset($item['amount']) && is_numeric($item['amount']) ? (float) $item['amount'] : null;
         $packageId = isset($data['package_id']) && is_numeric($data['package_id']) ? (int) $data['package_id'] : null;
 
-        if ($packageId !== null && class_exists(\App\Models\Package::class) && Schema::hasTable('packages')) {
-            $stored = \App\Models\Package::query()->find($packageId);
+        if ($packageId !== null && class_exists(Package::class) && Schema::hasTable('packages')) {
+            $stored = Package::query()->find($packageId);
 
             if ($stored !== null && is_numeric($stored->price) && (float) $stored->price > 0) {
                 $price = (float) $stored->price;
@@ -134,6 +135,7 @@ class ShoppingController extends Controller
         $quantity = $prefix !== ''
             ? 1
             : min(10, ((int) ($items[$line]['quantity'] ?? 0)) + $quantity);
+        $order = $this->selectedPackageOrder($slug, $story, (string) ($data['order_type'] ?? ''));
 
         $items[$line] = [
             'line' => $line,
@@ -146,13 +148,9 @@ class ShoppingController extends Controller
             'package_slug' => $slug,
             'niche' => 'Packages',
             'project' => $project,
-            'order_type' => 'package',
-            'order_label' => $slug === 'display-enterprise'
-                ? 'Custom campaign (We review your goals and confirm the quotation.)'
-                : 'Backlink campaign (We place the links and send the report.)',
-            'order_help' => $slug === 'display-enterprise'
-                ? 'We review your goals and confirm the quotation before work starts.'
-                : 'We place the backlinks and send the completion report.',
+            'order_type' => $order['value'],
+            'order_label' => $order['label'],
+            'order_help' => $order['help'],
             'product_key' => 'package',
             'addon' => false,
             'content_topic' => 'General',
@@ -173,6 +171,49 @@ class ShoppingController extends Controller
         return back()
             ->with('open_cart', true)
             ->with('shopping_status', $item['label'].' was added to your cart.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $story
+     * @return array{value: string, label: string, help: string}
+     */
+    private function selectedPackageOrder(string $slug, array $story, string $posted): array
+    {
+        $types = is_array($story['order_types'] ?? null) ? $story['order_types'] : [];
+
+        foreach ($types as $type) {
+            if (! is_array($type)) {
+                continue;
+            }
+
+            if ((string) ($type['value'] ?? '') === $posted) {
+                return [
+                    'value' => (string) $type['value'],
+                    'label' => (string) $type['label'],
+                    'help' => (string) ($type['help'] ?? $type['label']),
+                ];
+            }
+        }
+
+        if ($types !== [] && is_array($types[0])) {
+            return [
+                'value' => (string) ($types[0]['value'] ?? 'package'),
+                'label' => (string) ($types[0]['label'] ?? 'Backlink campaign'),
+                'help' => (string) ($types[0]['help'] ?? $types[0]['label'] ?? ''),
+            ];
+        }
+
+        $custom = $slug === 'display-enterprise';
+
+        return [
+            'value' => 'package',
+            'label' => $custom
+                ? 'Custom campaign (We review your goals and confirm the quotation.)'
+                : 'Backlink campaign (We place the links and send the report.)',
+            'help' => $custom
+                ? 'We review your goals and confirm the quotation before work starts.'
+                : 'We place the backlinks and send the completion report.',
+        ];
     }
 
     public function update(Request $request): RedirectResponse
@@ -396,7 +437,7 @@ class ShoppingController extends Controller
                     $details = $detailsByLine->get($line);
                     $name = ($item['kind'] ?? '') === 'package'
                         ? (string) ($item['display_name'] ?? 'Backlink package')
-                        : 'Publish Guest Post on '.$item['domain'].' · '.($item['order_label'] ?? 'Publish my article').' · '.($item['content_topic'] ?? 'General');
+                        : 'Publish Guest Post on '.$item['domain'].' · '.($item['order_label'] ?? 'Write and publish for me').' · '.($item['content_topic'] ?? 'General');
 
                     $order->items()->create([
                         'website_id' => $item['website_id'] ?? null,
@@ -585,7 +626,9 @@ class ShoppingController extends Controller
             'link_type' => (string) ($row['link_type'] ?? 'DoFollow'),
             'article_length' => (string) ($row['article_length'] ?? '—'),
             'tat_days' => $row['tat_days'] ?? null,
-            'rules' => $niche !== '' ? ["Content must be relevant to {$niche} or closely related topics."] : [],
+            'rules' => $niche !== ''
+                ? ["Our team writes and publishes the placement for {$niche} or a closely related topic."]
+                : ['Our team writes and publishes the placement.'],
             'restricted' => [],
             'screenshot' => null,
         ];
@@ -644,7 +687,7 @@ class ShoppingController extends Controller
             }
         }
 
-        return $all[0] ?? ['key' => 'publish_only', 'label' => 'Publish my article', 'help' => '', 'product_key' => 'guest_post', 'addon' => false];
+        return $all[0] ?? ['key' => 'write_and_publish', 'label' => 'Write and publish for me', 'help' => 'Our writers create the article, then we publish it.', 'product_key' => 'guest_post', 'addon' => false];
     }
 
     private function topic(?string $topic): string

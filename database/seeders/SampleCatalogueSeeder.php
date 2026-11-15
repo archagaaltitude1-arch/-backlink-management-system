@@ -96,6 +96,7 @@ class SampleCatalogueSeeder extends Seeder
             'Automotive' => 'Vehicles, repairs, and the automotive industry.',
             'Sports' => 'Teams, fitness, and sporting events.',
             'Food' => 'Recipes, restaurants, and food products.',
+            'Legal' => 'Law firms, compliance, and legal services.',
         ];
 
         $nicheIds = [];
@@ -168,6 +169,16 @@ class SampleCatalogueSeeder extends Seeder
                 'status' => 'active',
                 'niches' => ['Food', 'E-commerce'],
                 'metrics' => ['DR' => 33, 'DA' => 29, 'TF' => 20, 'CF' => 21, 'traffic' => 15000, 'spam_score' => 4, 'backlinks' => 2100],
+            ],
+            [
+                'domain' => 'counseldesk.example',
+                'website_name' => 'Counsel Desk',
+                'url' => 'https://counseldesk.example',
+                'price' => 160,
+                'credit_cost' => 16,
+                'status' => 'active',
+                'niches' => ['Legal', 'Business'],
+                'metrics' => ['DR' => 57, 'DA' => 49, 'TF' => 36, 'CF' => 31, 'traffic' => 31000, 'spam_score' => 2, 'backlinks' => 5400],
             ],
         ];
 

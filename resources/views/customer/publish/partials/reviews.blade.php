@@ -43,7 +43,7 @@
     </div>
 
     @if ($reviews['items'] === [])
-        <p>There are no reviews yet.</p>
+        <p class="pb-empty">There are no reviews yet.</p>
     @else
         <ul class="pb-review-list">
             @foreach ($reviews['items'] as $review)

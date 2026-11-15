@@ -3,13 +3,22 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\Niche;
+use App\Models\Package;
+use App\Models\Service;
+use App\Models\Website;
+use App\Services\Customer\NicheListingService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Throwable;
 
 class ServicePageController extends Controller
 {
+    public function __construct(private NicheListingService $listings) {}
+
     public function index(): View
     {
         $overview = config('backlink_services.overview', []);
@@ -74,7 +83,15 @@ class ServicePageController extends Controller
         }
         $page['start_href'] = auth()->check()
             ? url('/marketplace?service='.$slug)
-            : ( \Illuminate\Support\Facades\Route::has('auth.register') ? route('auth.register') : url('/register') );
+            : (Route::has('auth.register') ? route('auth.register') : url('/register'));
+        $publishers = null;
+
+        if ($slug === 'niche-edit') {
+            set_time_limit(120);
+            $publishers = $this->publisherCatalog();
+            $page['buttons']['secondary'] = 'Browse websites';
+        }
+
         $page['faq_schema'] = [
             '@context' => 'https://schema.org',
             '@type' => 'FAQPage',
@@ -90,7 +107,36 @@ class ServicePageController extends Controller
 
         return view('customer.services.show', [
             'page' => $page,
+            'publishers' => $publishers,
         ]);
+    }
+
+    /**
+     * @return array{rows: list<array<string, mixed>>, demo: bool, categories: array<string, string>}
+     */
+    private function publisherCatalog(): array
+    {
+        $catalog = $this->listings->catalogRows();
+        $categories = [];
+
+        foreach ($this->listings->categoryNames() as $name) {
+            $categorySlug = Str::slug($name);
+
+            if ($name !== '' && $categorySlug !== '') {
+                $categories[$name] = $categorySlug;
+            }
+        }
+
+        ksort($categories);
+
+        return [
+            'rows' => collect($catalog['rows'])
+                ->sortByDesc(fn (array $row): int => (int) ($row['traffic'] ?? -1))
+                ->values()
+                ->all(),
+            'demo' => (bool) $catalog['demo'],
+            'categories' => $categories,
+        ];
     }
 
     /**
@@ -181,7 +227,7 @@ class ServicePageController extends Controller
         }
 
         try {
-            $query = \App\Models\Niche::query();
+            $query = Niche::query();
 
             if (Schema::hasColumn('niches', 'status')) {
                 $query->where('status', 'active');
@@ -211,7 +257,7 @@ class ServicePageController extends Controller
         }
 
         try {
-            $query = \App\Models\Website::query();
+            $query = Website::query();
 
             if (Schema::hasColumn('websites', 'status')) {
                 $query->where('status', 'active');
@@ -226,7 +272,7 @@ class ServicePageController extends Controller
                 }
 
                 if (Schema::hasTable('website_niches') && Schema::hasColumn('website_niches', 'niche_id') && isset($niche->id)) {
-                    $ids = \Illuminate\Support\Facades\DB::table('website_niches')
+                    $ids = DB::table('website_niches')
                         ->where('niche_id', $niche->id)
                         ->pluck('website_id');
 
@@ -254,7 +300,7 @@ class ServicePageController extends Controller
         }
 
         try {
-            $query = \App\Models\Service::query();
+            $query = Service::query();
 
             if (Schema::hasColumn('services', 'status')) {
                 $query->where('status', 'active');
@@ -285,7 +331,7 @@ class ServicePageController extends Controller
         ]);
 
         try {
-            $query = \App\Models\Package::query()->whereIn('package_name', $names);
+            $query = Package::query()->whereIn('package_name', $names);
 
             if (Schema::hasColumn('packages', 'status')) {
                 $query->where('status', 'active');

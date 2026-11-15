@@ -57,6 +57,7 @@
         ['label' => 'Sports', 'query' => 'Sports'],
         ['label' => 'Food', 'query' => 'Food'],
         ['label' => 'Agriculture & Farming', 'query' => 'Agriculture & Farming'],
+        ['label' => 'Legal', 'query' => 'Legal'],
     ];
 
     $wishlistCount = 0;
@@ -95,8 +96,8 @@
 @endphp
 
 <header class="sticky top-0 z-50 border-b border-[#E3E5E8] bg-white">
-    <div class="mx-auto flex max-w-[1240px] items-center justify-between gap-3 px-6 py-[14px]">
-        <a href="{{ url('/') }}" class="flex shrink-0 items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
+    <div class="mx-auto flex items-center justify-between gap-3 px-6 py-[14px]">
+        <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
             <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#FF4917] text-white" aria-hidden="true">
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M10 13a5 5 0 0 0 7.1.1l1.4-1.4a5 5 0 0 0-7.1-7.1L10.2 5.8" />
@@ -176,16 +177,19 @@
                             Packages
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
                         </button>
-                        <div id="packages-panel" class="absolute top-full z-50 hidden pt-2" style="left:0;width:min(380px,calc(100vw - 32px))" hidden>
+                        <div id="packages-panel" class="absolute top-full z-50 hidden pt-2" style="left:0;width:min(760px,calc(100vw - 32px))" hidden>
                             <div class="rounded-[20px] border border-[#E3E5E8] bg-white p-4 shadow-lg">
-                                <div class="grid grid-cols-1">
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                     @foreach ($packageMenu as $group)
                                         @foreach ($group['sections'] as $section)
-                                            @foreach ($section['items'] as $item)
-                                                <a href="{{ route('packages.show', $item['slug']) }}" class="flex min-h-11 items-center rounded-xl px-3 text-[14px] font-bold text-navy hover:bg-[#FFF1EC] hover:text-[#C0340D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
-                                                    {{ $item['label'] }}
-                                                </a>
-                                            @endforeach
+                                            <div>
+                                                <p class="px-3 text-[13px] font-extrabold leading-5 text-[#152029]">{{ $section['title'] }}</p>
+                                                @foreach ($section['items'] as $item)
+                                                    <a href="{{ $item['href'] ?? route('packages.show', $item['slug']) }}" class="mt-1 flex min-h-11 items-center rounded-xl px-3 text-[14px] font-bold text-navy hover:bg-[#FFF1EC] hover:text-[#C0340D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
+                                                        {{ $item['label'] }}
+                                                    </a>
+                                                @endforeach
+                                            </div>
                                         @endforeach
                                     @endforeach
                                 </div>
@@ -337,7 +341,7 @@
     </div>
 
     <div id="public-nav-menu" class="hidden w-full border-t border-[#E3E5E8] bg-white lg:hidden">
-        <nav class="mx-auto flex w-full max-w-[1240px] flex-col gap-1 px-6 py-4" aria-label="Mobile">
+        <nav class="mx-auto flex w-full flex-col gap-1 px-6 py-4" aria-label="Mobile">
             @foreach ($links as $link)
                 @if ($link['label'] === 'Services')
                     <button
@@ -391,8 +395,9 @@
                     <div id="mobile-packages-panel" class="{{ $packagesCurrent ? '' : 'hidden' }} flex flex-col pl-2" @unless ($packagesCurrent) hidden @endunless>
                         @foreach ($packageMenu as $group)
                             @foreach ($group['sections'] as $section)
+                                <p class="px-3 pt-3 text-[13px] font-extrabold leading-5 text-[#152029]">{{ $section['title'] }}</p>
                                 @foreach ($section['items'] as $item)
-                                    <a href="{{ route('packages.show', $item['slug']) }}" class="flex min-h-11 items-center rounded-lg px-3 text-[15px] font-bold text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
+                                    <a href="{{ $item['href'] ?? route('packages.show', $item['slug']) }}" class="flex min-h-11 items-center rounded-lg px-3 text-[15px] font-bold text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
                                         {{ $item['label'] }}
                                     </a>
                                 @endforeach

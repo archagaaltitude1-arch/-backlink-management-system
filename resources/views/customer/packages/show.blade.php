@@ -14,16 +14,21 @@
 
 @section('content')
     <style>
-        .pk-wrap { max-width: 1240px; margin: 0 auto; padding: 28px 20px 72px; color: #152029; }
+        .pk-wrap { max-width: none; margin: 0 auto; padding: 28px 20px 72px; color: #152029; }
         .pk-crumb { margin: 0 0 16px; color: #4A5560; font-size: 14px; font-weight: 700; }
         .pk-crumb a { color: inherit; text-decoration: none; }
         .pk-crumb a:hover { color: #C0340D; }
         .pk-grid { display: grid; gap: 20px; }
-        .pk-hero { position: relative; overflow: hidden; min-height: 420px; border-radius: 16px; background: #152029; color: #fff; padding: 36px 28px; }
-        .pk-hero h2 { margin: 48px 0 0; max-width: 460px; font-family: Montserrat, sans-serif; font-size: 42px; font-weight: 800; line-height: 1.05; text-transform: uppercase; }
-        .pk-badge { position: absolute; top: 0; right: 0; width: 150px; height: 150px; background: #FF4917; clip-path: polygon(100% 0, 0 0, 100% 100%); }
-        .pk-badge span { position: absolute; top: 28px; right: 14px; font-family: Montserrat, sans-serif; font-size: 28px; font-weight: 800; }
-        .pk-hero ul { margin: 28px 0 0; padding: 0; list-style: none; max-width: 420px; }
+        .pk-hero { position: relative; overflow: hidden; min-height: 420px; border-radius: 16px; background: linear-gradient(155deg, #1D4ED8 0%, #153A8A 48%, #152029 100%); color: #fff; padding: 36px 28px; }
+        .pk-hero h2 { position: relative; z-index: 1; margin: 48px 0 0; max-width: 460px; font-family: Montserrat, sans-serif; font-size: clamp(34px, 4vw, 52px); font-weight: 800; line-height: 0.98; text-transform: uppercase; }
+        .pk-badge { position: absolute; top: 0; right: 0; z-index: 1; width: 168px; height: 168px; background: #FF4917; clip-path: polygon(100% 0, 0 0, 100% 100%); }
+        .pk-badge span { position: absolute; top: 28px; right: 12px; max-width: 92px; font-family: Montserrat, sans-serif; font-size: 22px; font-weight: 800; line-height: 1.05; text-align: right; }
+        .pk-marks { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 8px; max-width: 440px; margin-top: 28px; }
+        .pk-mark { display: inline-flex; align-items: center; min-height: 36px; border: 1px solid rgba(255,255,255,.45); border-radius: 8px; padding: 4px 10px; background: rgba(255,255,255,.08); font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+        .pk-price-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px; }
+        .pk-price-row .pk-price { margin: 0; }
+        .pk-cat { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; border: 1px solid #E3E5E8; border-radius: 8px; padding: 4px 10px; color: #4A5560; font-size: 14px; font-weight: 700; }
+        .pk-hero ul { position: relative; z-index: 1; margin: 28px 0 0; padding: 0; list-style: none; max-width: 420px; }
         .pk-hero li { position: relative; margin-top: 10px; padding-left: 16px; font-size: 16px; line-height: 1.4; }
         .pk-hero li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 6px; height: 6px; border-radius: 50%; background: #fff; }
         .pk-panel { background: #fff; border: 1px solid #E3E5E8; border-radius: 16px; padding: 22px; }
@@ -40,6 +45,8 @@
         .pk-copy li + li { margin-top: 6px; }
         .pk-rules { margin-top: 18px; border-radius: 12px; background: #EEF5FC; padding: 16px; }
         .pk-rules h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 16px; }
+        .pk-rules ul { margin: 0; padding-left: 18px; }
+        .pk-rules li + li { margin-top: 6px; }
         .pk-choice { display: flex; gap: 10px; align-items: flex-start; margin-top: 8px; min-height: 44px; }
         .pk-summary { margin-top: 16px; padding-top: 12px; border-top: 1px solid #E3E5E8; }
         .pk-row { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; }
@@ -74,18 +81,30 @@
 
             <div class="pk-grid">
                 <aside class="pk-hero" aria-label="{{ $title }}">
-                    <div class="pk-badge"><span>{{ $story['count'] ?? $package['size'] }}</span></div>
-                    <h2>{{ $package['name'] }} Backlink Package</h2>
+                    <div class="pk-badge"><span>{{ $story['badge'] ?? ($story['count'] ?? $package['size']) }}</span></div>
+                    <h2>{{ $story['hero'] ?? ($package['name'].' Backlink Package') }}</h2>
                     <ul>
                         @foreach (($story['gets'] ?? []) as $point)
                             <li>{{ $point }}</li>
                         @endforeach
                     </ul>
+                    @if (! empty($story['marks']))
+                        <div class="pk-marks">
+                            @foreach ($story['marks'] as $mark)
+                                <span class="pk-mark">{{ $mark }}</span>
+                            @endforeach
+                        </div>
+                    @endif
                 </aside>
 
                 <article class="pk-panel">
                     <h1>{{ $title }}</h1>
-                    <p class="pk-price" data-pk-price="{{ $unit === null ? '' : $unit }}" data-pk-prefix="{{ $package['price_prefix'] ?? '' }}">{{ $money }}</p>
+                    <div class="pk-price-row">
+                        <p class="pk-price" data-pk-price="{{ $unit === null ? '' : $unit }}" data-pk-prefix="{{ $package['price_prefix'] ?? '' }}">{{ $money }}</p>
+                        @if (! empty($story['category']))
+                            <span class="pk-cat">{{ $story['category'] }}</span>
+                        @endif
+                    </div>
                     @if ($story)
                         <p class="pk-lead">{{ $story['lead'] }}</p>
                         <p class="pk-lead">{{ $story['support'] }}</p>
@@ -93,10 +112,16 @@
                         <p class="pk-lead">{{ $package['summary'] }}</p>
                     @endif
                     <div class="pk-chips">
-                        <span class="pk-chip">{{ $story['count'] ?? $package['size'] }} backlinks</span>
-                        <span class="pk-chip">{{ $story['delivery'] ?? 'Delivery confirmed with the order' }}</span>
-                        <span class="pk-chip">Report included</span>
-                        <span class="pk-chip">Order tracking</span>
+                        @if (! empty($story['chips']))
+                            @foreach ($story['chips'] as $chip)
+                                <span class="pk-chip">{{ $chip }}</span>
+                            @endforeach
+                        @else
+                            <span class="pk-chip">{{ $story['count'] ?? $package['size'] }} backlinks</span>
+                            <span class="pk-chip">{{ $story['delivery'] ?? 'Delivery confirmed with the order' }}</span>
+                            <span class="pk-chip">Report included</span>
+                            <span class="pk-chip">Order tracking</span>
+                        @endif
                     </div>
                     @php
                         $sampleReports = [
@@ -105,12 +130,13 @@
                             'display-professional' => 'reports/professional-backlink-sample-report.xlsx',
                             'display-enterprise' => 'reports/enterprise-backlink-sample-report.xlsx',
                         ];
+                        $sampleReport = $story['sample'] ?? ($sampleReports[$package['slug']] ?? null);
                     @endphp
-                    @if (isset($sampleReports[$package['slug']]))
-                        <a class="pk-sample" href="{{ asset($sampleReports[$package['slug']]) }}" target="_blank" rel="noopener">View Sample Report</a>
+                    @if ($sampleReport)
+                        <a class="pk-sample" href="{{ asset($sampleReport) }}" target="_blank" rel="noopener">View Sample Report</a>
                     @endif
 
-                    @if ($story)
+                    @if ($story && ($story['layout'] ?? '') !== 'offer')
                         <div class="pk-copy">
                             <h2>{{ $story['headline'] }}</h2>
                             <h2>What you get</h2>
@@ -132,13 +158,19 @@
                                 @endforeach
                             </ol>
                         </div>
+                    @endif
+                    @if ($story)
                         <div class="pk-rules">
                             <h2>Publishing rules</h2>
                             <ul>
-                                <li>Placements stay relevant to the niche and pages you submit.</li>
-                                <li>Anchor text is placed so it reads naturally on the page.</li>
-                                <li>Adult content, hate speech and misleading claims are not accepted.</li>
-                                <li>{{ $story['delivery_note'] }}</li>
+                                @forelse ($story['rules'] ?? [] as $rule)
+                                    <li>{{ $rule }}</li>
+                                @empty
+                                    <li>Our team keeps each placement relevant to the niche in the order.</li>
+                                    <li>Anchor text is placed so it reads naturally on the page.</li>
+                                    <li>We do not publish adult content, hate speech, or misleading claims.</li>
+                                    <li>{{ $story['delivery_note'] }}</li>
+                                @endforelse
                             </ul>
                         </div>
                     @endif
@@ -151,10 +183,17 @@
                             <input type="hidden" name="quantity" value="1" data-pk-qty>
                             <fieldset style="margin:18px 0 0;padding:0;border:0">
                                 <legend style="font-weight:800">Order type *</legend>
-                                <label class="pk-choice">
-                                    <input type="radio" name="order_type" value="package" checked>
-                                    <span>{{ $package['slug'] === 'display-enterprise' ? 'Custom campaign (We review your goals and confirm the quotation.)' : 'Backlink campaign (We place the links and send the report.)' }}</span>
-                                </label>
+                                @forelse (data_get($story, 'order_types', []) as $type)
+                                    <label class="pk-choice">
+                                        <input type="radio" name="order_type" value="{{ $type['value'] }}" @checked($loop->first)>
+                                        <span>{{ $type['label'] }}</span>
+                                    </label>
+                                @empty
+                                    <label class="pk-choice">
+                                        <input type="radio" name="order_type" value="package" checked>
+                                        <span>{{ $package['slug'] === 'display-enterprise' ? 'Custom campaign (We review your goals and confirm the quotation.)' : 'Backlink campaign (We place the links and send the report.)' }}</span>
+                                    </label>
+                                @endforelse
                             </fieldset>
                             @if (($package['price_prefix'] ?? '') === '')
                                 <div class="pk-qty">
@@ -173,13 +212,13 @@
                                     <strong data-pk-sub>{{ $money }}</strong>
                                 </div>
                             </div>
-                            <p class="pk-note">After checkout you'll add your website URL, anchor text and target pages on the requirements page.</p>
+                            <p class="pk-note">{{ data_get($story, 'note', "After checkout you'll add your website URL, anchor text and target pages on the requirements page.") }}</p>
                             <button class="pk-cart" type="submit">Add to cart</button>
                         </form>
                     @endif
 
                     <p class="pk-tat"><b>Estimated delivery</b> <span>{{ $story['delivery'] ?? 'Confirmed with the order' }}{{ isset($story['delivery_note']) ? '. '.$story['delivery_note'] : '' }}</span></p>
-                    <p class="pk-help"><strong>Questions?</strong> Our team replies within [HOURS] hours. <a href="{{ route('contact') }}">Contact us</a></p>
+                    <p class="pk-help"><strong>Questions?</strong> <a href="{{ route('contact') }}">Contact us</a></p>
                     @if ($package['slug'] === 'display-enterprise')
                         <p class="pk-help">Contact our team to discuss your custom backlink campaign.</p>
                     @endif

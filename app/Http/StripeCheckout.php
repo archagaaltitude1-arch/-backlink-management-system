@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Notifications\OrderPlacedNotification;
+use App\Support\PublicPackages;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -50,7 +51,9 @@ class StripeCheckout
             }
 
             $order?->reservePaymentCoupon($customer);
-            $returnUrl = $order ? route('orders.show', $order) : route('customer.wallet');
+            $sites = $order ? PublicPackages::paidSites($order->items()->pluck('item_name')) : null;
+            $returnUrl = $sites['url'] ?? ($order ? route('orders.show', $order) : route('customer.wallet'));
+            $returnUrl .= (str_contains($returnUrl, '?') ? '&' : '?').'stripe=returned';
 
             return $customer->payments()->create($target + [
                 'transaction_id' => 'STRIPE-'.Str::uuid(),
@@ -61,7 +64,7 @@ class StripeCheckout
                 'metadata' => [
                     'name' => $order ? 'Order '.$order->order_number : $purchase->name,
                     'credits' => $purchase instanceof CreditPackage ? $purchase->credits : null,
-                    'success_url' => $returnUrl.'?stripe=returned',
+                    'success_url' => $returnUrl,
                     'cancel_url' => $order ? route('orders.payment', $order) : $returnUrl,
                 ],
             ]);

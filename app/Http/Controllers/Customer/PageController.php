@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\Website;
 use App\Services\Customer\NicheListingService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Throwable;
@@ -73,7 +75,7 @@ class PageController extends Controller
         }
 
         try {
-            $query = \App\Models\Website::query();
+            $query = Website::query();
 
             if (Schema::hasColumn('websites', 'status')) {
                 $query->where('status', 'active');
@@ -111,7 +113,7 @@ class PageController extends Controller
         }
 
         try {
-            $query = \App\Models\Website::query();
+            $query = Website::query();
 
             if (Schema::hasColumn('websites', 'status')) {
                 $query->where('status', 'active');
@@ -126,7 +128,7 @@ class PageController extends Controller
                 }
 
                 if (Schema::hasTable('website_niches') && Schema::hasColumn('website_niches', 'niche_id') && isset($niche->id)) {
-                    $ids = \Illuminate\Support\Facades\DB::table('website_niches')
+                    $ids = DB::table('website_niches')
                         ->where('niche_id', $niche->id)
                         ->pluck('website_id');
 
@@ -219,7 +221,7 @@ class PageController extends Controller
                 'slug' => 'guest-post',
                 'icon' => 'pen',
                 'title' => 'Guest Post',
-                'description' => 'A new article on the publisher website with your link inside. We write it, or you send your own.',
+                'description' => 'A new article on the publisher website with your link inside. Our team writes and publishes it.',
                 'best_for' => 'Building topical authority at scale.',
                 'button' => 'View Guest Post Prices',
                 'featured' => false,
@@ -227,7 +229,7 @@ class PageController extends Controller
                     ['label' => 'Guest posts by niche', 'href' => url('/niches')],
                     ['label' => 'Premium guest posts DR 60+', 'href' => $market(['service' => 'guest-post', 'dr_min' => 60])],
                     ['label' => 'Guest post packages', 'href' => url('/packages')],
-                    ['label' => 'Submit your own article', 'href' => url('/articles/create')],
+                    ['label' => 'Guest posts written by our team', 'href' => route('services.show', 'guest-post')],
                 ],
             ],
             [
@@ -303,7 +305,7 @@ class PageController extends Controller
         }
 
         try {
-            $query = \App\Models\Website::query();
+            $query = Website::query();
 
             if (Schema::hasColumn('websites', 'status')) {
                 $query->where('status', 'active');
@@ -403,8 +405,8 @@ class PageController extends Controller
         if (str_contains($slug, 'guest')) {
             return [
                 'icon' => 'guest',
-                'provides' => ['Article topic or your own article', 'Target URL', 'Anchor text'],
-                'content_by' => 'You or our team',
+                'provides' => ['Article topic', 'Target URL', 'Anchor text'],
+                'content_by' => 'Our team',
                 'link_type' => 'Contextual',
                 'turnaround' => '5–14 days',
             ];

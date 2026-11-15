@@ -15,179 +15,160 @@
         .say-section {
             width: 100%;
             overflow: hidden;
-            background: #fff;
+            background: #F6F7F9;
+            color: #152029;
         }
-        .say-layout {
-            display: grid;
-            grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
-            gap: 24px 40px;
+        .say-head {
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            width: 100%;
-            max-width: none;
-            margin: 0;
-            padding: 72px 0 88px clamp(20px, 4vw, 56px);
-        }
-        .say-copy {
-            min-width: 0;
-            padding-left: 0;
+            gap: 24px;
+            padding: 72px clamp(24px, 4vw, 56px) 0;
+            text-align: center;
         }
         .say-kicker {
             margin: 0 0 10px;
             color: #C0340D;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 800;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.1em;
             text-transform: uppercase;
         }
         .say-title {
-            margin: 0;
-            max-width: 320px;
-            color: #152029;
+            margin: 0 auto;
+            max-width: 18em;
             font-size: clamp(32px, 4vw, 44px);
-            line-height: 1.12;
+            line-height: 1.08;
             font-weight: 800;
+            letter-spacing: -0.02em;
         }
         .say-lead {
-            margin: 14px 0 0;
-            max-width: 280px;
+            margin: 14px auto 0;
+            max-width: 46ch;
             color: #4A5560;
-            font-size: 15px;
-            line-height: 1.6;
+            font-size: 16px;
+            line-height: 1.65;
         }
-        .say-nav { display: flex; gap: 10px; margin-top: 28px; }
+        .say-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: none;
+        }
+        .say-status {
+            margin: 0;
+            color: #4A5560;
+            font-size: 13px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+        .say-nav { display: flex; gap: 8px; }
         .say-btn {
             display: grid;
-            width: 48px;
-            height: 48px;
+            width: 44px;
+            height: 44px;
             place-items: center;
-            border: 1.5px solid #E3E5E8;
+            border: 1px solid #E3E5E8;
             border-radius: 999px;
             background: #fff;
             color: #152029;
             cursor: pointer;
         }
-        .say-btn:hover:not(:disabled) { border-color: #FF4917; color: #FF4917; }
+        .say-btn:hover:not(:disabled) { border-color: #152029; background: #152029; color: #fff; }
         .say-btn:disabled { opacity: 0.35; cursor: default; }
         .say-btn:focus-visible { outline: 2px solid #D63A10; outline-offset: 2px; }
         .say-stage {
             position: relative;
-            width: 100%;
-            min-width: 0;
-            min-height: 520px;
             overflow: hidden;
-        }
-        .say-orb {
-            position: absolute;
-            top: 50%;
-            right: -160px;
-            z-index: 0;
-            width: 620px;
-            height: 620px;
-            border-radius: 50%;
-            background: #FF4917;
-            background-image: radial-gradient(circle at 30% 28%, #FF7A45 0%, #FF4917 55%, #D63A10 100%);
-            box-shadow: 0 30px 80px rgba(214, 58, 16, 0.3);
-            transform: translateY(-50%);
-            pointer-events: none;
-        }
-        .say-orb-glow {
-            position: absolute;
-            top: 50%;
-            right: 40px;
-            z-index: 0;
-            width: 280px;
-            height: 280px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.16);
-            transform: translateY(-50%);
-            pointer-events: none;
+            margin: 0 clamp(24px, 4vw, 56px);
+            padding: 28px 0 72px;
+            container-type: inline-size;
         }
         .say-track {
-            position: relative;
-            z-index: 2;
             display: flex;
-            gap: 18px;
+            gap: 20px;
             width: max-content;
-            padding: 40px 40px 32px 12px;
-            transition: transform 0.4s ease;
+            transition: transform 0.45s ease;
         }
         .say-card {
-            position: relative;
-            z-index: 2;
-            width: min(300px, 78vw);
+            display: flex;
+            width: 100cqi;
+            min-height: 280px;
             flex: none;
+            flex-direction: column;
+            align-items: center;
             margin: 0;
+            text-align: center;
+            border: 1px solid #E3E5E8;
+            border-radius: 20px;
+            background: #fff;
+            padding: 28px 24px 22px;
+            box-shadow: 0 10px 28px rgba(21, 32, 41, 0.05);
+        }
+        .say-mark {
+            display: block;
+            margin: 0 0 8px;
+            color: #FF4917;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 42px;
+            line-height: 0.8;
         }
         .say-bubble {
-            position: relative;
             margin: 0;
-            border-radius: 16px;
-            background: #fff;
-            padding: 22px 20px 24px;
-            color: #4A5560;
-            font-size: 14.5px;
+            color: #152029;
+            font-size: 16px;
             line-height: 1.65;
-            box-shadow: 0 14px 34px rgba(21, 32, 41, 0.12);
         }
-        .say-bubble::after {
-            content: "";
-            position: absolute;
-            bottom: -8px;
-            left: 26px;
-            width: 16px;
-            height: 16px;
-            background: #fff;
-            transform: rotate(45deg);
+        .say-person {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-top: auto;
+            padding-top: 22px;
+            text-align: center;
         }
-        .say-person { display: flex; align-items: center; gap: 10px; margin-top: 20px; }
         .say-person img {
-            width: 46px;
-            height: 46px;
+            width: 44px;
+            height: 44px;
             flex: none;
             border-radius: 999px;
             object-fit: cover;
-            box-shadow: 0 0 0 2px #fff;
         }
-        .say-name { margin: 0; color: #152029; font-size: 15px; font-weight: 800; }
+        .say-name { margin: 0; font-size: 15px; font-weight: 800; }
         .say-role {
             margin: 2px 0 0;
-            color: #FF4917;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
+            color: #4A5560;
+            font-size: 13px;
+            font-weight: 600;
         }
-        @media (max-width: 900px) {
-            .say-layout {
-                grid-template-columns: 1fr;
-                padding: 48px 0 64px;
+        @media (min-width: 900px) {
+            .say-card { width: calc((100cqi - 60px) / 4); }
+        }
+        @media (min-width: 640px) and (max-width: 899px) {
+            .say-card { width: calc((100cqi - 20px) / 2); }
+        }
+        @media (max-width: 800px) {
+            .say-head {
+                padding-top: 48px;
             }
-            .say-copy {
-                padding: 0 20px;
-            }
-            .say-title, .say-lead { max-width: none; }
-            .say-stage { min-height: 440px; }
-            .say-orb {
-                right: -180px;
-                width: 460px;
-                height: 460px;
-            }
-            .say-orb-glow {
-                right: 20px;
-                width: 180px;
-                height: 180px;
-            }
-            .say-track { padding: 32px 20px 24px; }
+            .say-stage { padding-bottom: 48px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .say-track { transition: none; }
         }
     </style>
 @endonce
 
 <section class="say-section" aria-labelledby="reviews-heading" aria-roledescription="carousel">
-    <div class="say-layout">
-        <div class="say-copy">
+    <div class="say-head">
+        <div>
             <p class="say-kicker">Testimonials</p>
             <h2 id="reviews-heading" class="say-title font-display">What our customers are saying</h2>
-            <p class="say-lead">Real campaign feedback from teams who order placements through BacklinkPro.</p>
+            <p class="say-lead">Campaign notes from teams who order placements through BacklinkPro.</p>
+        </div>
+        <div class="say-controls">
+            <p class="say-status" data-review-status>1 / {{ count($reviews) }}</p>
             <div class="say-nav">
                 <button type="button" class="say-btn" data-review-prev aria-label="Previous review">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3 5 8l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -197,23 +178,24 @@
                 </button>
             </div>
         </div>
-        <div class="say-stage" data-review-stage>
-            <div class="say-orb-glow" aria-hidden="true"></div>
-            <div class="say-orb" aria-hidden="true"></div>
-            <div class="say-track" data-review-track>
-                @foreach ($reviews as $review)
-                    <figure class="say-card" data-review-card>
-                        <blockquote class="say-bubble">{{ $review['quote'] }}</blockquote>
-                        <figcaption class="say-person">
-                            <img src="{{ asset('images/reviews/'.$review['photo']) }}" alt="" width="46" height="46">
-                            <div>
-                                <p class="say-name">{{ $review['name'] }}</p>
-                                <p class="say-role">{{ $review['role'] }}</p>
-                            </div>
-                        </figcaption>
-                    </figure>
-                @endforeach
-            </div>
+    </div>
+    <div class="say-stage" data-review-stage>
+        <div class="say-track" data-review-track>
+            @foreach ($reviews as $review)
+                <figure class="say-card" data-review-card>
+                    <blockquote class="say-bubble">
+                        <span class="say-mark" aria-hidden="true">“</span>
+                        {{ $review['quote'] }}
+                    </blockquote>
+                    <figcaption class="say-person">
+                        <img src="{{ asset('images/reviews/'.$review['photo']) }}" alt="" width="44" height="44">
+                        <div>
+                            <p class="say-name">{{ $review['name'] }}</p>
+                            <p class="say-role">{{ $review['role'] }}</p>
+                        </div>
+                    </figcaption>
+                </figure>
+            @endforeach
         </div>
     </div>
 </section>
@@ -228,19 +210,26 @@
                     var cards = track ? Array.prototype.slice.call(track.querySelectorAll('[data-review-card]')) : [];
                     var prev = section.querySelector('[data-review-prev]');
                     var next = section.querySelector('[data-review-next]');
+                    var status = section.querySelector('[data-review-status]');
                     var index = 0;
 
                     function step() {
                         if (!cards.length) return 0;
                         var styles = window.getComputedStyle(track);
-                        var gap = parseFloat(styles.columnGap || styles.gap) || 18;
+                        var gap = parseFloat(styles.columnGap || styles.gap) || 20;
                         return cards[0].getBoundingClientRect().width + gap;
                     }
 
+                    function visibleCount() {
+                        if (!stage || !cards.length) return 1;
+                        var width = cards[0].getBoundingClientRect().width;
+                        var styles = window.getComputedStyle(track);
+                        var gap = parseFloat(styles.columnGap || styles.gap) || 20;
+                        return Math.max(1, Math.floor((stage.clientWidth + gap) / (width + gap)));
+                    }
+
                     function maxIndex() {
-                        if (!stage || !cards.length) return 0;
-                        var visible = Math.max(1, Math.floor((stage.clientWidth + 8) / step()));
-                        return Math.max(0, cards.length - visible);
+                        return Math.max(0, cards.length - visibleCount());
                     }
 
                     function paint() {
@@ -251,10 +240,20 @@
                         track.style.transform = 'translateX(' + (-index * step()) + 'px)';
                         if (prev) prev.disabled = index <= 0;
                         if (next) next.disabled = index >= max;
+                        if (status) {
+                            var visible = visibleCount();
+                            var start = index + 1;
+                            var end = Math.min(cards.length, index + visible);
+                            status.textContent = start === end ? (start + ' of ' + cards.length) : (start + '–' + end + ' of ' + cards.length);
+                        }
                     }
 
                     if (next) next.addEventListener('click', function () { index += 1; paint(); });
                     if (prev) prev.addEventListener('click', function () { index -= 1; paint(); });
+                    section.addEventListener('keydown', function (event) {
+                        if (event.key === 'ArrowRight') { index += 1; paint(); }
+                        if (event.key === 'ArrowLeft') { index -= 1; paint(); }
+                    });
                     window.addEventListener('resize', paint);
                     paint();
                 });

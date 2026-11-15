@@ -6,7 +6,7 @@
 
 @section('content')
     <style>
-        .pkg-wrap { max-width: 1240px; margin: 0 auto; padding: 56px 24px 88px; }
+        .pkg-wrap { max-width: none; margin: 0 auto; padding: 56px 24px 88px; }
         .pkg-crumb { color: #4A5560; font-size: 14px; font-weight: 700; }
         .pkg-crumb a { color: inherit; text-decoration: none; }
         .pkg-crumb a:hover { color: #C0340D; }
