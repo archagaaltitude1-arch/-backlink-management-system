@@ -29,8 +29,13 @@
             <main id="main" class="flex-1">
                 @yield('content')
             </main>
+            @unless (! empty($hideTestimonials))
+                @include('components.public-testimonials')
+            @endunless
+            <x-ui.country-browser centered />
             @include('components.public-footer')
         </div>
+        @include('components.public-cart-drawer')
         @stack('scripts')
     </body>
 </html>

@@ -1,21 +1,22 @@
 @once
     <style>
-        .nd-table-wrap { overflow-x: hidden; background: #fff; }
-        .nd-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        .nd-table col.c-url { width: 17%; }
-        .nd-table col.c-num { width: 4.2%; }
-        .nd-table col.c-niche { width: 10.5%; }
-        .nd-table col.c-lang { width: 7.5%; }
-        .nd-table col.c-chart { width: 9.5%; }
-        .nd-table col.c-keys { width: 6.5%; }
-        .nd-table col.c-countries { width: 8.4%; }
-        .nd-table col.c-price { width: 7.5%; }
-        .nd-table col.c-buy { width: 11%; }
-        .nd-table th { padding: 10px 6px; border-bottom: 1px solid #E3E5E8; background: #F7F8F9; color: #152029; font-size: 12px; font-weight: 800; line-height: 1.25; text-align: left; vertical-align: bottom; }
-        .nd-table td { padding: 10px 6px; border-bottom: 1px solid #F0F1F3; vertical-align: top; font-size: 13px; color: #152029; }
+        .nd-table-wrap { overflow-x: auto; background: #fff; }
+        .nd-table { width: 100%; min-width: 1330px; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+        .nd-table col.c-url { width: 180px; }
+        .nd-table col.c-num { width: 52px; }
+        .nd-table col.c-niche { width: 140px; }
+        .nd-table col.c-lang { width: 96px; }
+        .nd-table col.c-chart { width: 150px; }
+        .nd-table col.c-keys { width: 84px; }
+        .nd-table col.c-countries { width: 110px; }
+        .nd-table col.c-price { width: 96px; }
+        .nd-table col.c-buy { width: 120px; }
+        .nd-table th { padding: 12px 6px; border-right: 1px solid rgba(255, 255, 255, .28); border-bottom: 1px solid #B7C0C8; background: #152029; color: #fff; font-size: 12px; font-weight: 800; line-height: 1.25; text-align: left; vertical-align: middle; }
+        .nd-table td { padding: 10px 6px; border-right: 1px solid #B7C0C8; border-bottom: 1px solid #B7C0C8; background: #fff; vertical-align: top; font-size: 13px; color: #152029; }
+        .nd-table th:last-child, .nd-table td:last-child { border-right: 0; }
         .nd-table th:first-child, .nd-table td:first-child { padding-left: 12px; }
         .nd-table th:last-child, .nd-table td:last-child { padding-right: 12px; }
-        .nd-table .nd-spark { width: 100%; height: 32px; }
+        .nd-table .nd-spark { width: 72px; height: 22px; }
         .nd-table .nd-publish { min-height: 40px; gap: 4px; padding: 0 8px; font-size: 12px; letter-spacing: 0.02em; }
         .nd-table .nd-url { gap: 6px; min-width: 0; }
         .nd-table .nd-url a { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -34,7 +35,7 @@
         .nd-bar.is-semrush > span { background: #22A06B; }
         tr.is-chart-target td { background: #FFF1EC; }
         h2.is-chart-target { outline: 2px solid #D63A10; outline-offset: 4px; }
-        .nd-spark { display: block; width: 104px; height: 36px; }
+        .nd-spark { display: block; width: 72px; height: 22px; }
         .nd-countries { display: flex; flex-direction: column; gap: 4px; }
         .nd-country { display: flex; align-items: center; gap: 6px; color: #152029; font-size: 13px; font-weight: 700; white-space: nowrap; }
         .nd-publish { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border: 0; border-radius: 10px; background: #D63A10; padding: 0 16px; color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; text-decoration: none; }
@@ -44,7 +45,6 @@
         .nd-publish:focus-visible { outline: 2px solid #D63A10; outline-offset: 2px; }
         @media (max-width: 1099px) {
             .nd-table-wrap { overflow-x: auto; }
-            .nd-table { width: 1100px; }
         }
     </style>
 @endonce
@@ -94,7 +94,7 @@
                 <th class="c-keys" scope="col">Ahrefs<br>keywords</th>
                 <th scope="col">Countries</th>
                 <th scope="col">Semrush<br>traffic</th>
-                <th scope="col">Price</th>
+                <th scope="col">@if (! empty($insertionPrice)) Link insertion<br>price @else Price @endif</th>
                 <th scope="col">Buy now</th>
             </tr>
         </thead>
@@ -104,8 +104,18 @@
                     $rowSlug = \Illuminate\Support\Str::slug((string) ($publisher['domain'] ?? 'site'));
                     $ahrefs = is_numeric($publisher['traffic'] ?? null) ? (int) $publisher['traffic'] : 0;
                     $semrush = is_numeric($publisher['semrush_traffic'] ?? null) ? (int) $publisher['semrush_traffic'] : 0;
+                    $addedAt = $publisher['added_at'] ?? null;
+                    $addedStamp = $addedAt instanceof \DateTimeInterface ? $addedAt->getTimestamp() : 0;
+                    $countryCode = strtoupper((string) ($publisher['top_countries'][0][0] ?? ''));
+                    $flag = static function (mixed $value): string {
+                        if (! is_bool($value)) {
+                            return '';
+                        }
+
+                        return $value ? 'yes' : 'no';
+                    };
                 @endphp
-                <tr id="site-row-{{ $rowSlug !== '' ? $rowSlug : 'site' }}">
+                <tr id="site-row-{{ $rowSlug !== '' ? $rowSlug : 'site' }}" @if (! empty($filterable)) data-publisher-row data-as="{{ (int) ($publisher['as'] ?? 0) }}" data-da="{{ (int) ($publisher['da'] ?? 0) }}" data-dr="{{ (int) ($publisher['dr'] ?? 0) }}" data-traffic="{{ (int) ($publisher['traffic'] ?? 0) }}" data-semrush="{{ $semrush }}" data-keywords="{{ (int) ($publisher['keywords'] ?? 0) }}" data-backlinks="{{ (int) ($publisher['backlinks'] ?? 0) }}" data-pa="{{ (int) ($publisher['pa'] ?? 0) }}" data-tf="{{ (int) ($publisher['tf'] ?? 0) }}" data-spam="{{ (int) ($publisher['spam'] ?? 0) }}" data-referring="{{ (int) ($publisher['referring_domains'] ?? 0) }}" data-price="{{ is_numeric($publisher['price'] ?? null) ? (float) $publisher['price'] : 0 }}" data-added="{{ $addedStamp }}" data-language="{{ $publisher['language'] ?? '' }}" data-country="{{ $countryCode }}" data-type="{{ $publisher['link_type'] ?? '' }}" data-validity="{{ $publisher['link_validity'] ?? '' }}" data-sports="{{ $flag($publisher['sports_allowed'] ?? null) }}" data-pharmacy="{{ $flag($publisher['pharmacy_allowed'] ?? null) }}" data-crypto="{{ $flag($publisher['crypto_allowed'] ?? null) }}" data-news="{{ $flag($publisher['google_news'] ?? null) }}" data-sponsored="{{ $flag($publisher['sponsored'] ?? null) }}" data-foreign="{{ $flag($publisher['foreign_language'] ?? null) }}" data-niche="{{ implode('|', $publisher['niches'] ?? []) }}" data-search="{{ mb_strtolower(trim(($publisher['domain'] ?? '').' '.implode(' ', $publisher['niches'] ?? []).' '.($publisher['language'] ?? ''))) }}" @endif>
                     <td>
                         <div class="nd-url">
                             <a href="{{ ! empty($publisher['demo']) || empty($publisher['id']) ? '#' : url('/marketplace/'.$publisher['id']) }}" class="font-bold text-navy underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">{{ $publisher['domain'] }}</a>
@@ -127,9 +137,8 @@
                     </td>
                     <td>{{ $publisher['language'] ?? '' }}</td>
                     <td>
-                        <div class="nd-chart" role="img" aria-label="Ahrefs traffic {{ $ahrefs > 0 ? number_format($ahrefs) : 'not stored' }}">
-                            <span class="nd-bar is-ahrefs" title="{{ $ahrefs > 0 ? number_format($ahrefs) : 'Not stored' }}"><span style="width: {{ $barWidth($ahrefs, $ahrefsMax) }}%"></span></span>
-                            <span class="nd-metric">{{ \App\Support\DemoNicheData::compact($ahrefs > 0 ? $ahrefs : null) }}</span>
+                        <div class="nd-chart">
+                            <x-ui.sparkline :seed="$publisher['domain'].'-ahrefs'" color="#E98989" :value="$ahrefs > 0 ? $ahrefs : null" :label="'Ahrefs traffic trend for '.$publisher['domain']" />
                         </div>
                     </td>
                     <td class="c-keys nd-metric">{{ \App\Support\DemoNicheData::compact(is_numeric($publisher['keywords'] ?? null) ? (int) $publisher['keywords'] : null) }}</td>
@@ -152,16 +161,12 @@
                         </div>
                     </td>
                     <td>
-                        <div class="nd-chart" role="img" aria-label="Semrush traffic {{ $semrush > 0 ? number_format($semrush) : 'not stored' }}">
-                            <span class="nd-bar is-semrush" title="{{ $semrush > 0 ? number_format($semrush) : 'Not stored' }}"><span style="width: {{ $barWidth($semrush, $semrushMax) }}%"></span></span>
-                            <span class="nd-metric">{{ \App\Support\DemoNicheData::compact($semrush > 0 ? $semrush : null) }}</span>
+                        <div class="nd-chart">
+                            <x-ui.sparkline :seed="$publisher['domain'].'-semrush'" color="#7DCEA0" :value="$semrush > 0 ? $semrush : null" :label="'Semrush traffic trend for '.$publisher['domain']" />
                         </div>
                     </td>
                     <td>
                         <span class="nd-metric">{{ ($publisher['price'] ?? null) === null ? '' : '$'.number_format((float) $publisher['price'], 2) }}</span>
-                        @if (($publisher['credits'] ?? null) !== null)
-                            <span class="mt-1 block text-xs text-[#4A5560]">{{ $publisher['credits'] }} credits</span>
-                        @endif
                     </td>
                     <td>
                         @include('customer.niches.actions', ['site' => $publisher, 'part' => 'buy', 'demo' => $demo ?? ! empty($publisher['demo']), 'canSave' => $canSave, 'canCart' => $canCart, 'loginHref' => $loginHref])

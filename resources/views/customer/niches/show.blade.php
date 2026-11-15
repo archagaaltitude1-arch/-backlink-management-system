@@ -50,6 +50,8 @@
         'as_min' => request('as_min'),
         'da_min' => request('da_min'),
         'dr_min' => request('dr_min'),
+        'pa_min' => request('pa_min'),
+        'tf_min' => request('tf_min'),
         'price_max' => request('price_max'),
         'traffic_min' => request('traffic_min'),
         'semrush_min' => request('semrush_min'),
@@ -58,6 +60,8 @@
         'pharmacy' => request('pharmacy'),
         'crypto' => request('crypto'),
         'backlinks_min' => request('backlinks_min'),
+        'referring_min' => request('referring_min'),
+        'spam_max' => request('spam_max'),
         'link_type' => request('link_type'),
         'link_validity' => request('link_validity'),
         'google_news' => request('google_news'),
@@ -76,8 +80,8 @@
 
 @section('content')
     <style>
-        .nd-h1 { margin: 0; font-size: 30px; line-height: 1.15; font-weight: 800; }
-        .nd-section { padding: 56px 0; }
+        .nd-h1 { margin: 0; padding: 2px 0; font-size: 30px; line-height: 1.25; font-weight: 800; }
+        .nd-section { padding: 56px 24px; }
         .nd-toolbar { background: #fff; border-bottom: 1px solid #E3E5E8; }
         .nd-pills { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
         .nd-select { appearance: none; min-height: 44px; max-width: 100%; border: 1px solid #D9DDE3; border-radius: 8px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%23152029' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") right 12px center no-repeat; padding: 0 34px 0 12px; color: #152029; font: inherit; font-size: 14px; font-weight: 600; }
@@ -99,22 +103,23 @@
         .nd-bulk-panel { display: none; flex: 1 1 100%; }
         .nd-bulk-panel.is-open { display: block; }
         .nd-bulk-panel textarea { width: 100%; min-height: 88px; margin-top: 8px; border: 1px solid #D9DDE3; border-radius: 10px; padding: 10px 12px; color: #152029; font: inherit; font-size: 14px; }
-        .nd-table-wrap { overflow-x: hidden; background: #fff; }
-        .nd-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        .nd-table col.c-url { width: 17%; }
-        .nd-table col.c-num { width: 4.2%; }
-        .nd-table col.c-niche { width: 10.5%; }
-        .nd-table col.c-lang { width: 7.5%; }
-        .nd-table col.c-chart { width: 9.5%; }
-        .nd-table col.c-keys { width: 6.5%; }
-        .nd-table col.c-countries { width: 8.4%; }
-        .nd-table col.c-price { width: 7.5%; }
-        .nd-table col.c-buy { width: 11%; }
-        .nd-table th { padding: 10px 6px; border-bottom: 1px solid #E3E5E8; background: #F7F8F9; color: #152029; font-size: 12px; font-weight: 800; line-height: 1.25; text-align: left; vertical-align: bottom; }
-        .nd-table td { padding: 10px 6px; border-bottom: 1px solid #F0F1F3; vertical-align: top; font-size: 13px; color: #152029; }
+        .nd-table-wrap { overflow-x: auto; background: #fff; }
+        .nd-table { width: 100%; min-width: 1330px; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+        .nd-table col.c-url { width: 180px; }
+        .nd-table col.c-num { width: 52px; }
+        .nd-table col.c-niche { width: 140px; }
+        .nd-table col.c-lang { width: 96px; }
+        .nd-table col.c-chart { width: 150px; }
+        .nd-table col.c-keys { width: 84px; }
+        .nd-table col.c-countries { width: 110px; }
+        .nd-table col.c-price { width: 96px; }
+        .nd-table col.c-buy { width: 120px; }
+        .nd-table th { padding: 12px 6px; border-right: 1px solid rgba(255, 255, 255, .28); border-bottom: 1px solid #B7C0C8; background: #152029; color: #fff; font-size: 12px; font-weight: 800; line-height: 1.25; text-align: left; vertical-align: middle; }
+        .nd-table td { padding: 10px 6px; border-right: 1px solid #B7C0C8; border-bottom: 1px solid #B7C0C8; background: #fff; vertical-align: top; font-size: 13px; color: #152029; }
+        .nd-table th:last-child, .nd-table td:last-child { border-right: 0; }
         .nd-table th:first-child, .nd-table td:first-child { padding-left: 12px; }
         .nd-table th:last-child, .nd-table td:last-child { padding-right: 12px; }
-        .nd-table .nd-spark { width: 100%; height: 32px; }
+        .nd-table .nd-spark { width: 72px; height: 22px; }
         .nd-table .nd-publish { min-height: 40px; gap: 4px; padding: 0 8px; font-size: 12px; letter-spacing: 0.02em; }
         .nd-table .nd-url { gap: 6px; min-width: 0; }
         .nd-table .nd-url a { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -127,7 +132,7 @@
         .nd-niches { margin: 0; padding: 0; list-style: none; color: #4A5560; font-size: 13px; line-height: 1.55; }
         .nd-niches li + li { margin-top: 2px; }
         .nd-chart { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-        .nd-spark { display: block; width: 104px; height: 36px; }
+        .nd-spark { display: block; width: 72px; height: 22px; }
         .nd-countries { display: flex; flex-direction: column; gap: 4px; }
         .nd-country { display: flex; align-items: center; gap: 6px; color: #152029; font-size: 13px; font-weight: 700; white-space: nowrap; }
         .nd-publish { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border: 0; border-radius: 10px; background: #D63A10; padding: 0 16px; color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; text-decoration: none; }
@@ -145,7 +150,6 @@
         .nd-site-niches li { margin: 0; }
         .nd-site-lang { margin: 2px 0 0; color: #4A5560; font-size: 13px; }
         .nd-site-offer { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 12px; margin-left: auto; }
-        .nd-site-credits { color: #4A5560; font-size: 13px; }
         .nd-site-stats { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px 20px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #F0F1F3; }
         .nd-site-metrics { display: grid; grid-template-columns: repeat(2, max-content); gap: 8px 14px; margin: 0; }
         .nd-site-metrics dt, .nd-site-label { display: block; color: #4A5560; font-size: 12px; font-weight: 700; }
@@ -164,11 +168,10 @@
         }
         @media (max-width: 1099px) {
             .nd-table-wrap { overflow-x: auto; }
-            .nd-table { width: 1100px; }
         }
         @media (min-width: 900px) {
             .nd-h1 { font-size: 44px; }
-            .nd-section { padding: 56px 0; }
+            .nd-section { padding: 56px 32px; }
             .nd-board, .nd-list { padding-left: 32px; padding-right: 32px; }
             .nd-list { padding-top: 16px; padding-bottom: 28px; }
             .nd-site-stats { gap: 8px 28px; }
@@ -176,8 +179,8 @@
     </style>
 
     <section class="bg-[#F2F2F2]" aria-labelledby="niche-heading">
-        <div class="mx-auto max-w-[1240px] px-6 nd-section">
-            <nav aria-label="Breadcrumb" class="text-sm font-bold text-[#4A5560]">
+        <div class="mx-auto px-6 nd-section">
+            <nav aria-label="Breadcrumb" class="text-sm font-bold text-navy">
                 <a href="{{ url('/') }}" class="hover:text-[#C0340D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Home</a>
                 <span aria-hidden="true"> / </span>
                 <a href="{{ route('niches.index') }}" class="hover:text-[#C0340D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Niches</a>
@@ -194,7 +197,7 @@
             <p class="mt-4">
                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'newest', 'page' => null]) }}" class="inline-flex min-h-11 items-center text-[15px] font-bold text-[#C0340D] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">See recently added sites →</a>
             </p>
-            <div class="mt-4 max-w-[760px] text-[17px] leading-8 text-[#4A5560]">
+            <div class="mt-4 max-w-[760px] text-[17px] leading-8 text-navy">
                 <p>{{ $intro[0] }}</p>
                 <p class="mt-4">
                     {{ $intro[1] }}
@@ -231,6 +234,18 @@
                     <option value="">DR</option>
                     @foreach ([20, 30, 40, 50, 60] as $option)
                         <option value="{{ $option }}" @selected((string) request('dr_min') === (string) $option)>DR {{ $option }}+</option>
+                    @endforeach
+                </select>
+                <select id="niche-pa" class="nd-select {{ request('pa_min') ? 'is-set' : '' }}" name="pa_min" aria-label="Minimum PA">
+                    <option value="">PA</option>
+                    @foreach ([20, 30, 40, 50, 60] as $option)
+                        <option value="{{ $option }}" @selected((string) request('pa_min') === (string) $option)>PA {{ $option }}+</option>
+                    @endforeach
+                </select>
+                <select id="niche-tf" class="nd-select {{ request('tf_min') ? 'is-set' : '' }}" name="tf_min" aria-label="Minimum TF">
+                    <option value="">TF</option>
+                    @foreach ([20, 30, 40, 50, 60] as $option)
+                        <option value="{{ $option }}" @selected((string) request('tf_min') === (string) $option)>TF {{ $option }}+</option>
                     @endforeach
                 </select>
                 <select id="niche-price" class="nd-select {{ request('price_max') ? 'is-set' : '' }}" name="price_max" aria-label="Price range">
@@ -272,6 +287,18 @@
                     <option value="">No. of backlinks</option>
                     @foreach (['10' => '10+', '50' => '50+', '100' => '100+', '500' => '500+', '1000' => '1,000+'] as $value => $label)
                         <option value="{{ $value }}" @selected((string) request('backlinks_min') === (string) $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <select id="niche-referring" class="nd-select {{ request('referring_min') ? 'is-set' : '' }}" name="referring_min" aria-label="Number of referring domains">
+                    <option value="">No. of referring domains</option>
+                    @foreach (['10' => '10+', '50' => '50+', '100' => '100+', '500' => '500+', '1000' => '1,000+'] as $value => $label)
+                        <option value="{{ $value }}" @selected((string) request('referring_min') === (string) $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <select id="niche-spam" class="nd-select {{ request('spam_max') ? 'is-set' : '' }}" name="spam_max" aria-label="Spam Score">
+                    <option value="">Spam Score</option>
+                    @foreach (['5' => 'SS up to 5', '10' => 'SS up to 10', '20' => 'SS up to 20', '30' => 'SS up to 30'] as $value => $label)
+                        <option value="{{ $value }}" @selected((string) request('spam_max') === (string) $value)>{{ $label }}</option>
                     @endforeach
                 </select>
                 <select id="niche-link-type" class="nd-select {{ request('link_type') ? 'is-set' : '' }}" name="link_type" aria-label="Link type">
@@ -352,6 +379,8 @@
             <h2 id="publishers-heading" class="sr-only">{{ $name }} publisher websites</h2>
             @if ($demo)
                 <p class="mb-4 text-sm font-bold text-[#4A5560]">Sample data for preview</p>
+            @elseif (! empty($sample_metrics))
+                <p class="mb-4 text-sm font-bold text-[#4A5560]">Language, country, keywords, Semrush, referring domains and link details are sample figures until they are stored on each website.</p>
             @endif
 
             @if ($websites->isEmpty())
@@ -423,8 +452,7 @@
                                     <td>{{ $site['language'] }}</td>
                                     <td>
                                         <div class="nd-chart">
-                                            <x-ui.sparkline :seed="$site['domain'].'-ahrefs'" color="#E24B4B" />
-                                            <span class="nd-metric">{{ DemoNicheData::compact($site['traffic']) }}</span>
+                                            <x-ui.sparkline :seed="$site['domain'].'-ahrefs'" color="#E98989" :value="$site['traffic']" :label="'Ahrefs traffic trend for '.$site['domain']" />
                                         </div>
                                     </td>
                                     <td class="c-keys nd-metric">{{ DemoNicheData::compact($site['keywords']) }}</td>
@@ -448,15 +476,11 @@
                                     </td>
                                     <td>
                                         <div class="nd-chart">
-                                            <x-ui.sparkline :seed="$site['domain'].'-semrush'" color="#22A06B" />
-                                            <span class="nd-metric">{{ DemoNicheData::compact($site['semrush_traffic'] ?? null) }}</span>
+                                            <x-ui.sparkline :seed="$site['domain'].'-semrush'" color="#7DCEA0" :value="$site['semrush_traffic'] ?? null" :label="'Semrush traffic trend for '.$site['domain']" />
                                         </div>
                                     </td>
                                     <td>
                                         <span class="nd-metric">{{ $site['price'] === null ? '' : '$'.number_format($site['price'], 2) }}</span>
-                                        @if ($site['credits'] !== null)
-                                            <span class="mt-1 block text-xs text-[#4A5560]">{{ $site['credits'] }} credits</span>
-                                        @endif
                                     </td>
                                     <td>
                                         @include('customer.niches.actions', ['site' => $site, 'part' => 'buy', 'demo' => $demo, 'canSave' => $canSave, 'canCart' => $canCart, 'loginHref' => $loginHref])
@@ -489,7 +513,7 @@
     </section>
 
     <section class="bg-white">
-        <div class="mx-auto max-w-[1240px] px-6 pb-14">
+        <div class="mx-auto px-6 pb-14">
             <div class="grid items-center gap-6 rounded-[24px] bg-[#F2F2F2] px-6 py-8 md:grid-cols-[minmax(0,1fr)_auto] md:px-10">
                 <div>
                     <h3 class="font-display text-[24px] font-extrabold text-navy">Can't find the website you need?</h3>
@@ -504,7 +528,7 @@
     </section>
 
     <section class="bg-white" aria-labelledby="related-heading">
-        <div class="mx-auto max-w-[1240px] px-6 pb-14">
+        <div class="mx-auto px-6 pb-14">
             <h2 id="related-heading" class="font-display text-[30px] font-extrabold text-navy">Related niches</h2>
             <div class="mt-5 flex flex-wrap gap-2">
                 @foreach ($related as $relatedNiche)
@@ -514,10 +538,8 @@
         </div>
     </section>
 
-    <x-ui.country-browser heading-id="niche-countries-heading" />
-
     <section class="bg-[#F2F2F2]" aria-label="Why publishers are checked">
-        <div class="mx-auto grid max-w-[1240px] grid-cols-1 gap-4 px-6 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:py-[88px]">
+        <div class="mx-auto grid grid-cols-1 gap-4 px-6 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:py-[88px]">
             @foreach ([
                 ['shield', 'Manual Outreach', 'Every placement is arranged by our team, never automated.'],
                 ['clock', 'Fast Delivery', 'Most links go live within 3–14 days.'],

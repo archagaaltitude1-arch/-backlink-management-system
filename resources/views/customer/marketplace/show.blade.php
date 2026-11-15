@@ -7,7 +7,6 @@
     $loginHref = \Illuminate\Support\Facades\Route::has('auth.login') ? route('auth.login') : url('/login');
     $cartReady = ! $profile['demo'] && $profile['website_id'] && \Illuminate\Support\Facades\Route::has('orders.cart.items.store');
     $saveReady = ! $profile['demo'] && $profile['website_id'] && \Illuminate\Support\Facades\Route::has('customer.saved-websites.store');
-    $articleHref = \Illuminate\Support\Facades\Route::has('articles.create') ? route('articles.create') : null;
     $services = [
         ['value' => 'guest_post', 'label' => 'Guest Post'],
         ['value' => 'contextual_link', 'label' => 'Contextual Link'],
@@ -37,7 +36,7 @@
 @section('content')
     <style>
         .wd-page { background: #F2F2F2; color: #152029; }
-        .wd-wrap { max-width: 1240px; margin: 0 auto; padding: 40px 24px 72px; }
+        .wd-wrap { max-width: none; margin: 0 auto; padding: 40px 24px 72px; }
         .wd-crumb { color: #4A5560; font-size: 14px; font-weight: 700; }
         .wd-crumb a { color: #4A5560; }
         .wd-crumb a:hover { color: #C0340D; }
@@ -148,6 +147,9 @@
 
                 <aside class="wd-order" aria-label="Order">
                     <p class="wd-price">{{ $priceLabel }}</p>
+                    @if (\Illuminate\Support\Facades\Route::has('publish.show'))
+                        <a class="wd-btn wd-btn-primary" href="{{ route('publish.show', $profile['key']) }}">Publish</a>
+                    @endif
                     @if ($profile['credits'] !== null)
                         <p class="wd-credits">or {{ $profile['credits'] }} credits</p>
                     @endif
@@ -208,10 +210,7 @@
                     @else
                         <a class="wd-btn wd-btn-outline" href="{{ $loginHref }}">Save website</a>
                     @endif
-                    <p class="wd-fine">You'll add your target URL, anchor text and topic at checkout.</p>
-                    @if ($articleHref)
-                        <a class="wd-inline" href="{{ $articleHref }}">Have your own article? Submit it →</a>
-                    @endif
+                    <p class="wd-fine">You'll add your target URL, anchor text and topic at checkout. Our team publishes the placement.</p>
                 </aside>
             </div>
 

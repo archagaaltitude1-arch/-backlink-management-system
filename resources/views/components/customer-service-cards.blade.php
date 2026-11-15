@@ -4,7 +4,7 @@
         <p class="mt-1 text-sm text-navy/70">Filter by niche or domain rating, or compare backlink services.</p>
     </div>
     <div class="flex flex-wrap gap-2">
-        <a class="btn-outline min-h-11" href="{{ route('customer.websites') }}">Search sites</a>
-        <a class="btn-outline min-h-11" href="{{ route('customer.services') }}">Compare services</a>
+        <a class="btn-outline min-h-11" href="{{ route('publishers.index') }}">Search sites</a>
+        <a class="btn-outline min-h-11" href="{{ route('services.index') }}">Compare services</a>
     </div>
 </section>

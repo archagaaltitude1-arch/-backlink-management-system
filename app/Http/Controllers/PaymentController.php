@@ -11,6 +11,7 @@ use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Wallet;
 use App\Notifications\OrderPlacedNotification;
+use App\Support\PublicPackages;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,7 +31,7 @@ class PaymentController extends Controller
                 return response()->json(['data' => $order->load('items', 'payments')]);
             }
 
-            return redirect()->route('orders.show', $order);
+            return $this->afterPayment($order);
         }
 
         if ($request->expectsJson()) {
@@ -46,7 +47,7 @@ class PaymentController extends Controller
         if (! StripeCheckout::usesDemo() || $request->input('payment_method') === 'stripe') {
             $url = $checkout->start($request->user(), $order);
 
-            return $this->stripeRedirect($request, $url, route('orders.show', $order));
+            return $this->stripeRedirect($request, $url, $this->paidSitesUrl($order) ?? route('orders.show', $order));
         }
 
         $data = $request->validate([
@@ -101,8 +102,40 @@ class PaymentController extends Controller
             return response()->json(['data' => ['payment' => $payment, 'order' => $order->fresh()]], $payment->status === 'successful' ? 200 : 422);
         }
 
-        return redirect()->route('orders.show', $order)
-            ->with($payment->status === 'successful' ? 'success' : 'error', $payment->status === 'successful' ? 'Demo payment confirmed.' : 'Demo payment declined. You can try again.');
+        if ($payment->status !== 'successful') {
+            return redirect()->route('orders.show', $order)
+                ->with('error', 'Demo payment declined. You can try again.');
+        }
+
+        return $this->afterPayment($order);
+    }
+
+    private function afterPayment(Order $order): RedirectResponse
+    {
+        $sites = $this->paidPackageSites($order);
+
+        if ($sites === null) {
+            return redirect()->route('orders.show', $order)
+                ->with('success', 'Payment confirmed.');
+        }
+
+        return redirect()->to($sites['url'])
+            ->with('success', 'Payment confirmed. These websites match your '.$sites['label'].'.');
+    }
+
+    private function paidSitesUrl(Order $order): ?string
+    {
+        return $this->paidPackageSites($order)['url'] ?? null;
+    }
+
+    /**
+     * @return array{url: string, label: string}|null
+     */
+    private function paidPackageSites(Order $order): ?array
+    {
+        $order->loadMissing('items');
+
+        return PublicPackages::paidSites($order->items->pluck('item_name'));
     }
 
     public function history(Request $request): View|JsonResponse

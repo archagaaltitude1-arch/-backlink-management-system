@@ -17,10 +17,10 @@ class PublicPackageMenu
                     [
                         'title' => 'Display backlink packages',
                         'items' => [
-                            ['label' => 'Starter, 5 backlinks', 'id' => 'display-starter'],
-                            ['label' => 'Growth, 10 backlinks', 'id' => 'display-growth'],
-                            ['label' => 'Professional, 25 backlinks', 'id' => 'display-professional'],
-                            ['label' => 'Enterprise, custom backlink campaign', 'id' => 'display-enterprise'],
+                            ['label' => 'Starter Backlink Package', 'id' => 'display-starter'],
+                            ['label' => 'Growth Backlink Package', 'id' => 'display-growth'],
+                            ['label' => 'Professional Backlink Package', 'id' => 'display-professional'],
+                            ['label' => 'Enterprise Backlink Package', 'id' => 'display-enterprise'],
                         ],
                     ],
                 ],

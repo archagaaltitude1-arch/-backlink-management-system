@@ -6,62 +6,239 @@
 
 @section('content')
     <style>
-        .svc-h1 { margin: 0; font-size: 34px; line-height: 1.1; font-weight: 800; }
-        .svc-h2 { margin: 0; font-size: 30px; line-height: 1.15; font-weight: 800; }
-        .svc-section { padding: 56px 0; }
-        @media (min-width: 1024px) {
-            .svc-h1 { font-size: 52px; }
-            .svc-h2 { font-size: 40px; }
-            .svc-section { padding: 88px 0; }
+        .svc-wrap { padding-left: clamp(24px, 4vw, 56px); padding-right: clamp(24px, 4vw, 56px); }
+        .svc-hero { background: #fff; border-bottom: 1px solid #E3E5E8; }
+        .svc-hero-inner {
+            display: grid;
+            gap: 28px;
+            align-items: end;
+            padding-top: 56px;
+            padding-bottom: 48px;
+        }
+        .svc-kicker {
+            margin: 0 0 12px;
+            color: #C0340D;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .svc-h1 {
+            margin: 0;
+            max-width: 16ch;
+            color: #152029;
+            font-size: clamp(34px, 4.4vw, 52px);
+            line-height: 1.05;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .svc-lead {
+            margin: 16px 0 0;
+            max-width: 46ch;
+            color: #4A5560;
+            font-size: 17px;
+            line-height: 1.65;
+        }
+        .svc-facts {
+            display: grid;
+            gap: 0;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            border: 1px solid #E3E5E8;
+            border-radius: 20px;
+            background: #F6F7F9;
+            overflow: hidden;
+        }
+        .svc-facts li {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 18px;
+            border-top: 1px solid #E3E5E8;
+        }
+        .svc-facts li:first-child { border-top: 0; }
+        .svc-facts span { color: #152029; font-size: 14px; font-weight: 700; }
+        .svc-facts strong { color: #C0340D; font-size: 14px; font-weight: 800; }
+        .svc-list { background: #F6F7F9; }
+        .svc-list-inner { padding-top: 36px; padding-bottom: 56px; }
+        .svc-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        .svc-card {
+            display: flex;
+            min-height: 100%;
+            flex-direction: column;
+            border: 1px solid #E3E5E8;
+            border-radius: 20px;
+            background: #fff;
+            padding: 24px;
+            box-shadow: 0 10px 28px rgba(21, 32, 41, 0.05);
+        }
+        .svc-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+        .svc-icon {
+            display: grid;
+            width: 48px;
+            height: 48px;
+            place-items: center;
+            border-radius: 14px;
+            background: #FFF1EC;
+            color: #D63A10;
+        }
+        .svc-from { margin: 0; color: #C0340D; font-size: 15px; font-weight: 800; }
+        .svc-name { margin: 20px 0 0; color: #152029; font-size: 22px; line-height: 1.2; font-weight: 800; }
+        .svc-line { margin: 8px 0 0; color: #4A5560; font-size: 15px; line-height: 1.55; }
+        .svc-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 18px 0 0;
+            color: #152029;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .svc-meta::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 99px;
+            background: #FF4917;
+        }
+        .svc-more {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            margin-top: auto;
+            padding: 0 16px;
+            border: 1px solid #152029;
+            border-radius: 999px;
+            color: #152029;
+            font-size: 14px;
+            font-weight: 800;
+            text-decoration: none;
+        }
+        .svc-card .svc-more { margin-top: 22px; align-self: flex-start; }
+        .svc-more:hover { background: #152029; color: #fff; }
+        .svc-more:focus-visible { outline: 2px solid #D63A10; outline-offset: 2px; }
+        .svc-compare { background: #fff; }
+        .svc-compare-inner { padding-top: 56px; padding-bottom: 72px; }
+        .svc-h2 {
+            margin: 0;
+            color: #152029;
+            font-size: clamp(28px, 3vw, 36px);
+            line-height: 1.15;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .svc-compare-lead { margin: 10px 0 0; max-width: 42ch; color: #4A5560; font-size: 16px; line-height: 1.6; }
+        .svc-scroll-note { margin: 18px 0 0; color: #4A5560; font-size: 13px; font-weight: 700; }
+        .svc-table-wrap {
+            margin-top: 22px;
+            overflow-x: auto;
+            border: 1px solid #E3E5E8;
+            border-radius: 20px;
+            background: #fff;
+            box-shadow: 0 10px 28px rgba(21, 32, 41, 0.05);
+        }
+        .svc-table { width: 100%; min-width: 760px; border-collapse: collapse; text-align: left; }
+        .svc-table th, .svc-table td { padding: 16px 18px; vertical-align: top; }
+        .svc-table thead th {
+            background: #F6F7F9;
+            color: #152029;
+            font-size: 15px;
+            font-weight: 800;
+        }
+        .svc-table tbody th {
+            position: sticky;
+            left: 0;
+            background: #fff;
+            color: #152029;
+            font-size: 14px;
+            font-weight: 800;
+        }
+        .svc-table td { color: #4A5560; font-size: 15px; line-height: 1.5; }
+        .svc-table tbody tr + tr th,
+        .svc-table tbody tr + tr td { border-top: 1px solid #E3E5E8; }
+        .svc-price-row th, .svc-price-row td { background: #FFF1EC; color: #152029; font-weight: 800; }
+        .svc-price-row th { background: #FFF1EC; }
+        @media (min-width: 900px) {
+            .svc-hero-inner { grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.7fr); padding-top: 72px; padding-bottom: 56px; }
+            .svc-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+            .svc-list-inner { padding-top: 40px; padding-bottom: 72px; }
+            .svc-scroll-note { display: none; }
+        }
+        @media (min-width: 640px) and (max-width: 899px) {
+            .svc-grid { grid-template-columns: 1fr 1fr; }
+            .svc-facts { grid-template-columns: 1fr 1fr; }
+            .svc-facts li:nth-child(2) { border-top: 0; }
+            .svc-facts li:nth-child(odd) { border-right: 1px solid #E3E5E8; }
         }
     </style>
 
-    <section class="bg-[#F2F2F2]" aria-labelledby="services-overview-heading">
-        <div class="mx-auto max-w-[1240px] px-6 svc-section">
-            <p class="text-sm font-bold tracking-[0.08em] text-[#C0340D] uppercase">Services</p>
-            <h1 id="services-overview-heading" class="svc-h1 mt-3 max-w-3xl font-display text-navy">{{ $overview['h1'] }}</h1>
-            <p class="mt-4 max-w-2xl text-[17px] leading-8 text-[#4A5560] sm:text-[19px]">{{ $overview['intro'] }}</p>
+    <section class="svc-hero" aria-labelledby="services-overview-heading">
+        <div class="svc-wrap svc-hero-inner">
+            <div>
+                <p class="svc-kicker">Services</p>
+                <h1 id="services-overview-heading" class="svc-h1 font-display">{{ $overview['h1'] }}</h1>
+                <p class="svc-lead">{{ $overview['intro'] }}</p>
+            </div>
+            <ul class="svc-facts" aria-label="Starting prices">
+                @foreach ($cards as $card)
+                    <li>
+                        <span>{{ $card['name'] }}</span>
+                        <strong>{{ $card['price'] }}</strong>
+                    </li>
+                @endforeach
+            </ul>
         </div>
     </section>
 
-    <section class="bg-white" aria-label="Service list">
-        <div class="mx-auto max-w-[1240px] px-6 svc-section">
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section class="svc-list" aria-label="Service list">
+        <div class="svc-wrap svc-list-inner">
+            <div class="svc-grid">
                 @foreach ($cards as $card)
-                    <article class="flex h-full flex-col rounded-[24px] border border-[#E3E5E8] bg-white p-6">
-                        <span class="grid h-12 w-12 place-items-center rounded-xl bg-[#FFF1EC] text-[#D63A10]">
-                            <x-ui.icon :name="$card['icon']" />
-                        </span>
-                        <h2 class="mt-4 font-display text-[22px] font-extrabold text-navy">{{ $card['name'] }}</h2>
-                        <p class="mt-2 text-[15px] leading-6 text-[#4A5560]">{{ $card['menu'] }}</p>
-                        <p class="mt-3 text-sm font-bold text-navy">{{ $card['turnaround'] }}</p>
-                        <p class="mt-1 text-sm font-bold text-[#C0340D]">{{ $card['price'] }}</p>
-                        <a href="{{ url('/services/'.$card['slug']) }}" class="mt-auto inline-flex min-h-11 items-center pt-4 text-[15px] font-bold text-[#C0340D] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Learn more →</a>
+                    <article class="svc-card">
+                        <div class="svc-card-top">
+                            <span class="svc-icon">
+                                <x-ui.icon :name="$card['icon']" />
+                            </span>
+                            <p class="svc-from">{{ $card['price'] }}</p>
+                        </div>
+                        <h2 class="svc-name font-display">{{ $card['name'] }}</h2>
+                        <p class="svc-line">{{ $card['menu'] }}</p>
+                        <p class="svc-meta">{{ $card['turnaround'] }}</p>
+                        <a href="{{ url('/services/'.$card['slug']) }}" class="svc-more">View {{ $card['name'] }}</a>
                     </article>
                 @endforeach
             </div>
         </div>
     </section>
 
-    <section class="bg-[#F2F2F2]" aria-labelledby="compare-heading">
-        <div class="mx-auto max-w-[1240px] px-6 svc-section">
-            <h2 id="compare-heading" class="svc-h2 font-display text-navy">Compare all services</h2>
-            <div class="mt-8 overflow-x-auto rounded-[24px] border border-[#E3E5E8] bg-white">
-                <table class="w-full min-w-[760px] border-collapse text-left">
+    <section class="svc-compare" aria-labelledby="compare-heading">
+        <div class="svc-wrap svc-compare-inner">
+            <h2 id="compare-heading" class="svc-h2 font-display">Compare all services</h2>
+            <p class="svc-compare-lead">Content, placement, turnaround and starting price for each link type.</p>
+            <p class="svc-scroll-note">Scroll sideways to compare every column.</p>
+            <div class="svc-table-wrap">
+                <table class="svc-table">
                     <thead>
-                        <tr class="border-b border-[#E3E5E8]">
-                            <th scope="col" class="px-4 py-4 text-sm font-bold text-[#4A5560]"> </th>
+                        <tr>
+                            <th scope="col"> </th>
                             @foreach ($cards as $card)
-                                <th scope="col" class="px-4 py-4 font-display text-base font-extrabold text-navy">{{ $card['name'] }}</th>
+                                <th scope="col">{{ $card['name'] }}</th>
                             @endforeach
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($compareRows as $row)
-                            <tr class="border-t border-[#E3E5E8]">
-                                <th scope="row" class="px-4 py-4 text-[15px] font-bold text-navy">{{ $row['label'] }}</th>
+                            <tr @class(['svc-price-row' => $row['label'] === 'Price from'])>
+                                <th scope="row">{{ $row['label'] }}</th>
                                 @foreach ($row['cells'] as $cell)
-                                    <td class="px-4 py-4 text-[15px] leading-6 text-[#4A5560]">{{ $cell }}</td>
+                                    <td>{{ $cell }}</td>
                                 @endforeach
                             </tr>
                         @endforeach

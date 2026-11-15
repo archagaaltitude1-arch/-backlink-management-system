@@ -268,6 +268,112 @@
             <rect y="26.6" width="60" height="13.4" fill="#CE1126"/>
             <polygon points="0,0 16,20 0,40" fill="#000"/>
             @break
+        @case('by')
+            <rect width="60" height="20" fill="#CE1720"/>
+            <rect y="20" width="60" height="20" fill="#007C30"/>
+            <rect width="10" height="40" fill="#fff"/>
+            <rect x="2" width="6" height="40" fill="#CE1720"/>
+            @break
+        @case('bg')
+            <rect width="60" height="13.4" fill="#fff"/>
+            <rect y="13.4" width="60" height="13.2" fill="#00966E"/>
+            <rect y="26.6" width="60" height="13.4" fill="#D62612"/>
+            @break
+        @case('cn')
+            <rect width="60" height="40" fill="#DE2910"/>
+            <polygon points="12,6 13.4,10.2 17.8,10.2 14.2,12.8 15.6,17 12,14.4 8.4,17 9.8,12.8 6.2,10.2 10.6,10.2" fill="#FFDE00"/>
+            @break
+        @case('cy')
+            <rect width="60" height="40" fill="#fff"/>
+            <polygon points="18,24 30,14 42,24 36,22 30,26 24,22" fill="#D57800"/>
+            <path d="M16,28 Q30,32 44,28" fill="none" stroke="#4E7A2E" stroke-width="1.5"/>
+            @break
+        @case('cz')
+            <rect width="60" height="20" fill="#fff"/>
+            <rect y="20" width="60" height="20" fill="#D7141A"/>
+            <polygon points="0,0 26,20 0,40" fill="#11457E"/>
+            @break
+        @case('dk')
+            <rect width="60" height="40" fill="#C60C30"/>
+            <rect x="16" width="8" height="40" fill="#fff"/>
+            <rect y="16" width="60" height="8" fill="#fff"/>
+            @break
+        @case('fi')
+            <rect width="60" height="40" fill="#fff"/>
+            <rect x="16" width="8" height="40" fill="#003580"/>
+            <rect y="16" width="60" height="8" fill="#003580"/>
+            @break
+        @case('ge')
+            <rect width="60" height="40" fill="#fff"/>
+            <rect x="26" width="8" height="40" fill="#FF0000"/>
+            <rect y="16" width="60" height="8" fill="#FF0000"/>
+            <rect x="8" y="6" width="6" height="2" fill="#FF0000"/>
+            <rect x="10" y="4" width="2" height="6" fill="#FF0000"/>
+            <rect x="46" y="6" width="6" height="2" fill="#FF0000"/>
+            <rect x="48" y="4" width="2" height="6" fill="#FF0000"/>
+            <rect x="8" y="32" width="6" height="2" fill="#FF0000"/>
+            <rect x="10" y="30" width="2" height="6" fill="#FF0000"/>
+            <rect x="46" y="32" width="6" height="2" fill="#FF0000"/>
+            <rect x="48" y="30" width="2" height="6" fill="#FF0000"/>
+            @break
+        @case('hk')
+            <rect width="60" height="40" fill="#DE2910"/>
+            <circle cx="30" cy="20" r="7" fill="none" stroke="#fff" stroke-width="1.6"/>
+            <circle cx="30" cy="13" r="1.4" fill="#fff"/>
+            @break
+        @case('il')
+            <rect width="60" height="40" fill="#fff"/>
+            <rect y="6" width="60" height="5" fill="#0038B8"/>
+            <rect y="29" width="60" height="5" fill="#0038B8"/>
+            <polygon points="30,14 34,21 26,21" fill="none" stroke="#0038B8" stroke-width="1.2"/>
+            <polygon points="30,24 26,17 34,17" fill="none" stroke="#0038B8" stroke-width="1.2"/>
+            @break
+        @case('lt')
+            <rect width="60" height="13.4" fill="#FDB913"/>
+            <rect y="13.4" width="60" height="13.2" fill="#006A44"/>
+            <rect y="26.6" width="60" height="13.4" fill="#C1272D"/>
+            @break
+        @case('mt')
+            <rect width="30" height="40" fill="#fff"/>
+            <rect x="30" width="30" height="40" fill="#CF142B"/>
+            <rect x="4" y="4" width="6" height="2" fill="#C0A000"/>
+            <rect x="6" y="2" width="2" height="6" fill="#C0A000"/>
+            @break
+        @case('md')
+            <rect width="20" height="40" fill="#003DA5"/>
+            <rect x="20" width="20" height="40" fill="#FFD200"/>
+            <rect x="40" width="20" height="40" fill="#C8102E"/>
+            @break
+        @case('me')
+            <rect width="60" height="40" fill="#C40308"/>
+            <rect x="4" y="3" width="52" height="34" fill="none" stroke="#D4A017" stroke-width="2"/>
+            @break
+        @case('ru')
+            <rect width="60" height="13.4" fill="#fff"/>
+            <rect y="13.4" width="60" height="13.2" fill="#0039A6"/>
+            <rect y="26.6" width="60" height="13.4" fill="#D52B1E"/>
+            @break
+        @case('rs')
+            <rect width="60" height="13.4" fill="#C6363C"/>
+            <rect y="13.4" width="60" height="13.2" fill="#0C4076"/>
+            <rect y="26.6" width="60" height="13.4" fill="#fff"/>
+            @break
+        @case('si')
+            <rect width="60" height="13.4" fill="#fff"/>
+            <rect y="13.4" width="60" height="13.2" fill="#003DA5"/>
+            <rect y="26.6" width="60" height="13.4" fill="#ED1C24"/>
+            <polygon points="8,8 14,16 8,16" fill="#003DA5"/>
+            @break
+        @case('tr')
+            <rect width="60" height="40" fill="#E30A17"/>
+            <circle cx="24" cy="20" r="8" fill="#fff"/>
+            <circle cx="27" cy="20" r="6.4" fill="#E30A17"/>
+            <polygon points="34,20 36.2,22.4 34.6,19.2 37.4,19.2 35,17.2 37.4,20.8 34.6,20.8" fill="#fff"/>
+            @break
+        @case('ua')
+            <rect width="60" height="20" fill="#005BBB"/>
+            <rect y="20" width="60" height="20" fill="#FFD500"/>
+            @break
         @default
             <rect width="60" height="40" fill="#F2F2F2"/>
     @endswitch

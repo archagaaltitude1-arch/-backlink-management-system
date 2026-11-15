@@ -14,18 +14,29 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>@yield('title', 'Customer') · Backlink Management</title>
         @fonts
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=montserrat:600,700,800|ubuntu:400,500,700&display=swap" rel="stylesheet">
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @stack('head')
     </head>
-    <body @class(['font-sans text-navy antialiased', 'bg-white' => $isAccountPage, 'bg-canvas' => ! $isAccountPage])>
+    <body class="overflow-x-hidden bg-canvas font-sans text-navy antialiased">
         @if ($isAccountPage)
+            <a
+                href="#account-content"
+                class="absolute top-4 left-4 z-[60] -translate-y-24 rounded-xl bg-white px-4 py-2 text-sm font-medium text-navy shadow focus:translate-y-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            >
+                Skip to content
+            </a>
             <div class="flex min-h-screen flex-col">
+                @include('components.public-navbar')
                 @include('components.customer-account-nav')
                 <main id="account-content" class="mx-auto w-full max-w-[1600px] flex-1 px-4 pb-10 sm:px-6 lg:px-8">
                     @yield('content')
                 </main>
-                @include('components.footer')
+                <x-ui.country-browser centered />
+                @include('components.public-footer')
             </div>
+            @include('components.public-cart-drawer')
         @else
         <div class="flex min-h-screen">
             @auth

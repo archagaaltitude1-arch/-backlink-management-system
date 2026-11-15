@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 class DemoNicheData
 {
@@ -27,6 +28,7 @@ class DemoNicheData
             'Sports',
             'Food',
             'Agriculture & Farming',
+            'Legal',
         ];
     }
 
@@ -39,6 +41,10 @@ class DemoNicheData
             'agriculture-farming' => [
                 'Grow your reach in agriculture and farming with guest posts, contextual links and niche edits on websites read by farmers, agronomists and food producers.',
                 'From sustainable growing and livestock to farm technology and rural business, compare publishers by DR, DA, traffic and price, and pick the sites that suit your campaign.',
+            ],
+            'legal' => [
+                'Reach people researching law firms, compliance and legal services with guest posts, contextual links and niche edits on checked legal publishers.',
+                'From practice-area guides to business law and consumer rights, compare publishers by DR, DA, traffic and price, and pick the sites that suit your campaign.',
             ],
         ];
     }
@@ -91,6 +97,8 @@ class DemoNicheData
                 'language' => $row['language'],
                 'dr' => $row['dr'],
                 'da' => $row['da'],
+                'pa' => max(1, (int) $row['da'] - 5 - ($index % 4)),
+                'tf' => max(1, (int) round(((int) $row['dr'] + (int) $row['da']) / 2) - 4),
                 'as' => max(1, (int) $row['da'] - ($index % 8)),
                 'spam' => $row['spam'],
                 'traffic' => $row['traffic'],
@@ -111,6 +119,73 @@ class DemoNicheData
                 'foreign_language' => $row['language'] !== 'English',
                 'added_at' => Carbon::now()->subDays($index),
                 'demo' => true,
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Extra sample publishers so a niche comparison still shows several charts
+     * when only a few websites are stored.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function extraRows(string $niche): array
+    {
+        $slug = Str::slug($niche);
+        $stems = ['signaldesk', 'northbyte', 'harborstack', 'pixelroute', 'brightcircuit', 'fieldnote', 'orbitpress', 'lanternlab'];
+        $languages = ['English', 'German', 'Portuguese', 'Spanish', 'French', 'Dutch', 'Italian', 'English'];
+        $types = ['Guest post', 'Niche edit', 'Contextual', 'Text link'];
+        $validity = ['Permanent', '12 months', '6 months'];
+        $countries = [
+            [['US', 54.0], ['UK', 18.0], ['CA', 9.0]],
+            [['DE', 71.0], ['AT', 12.0], ['CH', 6.0]],
+            [['BR', 74.0], ['PT', 8.0], ['US', 6.0]],
+            [['FR', 68.0], ['BE', 11.0], ['CA', 7.0]],
+            [['IN', 62.0], ['US', 14.0], ['AE', 8.0]],
+            [['NL', 66.0], ['BE', 13.0], ['DE', 8.0]],
+            [['ES', 69.0], ['MX', 12.0], ['AR', 7.0]],
+            [['AU', 58.0], ['NZ', 16.0], ['UK', 9.0]],
+        ];
+        $traffic = [186000, 74200, 1280000, 24600, 410000, 9800, 305000, 56300];
+        $rows = [];
+
+        foreach ($stems as $index => $stem) {
+            $dr = 28 + ($index * 7) % 45;
+            $da = 24 + ($index * 5) % 40;
+            $language = $languages[$index];
+
+            $rows[] = [
+                'id' => null,
+                'domain' => $stem.'-'.$slug.'.example',
+                'niches' => [$niche],
+                'language' => $language,
+                'dr' => $dr,
+                'da' => $da,
+                'pa' => max(1, $da - 4),
+                'tf' => max(1, (int) round(($dr + $da) / 2) - 3),
+                'as' => max(1, $da - ($index % 6)),
+                'spam' => 1 + ($index % 8),
+                'traffic' => $traffic[$index],
+                'semrush_traffic' => (int) round($traffic[$index] * (0.55 + ($index % 4) * 0.12)),
+                'keywords' => 900 + ($index * 3400),
+                'top_countries' => $countries[$index],
+                'referring_domains' => 80 + ($index * 210),
+                'backlinks' => 400 + ($index * 1800),
+                'price' => 75 + ($index * 45),
+                'credits' => 8 + $index,
+                'sports_allowed' => $index % 2 === 0,
+                'pharmacy_allowed' => $index % 3 !== 0,
+                'crypto_allowed' => $index % 4 === 0,
+                'link_type' => $types[$index % 4],
+                'link_validity' => $validity[$index % 3],
+                'google_news' => $index % 2 === 0,
+                'sponsored' => $index % 3 === 1,
+                'foreign_language' => $language !== 'English',
+                'added_at' => Carbon::now()->subDays($index + 2),
+                'demo' => true,
+                'sample_metrics' => true,
             ];
         }
 
