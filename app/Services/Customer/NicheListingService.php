@@ -403,6 +403,7 @@ class NicheListingService
             'top_countries' => $countries,
             'referring_domains' => is_numeric($website->referring_domains ?? null) ? (int) $website->referring_domains : null,
             'backlinks' => $this->intColumn($website, 'backlinks'),
+            'backlinks_refreshed_at' => $website->backlinks_refreshed_at,
             'price' => is_numeric($website->price ?? null) ? (float) $website->price : null,
             'sports_allowed' => $this->boolColumn($website, 'sports_allowed'),
             'pharmacy_allowed' => $this->boolColumn($website, 'pharmacy_allowed'),
@@ -478,12 +479,12 @@ class NicheListingService
             $filled = true;
         }
 
-        if (! is_numeric($row['backlinks'] ?? null) || (int) $row['backlinks'] <= 0) {
+        if (empty($row['backlinks_refreshed_at']) && (! is_numeric($row['backlinks'] ?? null) || (int) $row['backlinks'] <= 0)) {
             $row['backlinks'] = 24 + ($seed % 1400);
             $filled = true;
         }
 
-        if (! is_numeric($row['referring_domains'] ?? null) || (int) $row['referring_domains'] <= 0) {
+        if (empty($row['backlinks_refreshed_at']) && (! is_numeric($row['referring_domains'] ?? null) || (int) $row['referring_domains'] <= 0)) {
             $row['referring_domains'] = 18 + ($seed % 1800);
             $filled = true;
         }
