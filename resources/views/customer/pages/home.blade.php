@@ -86,14 +86,14 @@
                 .home-hero::after { animation: none; }
             }
         </style>
-        <div class="home-hero-inner mx-auto flex max-w-[1240px] flex-col items-center gap-10 px-6 py-14 md:flex-row md:items-center md:justify-between md:gap-12 lg:py-[88px]">
+        <div class="home-hero-inner mx-auto flex max-w-[1240px] flex-col items-center gap-8 px-4 py-10 sm:gap-10 sm:px-6 sm:py-14 md:flex-row md:items-center md:justify-between md:gap-12 lg:py-[88px]">
             <div class="min-w-0 w-full md:max-w-[640px] md:flex-1">
                 <p class="inline-flex rounded-full border border-[#E3E5E8] bg-white/90 px-4 py-2 text-sm font-bold text-[#C0340D] backdrop-blur-sm">Link Building Agency · White-Hat Only</p>
-                <h1 id="home-heading" class="mt-5 font-display text-[36px] leading-[1.08] font-extrabold text-balance text-navy lg:text-[56px]">Earn Higher Rankings with Backlinks from <span class="text-[#FF4917]">Real, Traffic-Driven Websites</span></h1>
-                <p class="mt-5 max-w-xl text-[17px] leading-8 text-[#4A5560] sm:text-[19px]">Pick from {{ $publishers }} checked publisher websites and grow your search visibility, visitors and sales with text links, contextual links, guest posts and niche edits. Every one is verified before you get your report.</p>
-                <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                    <x-ui.button variant="primary" :href="$startHref">Start Building Links</x-ui.button>
-                    <x-ui.button variant="outline" :href="$publisherListHref">See the publisher list</x-ui.button>
+                <h1 id="home-heading" class="mt-5 font-display text-[30px] leading-[1.08] font-extrabold text-balance text-navy sm:text-[36px] lg:text-[56px]">Earn Higher Rankings with Backlinks from <span class="text-[#FF4917]">Real, Traffic-Driven Websites</span></h1>
+                <p class="mt-5 max-w-xl text-[16px] leading-7 text-[#4A5560] sm:text-[17px] sm:leading-8 sm:text-[19px]">Pick from {{ $publishers }} checked publisher websites and grow your search visibility, visitors and sales with text links, contextual links, guest posts and niche edits. Every one is verified before you get your report.</p>
+                <div class="mt-6 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
+                    <x-ui.button variant="primary" class="w-full justify-center sm:w-auto" :href="$startHref">Start Building Links</x-ui.button>
+                    <x-ui.button variant="outline" class="w-full justify-center sm:w-auto" :href="$publisherListHref">See the publisher list</x-ui.button>
                 </div>
                 <ul class="mt-6 grid gap-x-4 gap-y-2 sm:grid-cols-2">
                     @foreach ([$publishers.' Checked Publishers', 'White-Hat Placements Only', 'Delivered in 3–14 Days', 'Every Link Verified'] as $trust)
@@ -362,13 +362,13 @@
                 'niche-edit' => ['bg' => '#E7F3FC', 'ink' => '#1D4ED8'],
             ];
                                     @endphp
-        <div class="mx-auto max-w-[1240px] px-6 py-14 lg:py-[88px]">
+        <div class="mx-auto max-w-[1240px] px-4 py-10 sm:px-6 sm:py-14 lg:py-[88px]">
             <div class="mx-auto max-w-4xl text-center">
                 <p class="text-sm font-bold tracking-[0.08em] text-[#C0340D] uppercase">Our services</p>
-                <h2 id="services-heading" class="mt-3 font-display text-[30px] leading-tight font-extrabold text-navy lg:text-[40px]">
+                <h2 id="services-heading" class="mt-3 font-display text-[26px] leading-tight font-extrabold text-navy sm:text-[30px] lg:text-[40px]">
                     <span class="text-[#5B4BDB]">BacklinkPro</span> Link Building Services Built Around Real Results
                 </h2>
-                <p class="mt-4 text-[17px] leading-8 font-medium text-navy sm:text-[19px]">Order text links, contextual links, guest posts and niche edits on checked publisher websites, with clear metrics, fast delivery and reports made for agencies and in-house teams.</p>
+                <p class="mt-4 text-[16px] leading-7 font-medium text-navy sm:text-[17px] sm:leading-8 sm:text-[19px]">Order text links, contextual links, guest posts and niche edits on checked publisher websites, with clear metrics, fast delivery and reports made for agencies and in-house teams.</p>
             </div>
 
             @unless ($servicesPublished)
