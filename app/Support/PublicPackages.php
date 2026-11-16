@@ -5,19 +5,47 @@ namespace App\Support;
 class PublicPackages
 {
     /**
-     * @return array<int, array{title: string, sections: array<int, array{title: string|null, items: array<int, array{label: string, slug: string, flag: string|null, name: string, size: string, summary: string, lookup: array<int, string>}>}>}>
+     * @return array<int, array{title: string, sections: array<int, array{title: string, items: array<int, array{label: string, slug: string, href: string}>}>}>
      */
     public static function groups(): array
     {
+        $levels = [
+            ['label' => 'Starter', 'key' => 'starter'],
+            ['label' => 'Pro', 'key' => 'pro'],
+            ['label' => 'Professional', 'key' => 'professional'],
+            ['label' => 'Enterprise', 'key' => 'enterprise'],
+        ];
+
+        $services = [
+            ['title' => 'Text backlink package', 'slug' => 'text-link'],
+            ['title' => 'Contextual backlink package', 'slug' => 'contextual-link'],
+            ['title' => 'Guest post package', 'slug' => 'guest-post'],
+        ];
+
+        $sections = [];
+
+        foreach ($services as $service) {
+            $items = [];
+
+            foreach ($levels as $level) {
+                $slug = $level['key'].'-'.$service['slug'];
+                $items[] = [
+                    'label' => $level['label'],
+                    'slug' => $slug,
+                    'href' => route('packages.show', $slug),
+                ];
+            }
+
+            $sections[] = [
+                'title' => $service['title'],
+                'items' => $items,
+            ];
+        }
+
         return [
             [
                 'title' => 'Link Building',
-                'sections' => [
-                    [
-                        'title' => 'Display backlink packages',
-                        'items' => self::items(),
-                    ],
-                ],
+                'sections' => $sections,
             ],
         ];
     }
@@ -84,7 +112,7 @@ class PublicPackages
      */
     public static function find(string $slug): ?array
     {
-        foreach (self::items() as $item) {
+        foreach ([...self::items(), ...self::serviceProducts()] as $item) {
             if ($item['slug'] === $slug) {
                 return $item;
             }
@@ -94,12 +122,179 @@ class PublicPackages
     }
 
     /**
+     * Customer-facing package choice, such as "Starter – 5 Backlinks".
+     *
+     * @param  array<string, mixed>  $item
+     * @param  array<string, mixed>  $story
+     */
+    public static function choiceLabel(array $item, array $story): string
+    {
+        $slug = (string) ($item['slug'] ?? '');
+        $level = str_starts_with($slug, 'display-')
+            ? (string) ($item['name'] ?? 'Package')
+            : ucfirst((string) explode('-', $slug, 2)[0]);
+        $count = $story['count'] ?? null;
+        $size = is_numeric($count) ? ((int) $count).' Backlinks' : 'Custom Backlinks';
+
+        return $level.' – '.$size;
+    }
+
+    /**
+     * How many websites this package order needs. Custom packages have no fixed count.
+     *
+     * @param  array<string, mixed>  $story
+     */
+    public static function websiteLimit(array $story, int $quantity): ?int
+    {
+        $count = $story['count'] ?? null;
+
+        if (! is_numeric($count)) {
+            return null;
+        }
+
+        return (int) $count * max(1, $quantity);
+    }
+
+    /**
+     * Website chart for a paid package. The first recognized package name wins.
+     *
+     * @param  iterable<int, mixed>  $names
+     * @return array{url: string, label: string}|null
+     */
+    public static function paidSites(iterable $names): ?array
+    {
+        foreach ($names as $name) {
+            $match = self::matchPackageName((string) $name);
+
+            if ($match === null) {
+                continue;
+            }
+
+            $query = [];
+
+            if ($match['type'] !== '') {
+                $query['type'] = $match['type'];
+            }
+
+            if ($match['dr_min'] !== null) {
+                $query['dr_min'] = $match['dr_min'];
+            }
+
+            $query['package'] = $match['slug'];
+            $query['confirmed'] = '1';
+
+            return [
+                'url' => route('publishers.index', $query),
+                'label' => $match['label'],
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{slug: string, label: string, type: string, dr_min: int|null}|null
+     */
+    private static function matchPackageName(string $name): ?array
+    {
+        $name = trim($name);
+
+        if ($name === '') {
+            return null;
+        }
+
+        foreach ([...self::items(), ...self::serviceProducts()] as $item) {
+            if (strcasecmp((string) $item['label'], $name) !== 0) {
+                continue;
+            }
+
+            $offer = self::offerBySlug((string) $item['slug']);
+            $type = match ($offer['category'] ?? '') {
+                'Text Link' => 'Text link',
+                'Contextual Link' => 'Contextual',
+                'Guest Post' => 'Guest post',
+                default => '',
+            };
+            $drMin = null;
+
+            if (is_string($offer['dr'] ?? null) && preg_match('/(\d+)/', $offer['dr'], $found) === 1) {
+                $drMin = (int) $found[1];
+            }
+
+            return [
+                'slug' => (string) $item['slug'],
+                'label' => (string) $item['label'],
+                'type' => $type,
+                'dr_min' => $drMin,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Service-page products. These have their own details page and cart line, and they stay off the packages index.
+     *
+     * @return array<int, array{label: string, slug: string, flag: null, name: string, size: string, summary: string, lookup: array<int, string>}>
+     */
+    public static function serviceProducts(): array
+    {
+        return array_map(function (array $offer): array {
+            return [
+                'label' => $offer['label'],
+                'slug' => $offer['slug'],
+                'flag' => null,
+                'name' => $offer['label'],
+                'size' => $offer['size'],
+                'amount' => $offer['amount'],
+                'price_prefix' => $offer['prefix'],
+                'popular' => false,
+                'summary' => $offer['lead'],
+                'lookup' => [$offer['label']],
+            ];
+        }, self::offers());
+    }
+
+    public static function slugForTier(string $service, string $tier): ?string
+    {
+        $levels = [
+            'text-link' => [
+                'Starter' => 'starter',
+                'Growth' => 'pro',
+                'Professional' => 'professional',
+                'Premium' => 'enterprise',
+            ],
+            'contextual-link' => [
+                'Starter' => 'starter',
+                'Growth' => 'pro',
+                'Professional' => 'professional',
+                'Premium' => 'enterprise',
+            ],
+            'guest-post' => [
+                'DR 50+' => 'starter',
+                'DR 60+' => 'pro',
+                'DR 70+' => 'professional',
+            ],
+        ];
+
+        $level = $levels[$service][$tier] ?? null;
+
+        return $level === null ? null : $level.'-'.$service;
+    }
+
+    /**
      * Product copy for a package details page.
      *
      * @return array<string, mixed>|null
      */
     public static function story(string $slug): ?array
     {
+        $offer = self::offerBySlug($slug);
+
+        if ($offer !== null) {
+            return self::offerStory($offer);
+        }
+
         $stories = [
             'display-starter' => [
                 'headline' => "Build Your Website's SEO Foundation with 5 Quality Backlinks",
@@ -229,6 +424,307 @@ class PublicPackages
         ];
 
         return $stories[$slug] ?? null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private static function offerBySlug(string $slug): ?array
+    {
+        foreach (self::offers() as $offer) {
+            if ($offer['slug'] === $slug) {
+                return $offer;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $offer
+     * @return array<string, mixed>
+     */
+    private static function offerStory(array $offer): array
+    {
+        return [
+            'layout' => 'offer',
+            'headline' => $offer['label'],
+            'hero' => $offer['label'],
+            'badge' => $offer['badge'],
+            'category' => $offer['category'],
+            'lead' => $offer['lead'],
+            'support' => $offer['support'],
+            'count' => $offer['count'],
+            'delivery' => $offer['delivery'],
+            'delivery_note' => $offer['delivery_note'],
+            'chips' => $offer['chips'],
+            'sample' => $offer['sample'],
+            'marks' => ['Technology', 'Finance', 'Business', 'Health'],
+            'gets' => $offer['gets'],
+            'rules' => $offer['rules'],
+            'order_types' => $offer['order_types'],
+            'note' => $offer['note'],
+            'audience' => [$offer['category'].' buyers'],
+            'steps' => [
+                'Choose '.$offer['label'].'.',
+                'Add the details for this order.',
+                'Our team places the order.',
+                'We send the live URL after the placement is checked.',
+            ],
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private static function offers(): array
+    {
+        $linkOrders = [
+            [
+                'value' => 'placement',
+                'label' => 'Text link placement (We will place your link.)',
+                'help' => 'We place the link and send the live URL.',
+            ],
+            [
+                'value' => 'anchor-review',
+                'label' => 'Anchor review + placement (We will check the anchor, then place the link.)',
+                'help' => 'We review the anchor text, then place the link and send the live URL.',
+            ],
+        ];
+        $contextualOrders = [
+            [
+                'value' => 'placement',
+                'label' => 'Contextual placement (We will place your link inside the article.)',
+                'help' => 'We place the link in the article body and send the live URL.',
+            ],
+            $linkOrders[1],
+        ];
+        $guestOrders = [
+            [
+                'value' => 'writing',
+                'label' => 'Article writing + publication (We will write and publish the article.)',
+                'help' => 'Our team writes the article, then publishes it with the links you set.',
+            ],
+        ];
+        $linkNote = 'After checkout, you will be redirected to the requirements page, where you can add the anchor text, target URL, or any other details.';
+        $guestNote = 'After checkout, you will be redirected to the requirements page, where you can add the topic, anchor text, target URL, or any other details.';
+        $samples = [
+            'starter' => 'reports/starter-backlink-sample-report.xlsx',
+            'pro' => 'reports/growth-backlink-sample-report.xlsx',
+            'professional' => 'reports/professional-backlink-sample-report.xlsx',
+            'enterprise' => 'reports/enterprise-backlink-sample-report.xlsx',
+        ];
+
+        $text = [
+            'starter' => ['Starter', 39, '', '5', '5 links', '5 text links', 'DR 30–40', '2–5 days', false],
+            'pro' => ['Pro', 69, '', '10', '10 links', '10 text links', 'DR 40–50', '2–5 days', false],
+            'professional' => ['Professional', 149, '', '25', '25 links', '25 text links', 'DR 50–60', '2–5 days', false],
+            'enterprise' => ['Enterprise', 199, 'From ', 'Custom', 'Custom', 'Custom text links', 'DR 60+', '2–5 days', true],
+        ];
+        $contextual = [
+            'starter' => ['Starter', 59, '', '5', '5 links', '5 contextual links', 'DR 30–40', '3–7 days', false],
+            'pro' => ['Pro', 99, '', '10', '10 links', '10 contextual links', 'DR 40–50', '3–7 days', false],
+            'professional' => ['Professional', 219, '', '25', '25 links', '25 contextual links', 'DR 50–60', '3–7 days', false],
+            'enterprise' => ['Enterprise', 299, 'From ', 'Custom', 'Custom', 'Custom contextual links', 'DR 60+', '3–7 days', true],
+        ];
+        $guest = [
+            'starter' => ['Starter', 150, '', '10', '10 posts', '10 guest posts', 'DR 50+', 150],
+            'pro' => ['Pro', 200, '', '10', '10 posts', '10 guest posts', 'DR 60+', 200],
+            'professional' => ['Professional', 400, '', '10', '10 posts', '10 guest posts', 'DR 70+', 400],
+            'enterprise' => ['Enterprise', 400, 'From ', 'Custom', 'Custom', 'Custom guest posts', 'DR 70+', 400],
+        ];
+
+        $offers = [];
+
+        foreach ($text as $key => $plan) {
+            [$level, $amount, $prefix, $count, $badge, $size, $dr, $delivery, $custom] = $plan;
+            $countLine = $count === 'Custom' ? 'Custom link count' : $count.' links included';
+            $gets = array_values(array_filter([
+                $dr.' websites',
+                $countLine,
+                $custom ? 'High-authority sites' : null,
+                $custom ? 'Priority delivery' : null,
+                'Link on a relevant existing page',
+                'No article writing required',
+                'Delivery in '.$delivery,
+                'Live URL after the link is checked',
+            ]));
+            $offers[] = self::offerRow(
+                $key.'-text-link',
+                $level.' Text Link Package',
+                'Text Link',
+                $amount,
+                $prefix,
+                $count,
+                $badge,
+                $size,
+                $dr,
+                $delivery,
+                $custom
+                    ? 'A custom text link campaign on '.$dr.' websites, with priority delivery. The price starts here and follows the campaign size.'
+                    : $size.' on '.$dr.' publisher pages. No new article is required, and each link is checked before the live URL is sent.',
+                'Use your brand name, a URL, or a keyword as the anchor.',
+                $gets,
+                [
+                    'The link is placed on a relevant existing page, such as a resources section.',
+                    'Anchor text can be your brand, a URL, or a keyword, and it should read naturally on the page.',
+                    'We do not publish adult content, hate speech, or misleading claims.',
+                    'The live URL is sent after the link is checked. Search indexing is not guaranteed.',
+                    $custom
+                        ? 'The price starts at this amount and follows the campaign size. Turnaround starts after the target URL and anchor text are confirmed.'
+                        : 'The '.$delivery.' turnaround starts after the target URL and anchor text are confirmed.',
+                ],
+                $linkOrders,
+                $linkNote,
+                $samples[$key],
+                [$size, $dr.' websites', $custom ? 'Priority delivery' : $delivery.' delivery', 'Live URL included'],
+            );
+        }
+
+        foreach ($contextual as $key => $plan) {
+            [$level, $amount, $prefix, $count, $badge, $size, $dr, $delivery, $custom] = $plan;
+            $countLine = $count === 'Custom' ? 'Custom link count' : $count.' links included';
+            $gets = array_values(array_filter([
+                $dr.' websites',
+                $countLine,
+                $custom ? 'High-authority sites' : null,
+                $custom ? 'Priority delivery' : null,
+                'Link inside the article body',
+                'Topic-matched surrounding text',
+                'Delivery in '.$delivery,
+                'Live URL after verification',
+            ]));
+            $offers[] = self::offerRow(
+                $key.'-contextual-link',
+                $level.' Contextual Link Package',
+                'Contextual Link',
+                $amount,
+                $prefix,
+                $count,
+                $badge,
+                $size,
+                $dr,
+                $delivery,
+                $custom
+                    ? 'A custom contextual link campaign on '.$dr.' websites, with priority delivery. The price starts here and follows the campaign size.'
+                    : $size.' inside topic-matched articles on '.$dr.' websites. The live URL is sent after verification.',
+                'The link sits in the article body, surrounded by text that matches your topic. No new article is required.',
+                $gets,
+                [
+                    'The link is placed in the article body, not in a footer, sidebar, or author bio.',
+                    'The surrounding text matches the topic of the page you submit.',
+                    'You set the anchor text and target URL. Where the publisher allows it, the link can be dofollow.',
+                    'We do not publish adult content, hate speech, or misleading claims.',
+                    'The live URL is sent after the link is checked. Search indexing is not guaranteed.',
+                    $custom
+                        ? 'The price starts at this amount and follows the campaign size.'
+                        : 'The '.$delivery.' turnaround starts after the target URL and anchor text are confirmed.',
+                ],
+                $contextualOrders,
+                $linkNote,
+                $samples[$key],
+                [$size, $dr.' websites', $custom ? 'Priority delivery' : $delivery.' delivery', 'Live URL included'],
+            );
+        }
+
+        foreach ($guest as $key => $plan) {
+            [$level, $amount, $prefix, $count, $badge, $size, $dr, $nicheFee] = $plan;
+            $custom = $count === 'Custom';
+            $posts = $custom ? 'Custom post count' : 'DR '.ltrim($dr, 'DR ').' across '.$count.' websites';
+            $gets = [
+                $custom ? $dr.' websites' : $posts,
+                $custom ? 'Custom post count' : 'Article written and published by our team',
+                'Article written and published by our team',
+                '2 dofollow contextual links per post',
+                'Links on websites with real traffic',
+                '600+ word articles (+$100)',
+                $custom ? 'Priority delivery' : 'Standard delivery in 2 weeks',
+                'Casino and CBD niches (+$'.$nicheFee.')',
+            ];
+            $offers[] = self::offerRow(
+                $key.'-guest-post',
+                $level.' Guest Post Package',
+                'Guest Post',
+                $amount,
+                $prefix,
+                $count,
+                $badge,
+                $size,
+                $dr,
+                '2 weeks',
+                $custom
+                    ? 'A custom guest post campaign on '.$dr.' websites. The price starts at the '.$dr.' package and follows the number of posts.'
+                    : $count.' guest posts on '.$dr.' websites, with 2 dofollow contextual links in each article.',
+                'Our team writes and publishes the article. Casino and CBD niches are an extra $'.$nicheFee.'. Articles over 600 words are an extra $100.',
+                array_values(array_unique($gets)),
+                [
+                    'Our team writes and publishes each article.',
+                    'Each post includes 2 contextual links. You set the anchor text and target URL.',
+                    '600+ word articles are available for an extra $100.',
+                    'Casino and CBD niches are available for an extra $'.$nicheFee.'.',
+                    'We do not publish adult content, hate speech, or misleading claims.',
+                    $custom
+                        ? 'The timeline is confirmed after the campaign size is agreed. Search indexing is not guaranteed.'
+                        : 'Standard delivery is 2 weeks after the topic, anchor text, and target URL are confirmed. Search indexing is not guaranteed.',
+                ],
+                $guestOrders,
+                $guestNote,
+                $samples[$key],
+                [$size, $dr.' websites', $custom ? 'Priority delivery' : '2 week delivery', 'Report included'],
+            );
+        }
+
+        return $offers;
+    }
+
+    /**
+     * @param  array<int, string>  $gets
+     * @param  array<int, string>  $rules
+     * @param  array<int, array{value: string, label: string, help: string}>  $orders
+     * @param  array<int, string>  $chips
+     * @return array<string, mixed>
+     */
+    private static function offerRow(
+        string $slug,
+        string $label,
+        string $category,
+        int $amount,
+        string $prefix,
+        string $count,
+        string $badge,
+        string $size,
+        string $dr,
+        string $delivery,
+        string $lead,
+        string $support,
+        array $gets,
+        array $rules,
+        array $orders,
+        string $note,
+        string $sample,
+        array $chips,
+    ): array {
+        return [
+            'slug' => $slug,
+            'label' => $label,
+            'category' => $category,
+            'amount' => $amount,
+            'prefix' => $prefix,
+            'count' => $count,
+            'badge' => $badge,
+            'size' => $size,
+            'dr' => $dr,
+            'delivery' => $delivery,
+            'delivery_note' => $rules[array_key_last($rules)],
+            'lead' => $lead,
+            'support' => $support,
+            'gets' => $gets,
+            'rules' => $rules,
+            'order_types' => $orders,
+            'note' => $note,
+            'sample' => $sample,
+            'chips' => $chips,
+        ];
     }
 
     /**

@@ -19,7 +19,7 @@
 
     <style>
         .bag { background: #F2F2F2; }
-        .bag-wrap { max-width: 1240px; margin: 0 auto; padding: 28px 24px 72px; }
+        .bag-wrap { max-width: none; margin: 0 auto; padding: 28px 24px 72px; }
         .bag-crumb { margin: 0; color: #4A5560; font-size: 14px; font-weight: 700; }
         .bag-crumb a { color: inherit; }
         .bag-crumb a:hover { color: #C0340D; }
@@ -198,7 +198,10 @@
                                             <input form="cart-update" type="hidden" name="lines[{{ $line }}][quantity]" value="{{ (int) $item['quantity'] }}">
                                             <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m13 7 4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
                                         </p>
-                                        <p><span class="co-k">Order type:</span> {{ $item['order_label'] ?? 'Publish my article' }}@if (! empty($item['order_help'])) ({{ $item['order_help'] }})@endif</p>
+                                        <p><span class="co-k">Order type:</span> {{ $item['order_label'] ?? 'Write and publish for me' }}@if (! empty($item['order_help'])) ({{ $item['order_help'] }})@endif</p>
+                                        @if (($item['kind'] ?? '') === 'package' && is_array($item['websites'] ?? null) && $item['websites'] !== [])
+                                            <p><span class="co-k">Websites:</span> {{ implode(', ', $item['websites']) }}</p>
+                                        @endif
                                         @if (($item['kind'] ?? '') !== 'package')
                                             <p><span class="co-k">Your article topic:</span> {{ $item['content_topic'] ?? 'General' }}</p>
                                         @endif

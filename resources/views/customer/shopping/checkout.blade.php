@@ -159,6 +159,9 @@
                             <p class="ck-meta">
                                 {{ $item['order_label'] ?? 'Placement' }}
                                 · Qty {{ $qty }}
+                                @if (($item['kind'] ?? '') === 'package' && is_array($item['websites'] ?? null) && $item['websites'] !== [])
+                                    · {{ implode(', ', $item['websites']) }}
+                                @endif
                             </p>
                             <p class="ck-price">{{ $prefix !== '' ? $prefix.' ' : '' }}${{ number_format($lineTotal, 2) }}</p>
 

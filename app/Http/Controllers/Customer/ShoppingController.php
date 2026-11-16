@@ -7,6 +7,7 @@ use App\Models\Cart;
 use App\Models\Coupon;
 use App\Models\CouponUsage;
 use App\Models\Order;
+use App\Models\Package;
 use App\Services\Customer\NicheListingService;
 use App\Services\Customer\PublishOfferService;
 use App\Support\PublicPackages;
@@ -71,10 +72,12 @@ class ShoppingController extends Controller
             'order_type' => ['nullable', 'string', 'max:60'],
             'content_topic' => ['nullable', 'string', 'max:80'],
             'project' => ['nullable', 'string', 'max:80'],
+            'websites' => ['nullable', 'array', 'max:250'],
+            'websites.*' => ['string', 'max:255'],
         ]);
 
         if (filled($data['package_slug'] ?? null)) {
-            return $this->storePackage($data);
+            return $this->storePackage($data, $listings);
         }
 
         $offer = filled($data['site'] ?? null) ? $offers->resolve((string) $data['site']) : null;
@@ -105,7 +108,7 @@ class ShoppingController extends Controller
     /**
      * @param  array<string, mixed>  $data
      */
-    private function storePackage(array $data): RedirectResponse
+    private function storePackage(array $data, NicheListingService $listings): RedirectResponse
     {
         $slug = (string) $data['package_slug'];
         $item = PublicPackages::find($slug);
@@ -115,11 +118,25 @@ class ShoppingController extends Controller
             return redirect()->route('packages.index')->with('shopping_error', 'That package is not available.');
         }
 
+        $postedQuantity = min(10, max(1, (int) ($data['quantity'] ?? 1)));
+        $chosen = $this->chosenPackageWebsites(
+            $slug,
+            $story,
+            $postedQuantity,
+            $data['websites'] ?? [],
+            isset($data['order_type']) ? (string) $data['order_type'] : null,
+            $listings,
+        );
+
+        if ($chosen instanceof RedirectResponse) {
+            return $chosen;
+        }
+
         $price = isset($item['amount']) && is_numeric($item['amount']) ? (float) $item['amount'] : null;
         $packageId = isset($data['package_id']) && is_numeric($data['package_id']) ? (int) $data['package_id'] : null;
 
-        if ($packageId !== null && class_exists(\App\Models\Package::class) && Schema::hasTable('packages')) {
-            $stored = \App\Models\Package::query()->find($packageId);
+        if ($packageId !== null && class_exists(Package::class) && Schema::hasTable('packages')) {
+            $stored = Package::query()->find($packageId);
 
             if ($stored !== null && is_numeric($stored->price) && (float) $stored->price > 0) {
                 $price = (float) $stored->price;
@@ -128,12 +145,16 @@ class ShoppingController extends Controller
 
         $project = trim((string) ($data['project'] ?? '')) ?: 'Default';
         $prefix = (string) ($item['price_prefix'] ?? '');
-        $quantity = min(10, max(1, (int) ($data['quantity'] ?? 1)));
         $line = $this->lineKey($slug, 'package', 'package');
         $items = $this->sessionItems();
+        $existingSites = is_array($items[$line]['websites'] ?? null) ? $items[$line]['websites'] : [];
         $quantity = $prefix !== ''
             ? 1
-            : min(10, ((int) ($items[$line]['quantity'] ?? 0)) + $quantity);
+            : min(10, ((int) ($items[$line]['quantity'] ?? 0)) + $postedQuantity);
+        $websites = $prefix !== ''
+            ? $chosen
+            : array_values(array_unique([...$existingSites, ...$chosen]));
+        $order = $this->selectedPackageOrder($slug, $story, (string) ($data['order_type'] ?? ''));
 
         $items[$line] = [
             'line' => $line,
@@ -146,13 +167,9 @@ class ShoppingController extends Controller
             'package_slug' => $slug,
             'niche' => 'Packages',
             'project' => $project,
-            'order_type' => 'package',
-            'order_label' => $slug === 'display-enterprise'
-                ? 'Custom campaign (We review your goals and confirm the quotation.)'
-                : 'Backlink campaign (We place the links and send the report.)',
-            'order_help' => $slug === 'display-enterprise'
-                ? 'We review your goals and confirm the quotation before work starts.'
-                : 'We place the backlinks and send the completion report.',
+            'order_type' => $order['value'],
+            'order_label' => $order['label'],
+            'order_help' => $order['help'],
             'product_key' => 'package',
             'addon' => false,
             'content_topic' => 'General',
@@ -160,6 +177,7 @@ class ShoppingController extends Controller
             'price_prefix' => $prefix,
             'quantity' => $quantity,
             'backlinks' => $story['count'],
+            'websites' => $websites,
             'link_validity' => $story['delivery'],
             'link_type' => 'Included',
             'article_length' => (string) $item['size'],
@@ -173,6 +191,114 @@ class ShoppingController extends Controller
         return back()
             ->with('open_cart', true)
             ->with('shopping_status', $item['label'].' was added to your cart.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $story
+     * @return array<int, string>|RedirectResponse
+     */
+    private function chosenPackageWebsites(string $slug, array $story, int $quantity, mixed $postedSites, ?string $orderType, NicheListingService $listings): array|RedirectResponse
+    {
+        $known = [];
+
+        foreach ($listings->catalogRows()['rows'] as $row) {
+            $domain = trim((string) ($row['domain'] ?? ''));
+
+            if ($domain === '') {
+                continue;
+            }
+
+            $known[mb_strtolower($domain)] = $domain;
+        }
+
+        $chosen = [];
+
+        foreach (is_array($postedSites) ? $postedSites : [] as $website) {
+            $key = mb_strtolower(trim((string) $website));
+
+            if ($key === '' || isset($chosen[$key])) {
+                continue;
+            }
+
+            if (! isset($known[$key])) {
+                return $this->websiteSelectionRedirect($slug, $quantity, $orderType, 'That website is not on the list.');
+            }
+
+            $chosen[$key] = $known[$key];
+        }
+
+        $websites = array_values($chosen);
+        $expected = PublicPackages::websiteLimit($story, $quantity);
+
+        if ($websites === []) {
+            return $this->websiteSelectionRedirect($slug, $quantity, $orderType, 'Choose the websites for this package before adding it to your cart.');
+        }
+
+        if ($expected !== null && count($websites) !== $expected) {
+            return $this->websiteSelectionRedirect($slug, $quantity, $orderType, 'Choose '.$expected.' websites for this package.');
+        }
+
+        if ($expected === null && count($websites) > 50) {
+            return $this->websiteSelectionRedirect($slug, $quantity, $orderType, 'Choose up to 50 websites for this package.');
+        }
+
+        return $websites;
+    }
+
+    private function websiteSelectionRedirect(string $slug, int $quantity, ?string $orderType, string $message): RedirectResponse
+    {
+        $query = ['slug' => $slug, 'quantity' => $quantity];
+
+        if (filled($orderType)) {
+            $query['order_type'] = $orderType;
+        }
+
+        return redirect()
+            ->route('packages.websites', $query)
+            ->with('shopping_error', $message);
+    }
+
+    /**
+     * @param  array<string, mixed>  $story
+     * @return array{value: string, label: string, help: string}
+     */
+    private function selectedPackageOrder(string $slug, array $story, string $posted): array
+    {
+        $types = is_array($story['order_types'] ?? null) ? $story['order_types'] : [];
+
+        foreach ($types as $type) {
+            if (! is_array($type)) {
+                continue;
+            }
+
+            if ((string) ($type['value'] ?? '') === $posted) {
+                return [
+                    'value' => (string) $type['value'],
+                    'label' => (string) $type['label'],
+                    'help' => (string) ($type['help'] ?? $type['label']),
+                ];
+            }
+        }
+
+        if ($types !== [] && is_array($types[0])) {
+            return [
+                'value' => (string) ($types[0]['value'] ?? 'package'),
+                'label' => (string) ($types[0]['label'] ?? 'Backlink campaign'),
+                'help' => (string) ($types[0]['help'] ?? $types[0]['label'] ?? ''),
+            ];
+        }
+
+        $custom = $slug === 'display-enterprise';
+
+        return [
+            'value' => 'package',
+            'label' => $custom
+                ? 'Custom campaign (We review your goals and confirm the quotation.)'
+                : 'Backlink campaign (We place the links and send the report.)',
+            'help' => $custom
+                ? 'We review your goals and confirm the quotation before work starts.'
+                : 'We place the backlinks and send the completion report.',
+        ];
     }
 
     public function update(Request $request): RedirectResponse
@@ -396,7 +522,7 @@ class ShoppingController extends Controller
                     $details = $detailsByLine->get($line);
                     $name = ($item['kind'] ?? '') === 'package'
                         ? (string) ($item['display_name'] ?? 'Backlink package')
-                        : 'Publish Guest Post on '.$item['domain'].' · '.($item['order_label'] ?? 'Publish my article').' · '.($item['content_topic'] ?? 'General');
+                        : 'Publish Guest Post on '.$item['domain'].' · '.($item['order_label'] ?? 'Write and publish for me').' · '.($item['content_topic'] ?? 'General');
 
                     $order->items()->create([
                         'website_id' => $item['website_id'] ?? null,
@@ -585,7 +711,9 @@ class ShoppingController extends Controller
             'link_type' => (string) ($row['link_type'] ?? 'DoFollow'),
             'article_length' => (string) ($row['article_length'] ?? '—'),
             'tat_days' => $row['tat_days'] ?? null,
-            'rules' => $niche !== '' ? ["Content must be relevant to {$niche} or closely related topics."] : [],
+            'rules' => $niche !== ''
+                ? ["Our team writes and publishes the placement for {$niche} or a closely related topic."]
+                : ['Our team writes and publishes the placement.'],
             'restricted' => [],
             'screenshot' => null,
         ];
@@ -644,7 +772,7 @@ class ShoppingController extends Controller
             }
         }
 
-        return $all[0] ?? ['key' => 'publish_only', 'label' => 'Publish my article', 'help' => '', 'product_key' => 'guest_post', 'addon' => false];
+        return $all[0] ?? ['key' => 'write_and_publish', 'label' => 'Write and publish for me', 'help' => 'Our writers create the article, then we publish it.', 'product_key' => 'guest_post', 'addon' => false];
     }
 
     private function topic(?string $topic): string
