@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\Package;
+use App\Services\Customer\NicheListingService;
 use App\Support\PublicPackages;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Throwable;
 
 class PackagePageController extends Controller
@@ -30,6 +34,41 @@ class PackagePageController extends Controller
             'package' => $priced,
             'packages' => $this->withStoredPrice(PublicPackages::items()),
             'guestPostPrices' => PublicPackages::guestPostPrices(),
+        ]);
+    }
+
+    public function websites(Request $request, string $slug, NicheListingService $listings): View
+    {
+        set_time_limit(120);
+
+        $package = PublicPackages::find($slug);
+        $story = PublicPackages::story($slug);
+        abort_if($package === null || $story === null, 404);
+
+        $priced = $this->withStoredPrice([$package])[0];
+        $priced['story'] = $story;
+        $catalog = $listings->catalogRows();
+        $quantity = min(10, max(1, (int) $request->query('quantity', 1)));
+        $limit = PublicPackages::websiteLimit($story, $quantity);
+        $choice = PublicPackages::choiceLabel($priced, $story);
+        $websiteWord = $limit === 1 ? 'website' : 'websites';
+        $lead = $limit === null
+            ? $choice.'. Choose the websites for this package, then add it to your cart.'
+            : $choice.'. Choose '.$limit.' '.$websiteWord.' for this package, then add it to your cart.';
+
+        return view('customer.packages.websites', [
+            'package' => $priced,
+            'choice' => $choice,
+            'limit' => $limit,
+            'quantity' => $quantity,
+            'orderType' => trim((string) $request->query('order_type', '')),
+            'rows' => collect($catalog['rows'])
+                ->sortByDesc(fn (array $row) => $row['dr'] ?? -1)
+                ->values()
+                ->all(),
+            'demo' => $catalog['demo'],
+            'categories' => $this->categories($listings),
+            'lead' => $lead,
         ]);
     }
 
@@ -88,12 +127,12 @@ class PackagePageController extends Controller
      */
     private function storedRows(): array
     {
-        if (! class_exists(\App\Models\Package::class) || ! Schema::hasTable('packages') || ! Schema::hasColumn('packages', 'package_name')) {
+        if (! class_exists(Package::class) || ! Schema::hasTable('packages') || ! Schema::hasColumn('packages', 'package_name')) {
             return [];
         }
 
         try {
-            $query = \App\Models\Package::query();
+            $query = Package::query();
 
             if (Schema::hasColumn('packages', 'status')) {
                 $query->where(function ($rows): void {
@@ -131,6 +170,26 @@ class PackagePageController extends Controller
         }
 
         return $this->money($price / (int) $count[1]).' each';
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function categories(NicheListingService $listings): array
+    {
+        $categories = [];
+
+        foreach ($listings->categoryNames() as $name) {
+            $slug = Str::slug($name);
+
+            if ($name !== '' && $slug !== '') {
+                $categories[$name] = $slug;
+            }
+        }
+
+        ksort($categories);
+
+        return $categories;
     }
 
     private function money(float $amount): string
