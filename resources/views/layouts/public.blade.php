@@ -15,7 +15,6 @@
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @endif
-        @include('components.public-responsive')
         @stack('head')
     </head>
     <body class="overflow-x-hidden bg-canvas font-sans text-base text-navy antialiased">
@@ -25,9 +24,9 @@
         >
             Skip to content
         </a>
-        <div class="flex min-h-screen min-w-0 flex-col">
+        <div class="flex min-h-screen flex-col">
             @include('components.public-navbar')
-            <main id="main" class="min-w-0 flex-1">
+            <main id="main" class="flex-1">
                 @yield('content')
             </main>
             @unless (! empty($hideTestimonials))

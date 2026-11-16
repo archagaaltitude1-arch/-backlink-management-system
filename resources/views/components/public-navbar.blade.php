@@ -95,15 +95,15 @@
 @endphp
 
 <header class="sticky top-0 z-50 border-b border-[#E3E5E8] bg-white">
-    <div class="mx-auto flex max-w-[1240px] min-w-0 items-center justify-between gap-2 px-4 py-[12px] sm:gap-3 sm:px-6 sm:py-[14px]">
-        <a href="{{ url('/') }}" class="flex min-w-0 shrink-0 items-center gap-2 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10] sm:gap-2.5">
-            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#FF4917] text-white" aria-hidden="true">
+    <div class="mx-auto flex max-w-[1240px] items-center justify-between gap-3 px-6 py-[14px]">
+        <a href="{{ url('/') }}" class="flex shrink-0 items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
+            <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#FF4917] text-white" aria-hidden="true">
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M10 13a5 5 0 0 0 7.1.1l1.4-1.4a5 5 0 0 0-7.1-7.1L10.2 5.8" />
                     <path d="M14 11a5 5 0 0 0-7.1-.1L5.5 12.3a5 5 0 0 0 7.1 7.1l1.2-1.2" />
                 </svg>
             </span>
-            <span class="font-display truncate text-[18px] leading-none font-extrabold text-navy sm:text-[20px]">BacklinkPro</span>
+            <span class="font-display text-[20px] leading-none font-extrabold text-navy">BacklinkPro</span>
         </a>
 
         <nav class="hidden items-center gap-1 lg:flex" aria-label="Primary">
@@ -121,7 +121,7 @@
                             Services
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
                         </button>
-                        <div id="services-panel" class="absolute left-0 top-full z-50 hidden pt-2" style="width:min(540px,calc(100vw - 32px))" hidden>
+                        <div id="services-panel" class="absolute left-0 top-full z-50 hidden pt-2" style="width:540px" hidden>
                             <div class="rounded-[20px] border border-[#E3E5E8] bg-white p-3 shadow-lg">
                             <div class="grid grid-cols-2 gap-1">
                                 @foreach ($serviceMenu as $item)
@@ -153,7 +153,7 @@
                             Niches
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
                         </button>
-                        <div id="niches-panel" class="absolute left-0 top-full z-50 hidden pt-2" style="width:min(420px,calc(100vw - 32px))" hidden>
+                        <div id="niches-panel" class="absolute left-0 top-full z-50 hidden pt-2" style="width:420px" hidden>
                             <div class="rounded-[20px] border border-[#E3E5E8] bg-white p-3 shadow-lg">
                                 <div class="grid grid-cols-2 gap-1">
                                     @foreach ($nicheMenu as $niche)

@@ -56,8 +56,7 @@
         display: flex;
         flex-direction: column;
         width: min(100vw, 420px);
-        height: 100dvh;
-        max-height: 100dvh;
+        height: 100vh;
         background: #fff;
         color: #152029;
         box-shadow: -12px 0 40px rgba(21, 32, 41, 0.18);
