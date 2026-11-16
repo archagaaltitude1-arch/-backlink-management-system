@@ -199,6 +199,9 @@
                                             <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m13 7 4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
                                         </p>
                                         <p><span class="co-k">Order type:</span> {{ $item['order_label'] ?? 'Write and publish for me' }}@if (! empty($item['order_help'])) ({{ $item['order_help'] }})@endif</p>
+                                        @if (($item['kind'] ?? '') === 'package' && is_array($item['websites'] ?? null) && $item['websites'] !== [])
+                                            <p><span class="co-k">Websites:</span> {{ implode(', ', $item['websites']) }}</p>
+                                        @endif
                                         @if (($item['kind'] ?? '') !== 'package')
                                             <p><span class="co-k">Your article topic:</span> {{ $item['content_topic'] ?? 'General' }}</p>
                                         @endif

@@ -2,11 +2,11 @@
 
 use App\Http\Controllers\Customer\MarketplaceController;
 use App\Http\Controllers\Customer\NicheController;
-use App\Http\Controllers\Customer\PublishController;
-use App\Http\Controllers\Customer\PublisherReviewController;
 use App\Http\Controllers\Customer\PackagePageController;
 use App\Http\Controllers\Customer\PageController;
+use App\Http\Controllers\Customer\PublishController;
 use App\Http\Controllers\Customer\PublisherController;
+use App\Http\Controllers\Customer\PublisherReviewController;
 use App\Http\Controllers\Customer\ServicePageController;
 use App\Http\Controllers\Customer\ShoppingController;
 use App\Http\Controllers\Customer\SiteController;
@@ -19,6 +19,7 @@ Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 Route::get('/services', [ServicePageController::class, 'index'])->name('services.index');
 Route::get('/services/{slug}', [ServicePageController::class, 'show'])->name('services.show');
 Route::get('/packages', [PackagePageController::class, 'index'])->name('packages.index');
+Route::get('/packages/{slug}/websites', [PackagePageController::class, 'websites'])->where('slug', '[a-z0-9\-]+')->name('packages.websites');
 Route::get('/packages/{slug}', [PackagePageController::class, 'show'])->where('slug', '[a-z0-9\-]+')->name('packages.show');
 Route::get('/tools', [ToolController::class, 'index'])->name('tools.index');
 Route::get('/tools/{slug}', [ToolController::class, 'show'])->where('slug', '[a-z0-9\-]+')->name('tools.show');
@@ -43,7 +44,7 @@ Route::get('/publish/{site}', [PublishController::class, 'show'])->name('publish
 Route::post('/publish/{site}/reviews', [PublisherReviewController::class, 'store'])
     ->middleware(['auth', 'throttle:10,1'])
     ->name('publish.reviews.store');
-Route::get('/niches',[NicheController::class, 'index'])->name('niches.index');
+Route::get('/niches', [NicheController::class, 'index'])->name('niches.index');
 Route::get('/niches/{slug}', [NicheController::class, 'show'])->name('niches.show');
 
 Route::view('/ui-kit', 'customer.pages.ui-kit')->name('ui.kit');

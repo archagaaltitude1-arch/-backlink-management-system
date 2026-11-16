@@ -122,6 +122,40 @@ class PublicPackages
     }
 
     /**
+     * Customer-facing package choice, such as "Starter – 5 Backlinks".
+     *
+     * @param  array<string, mixed>  $item
+     * @param  array<string, mixed>  $story
+     */
+    public static function choiceLabel(array $item, array $story): string
+    {
+        $slug = (string) ($item['slug'] ?? '');
+        $level = str_starts_with($slug, 'display-')
+            ? (string) ($item['name'] ?? 'Package')
+            : ucfirst((string) explode('-', $slug, 2)[0]);
+        $count = $story['count'] ?? null;
+        $size = is_numeric($count) ? ((int) $count).' Backlinks' : 'Custom Backlinks';
+
+        return $level.' – '.$size;
+    }
+
+    /**
+     * How many websites this package order needs. Custom packages have no fixed count.
+     *
+     * @param  array<string, mixed>  $story
+     */
+    public static function websiteLimit(array $story, int $quantity): ?int
+    {
+        $count = $story['count'] ?? null;
+
+        if (! is_numeric($count)) {
+            return null;
+        }
+
+        return (int) $count * max(1, $quantity);
+    }
+
+    /**
      * Website chart for a paid package. The first recognized package name wins.
      *
      * @param  iterable<int, mixed>  $names

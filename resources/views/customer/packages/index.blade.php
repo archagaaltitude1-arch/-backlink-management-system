@@ -94,8 +94,8 @@
                                 <h3 class="pkg-name font-display">{{ $package['size'] }}</h3>
                                 <p class="pkg-meta">{{ $package['summary'] }}</p>
                                 <div class="pkg-actions">
-                                    <a class="pkg-btn pkg-btn-primary" href="{{ route('packages.show', $package['slug']) }}">Package details</a>
-                                    <a class="pkg-btn pkg-btn-line" href="{{ route('publishers.index') }}">Browse publishers</a>
+                                    <a class="pkg-btn pkg-btn-primary" href="{{ route('packages.websites', $package['slug']) }}">Choose Backlinks</a>
+                                    <a class="pkg-btn pkg-btn-line" href="{{ route('packages.show', $package['slug']) }}">Package details</a>
                                 </div>
                             </article>
                         </li>

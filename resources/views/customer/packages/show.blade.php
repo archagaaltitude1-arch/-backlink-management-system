@@ -6,7 +6,7 @@
     $unit = is_numeric($package['price'] ?? null) ? (float) $package['price'] : null;
     $prefix = trim((string) ($package['price_prefix'] ?? ''));
     $money = $unit === null ? 'Price on request' : ($prefix === '' ? '' : $prefix.' ').'$'.number_format($unit, 2);
-    $cartPost = \Illuminate\Support\Facades\Route::has('shopping.store') ? route('shopping.store') : null;
+    $chooseHref = route('packages.websites', $package['slug']);
 @endphp
 
 @section('document_title', $title.' | BacklinkPro')
@@ -175,11 +175,7 @@
                         </div>
                     @endif
 
-                    @if ($cartPost)
-                        <form method="POST" action="{{ $cartPost }}" data-pk-order>
-                            @csrf
-                            <input type="hidden" name="package_slug" value="{{ $package['slug'] }}">
-                            <input type="hidden" name="package_id" value="{{ $package['package_id'] }}">
+                    <form method="GET" action="{{ $chooseHref }}" data-pk-order>
                             <input type="hidden" name="quantity" value="1" data-pk-qty>
                             <fieldset style="margin:18px 0 0;padding:0;border:0">
                                 <legend style="font-weight:800">Order type *</legend>
@@ -212,10 +208,9 @@
                                     <strong data-pk-sub>{{ $money }}</strong>
                                 </div>
                             </div>
-                            <p class="pk-note">{{ data_get($story, 'note', "After checkout you'll add your website URL, anchor text and target pages on the requirements page.") }}</p>
-                            <button class="pk-cart" type="submit">Add to cart</button>
+                            <p class="pk-note">{{ data_get($story, 'note', 'Next, choose the websites for this package. Anchor text and target pages are added at checkout.') }}</p>
+                            <button class="pk-cart" type="submit">Choose Backlinks</button>
                         </form>
-                    @endif
 
                     <p class="pk-tat"><b>Estimated delivery</b> <span>{{ $story['delivery'] ?? 'Confirmed with the order' }}{{ isset($story['delivery_note']) ? '. '.$story['delivery_note'] : '' }}</span></p>
                     <p class="pk-help"><strong>Questions?</strong> <a href="{{ route('contact') }}">Contact us</a></p>

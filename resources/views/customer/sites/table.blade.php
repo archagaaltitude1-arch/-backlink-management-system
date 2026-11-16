@@ -43,6 +43,8 @@
         .nd-publish:disabled,
         .nd-publish:disabled:hover { background: #D63A10; color: #fff; opacity: 1; cursor: not-allowed; }
         .nd-publish:focus-visible { outline: 2px solid #D63A10; outline-offset: 2px; }
+        .nd-pick { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+        .nd-pick input { width: 20px; height: 20px; accent-color: #D63A10; }
         @media (max-width: 1099px) {
             .nd-table-wrap { overflow-x: auto; }
         }
@@ -82,7 +84,7 @@
                 <th scope="col">Countries</th>
                 <th scope="col">Semrush<br>traffic</th>
                 <th scope="col">@if (! empty($insertionPrice)) Link insertion<br>price @else Price @endif</th>
-                <th scope="col">Buy now</th>
+                <th scope="col">@if (! empty($selectable)) Select @else Buy now @endif</th>
             </tr>
         </thead>
         <tbody>
@@ -156,7 +158,14 @@
                         <span class="nd-metric">{{ ($publisher['price'] ?? null) === null ? '' : '$'.number_format((float) $publisher['price'], 2) }}</span>
                     </td>
                     <td>
-                        @include('customer.niches.actions', ['site' => $publisher, 'part' => 'buy', 'demo' => $demo ?? ! empty($publisher['demo']), 'canSave' => $canSave, 'canCart' => $canCart, 'loginHref' => $loginHref])
+                        @if (! empty($selectable))
+                            <label class="nd-pick">
+                                <input type="checkbox" name="websites[]" value="{{ $publisher['domain'] }}" data-site-choice @if (! empty($selectionForm)) form="{{ $selectionForm }}" @endif>
+                                <span class="sr-only">Select {{ $publisher['domain'] }}</span>
+                            </label>
+                        @else
+                            @include('customer.niches.actions', ['site' => $publisher, 'part' => 'buy', 'demo' => $demo ?? ! empty($publisher['demo']), 'canSave' => $canSave, 'canCart' => $canCart, 'loginHref' => $loginHref])
+                        @endif
                     </td>
                 </tr>
             @endforeach

@@ -72,10 +72,12 @@ class ShoppingController extends Controller
             'order_type' => ['nullable', 'string', 'max:60'],
             'content_topic' => ['nullable', 'string', 'max:80'],
             'project' => ['nullable', 'string', 'max:80'],
+            'websites' => ['nullable', 'array', 'max:250'],
+            'websites.*' => ['string', 'max:255'],
         ]);
 
         if (filled($data['package_slug'] ?? null)) {
-            return $this->storePackage($data);
+            return $this->storePackage($data, $listings);
         }
 
         $offer = filled($data['site'] ?? null) ? $offers->resolve((string) $data['site']) : null;
@@ -106,7 +108,7 @@ class ShoppingController extends Controller
     /**
      * @param  array<string, mixed>  $data
      */
-    private function storePackage(array $data): RedirectResponse
+    private function storePackage(array $data, NicheListingService $listings): RedirectResponse
     {
         $slug = (string) $data['package_slug'];
         $item = PublicPackages::find($slug);
@@ -114,6 +116,20 @@ class ShoppingController extends Controller
 
         if ($item === null || $story === null) {
             return redirect()->route('packages.index')->with('shopping_error', 'That package is not available.');
+        }
+
+        $postedQuantity = min(10, max(1, (int) ($data['quantity'] ?? 1)));
+        $chosen = $this->chosenPackageWebsites(
+            $slug,
+            $story,
+            $postedQuantity,
+            $data['websites'] ?? [],
+            isset($data['order_type']) ? (string) $data['order_type'] : null,
+            $listings,
+        );
+
+        if ($chosen instanceof RedirectResponse) {
+            return $chosen;
         }
 
         $price = isset($item['amount']) && is_numeric($item['amount']) ? (float) $item['amount'] : null;
@@ -129,12 +145,15 @@ class ShoppingController extends Controller
 
         $project = trim((string) ($data['project'] ?? '')) ?: 'Default';
         $prefix = (string) ($item['price_prefix'] ?? '');
-        $quantity = min(10, max(1, (int) ($data['quantity'] ?? 1)));
         $line = $this->lineKey($slug, 'package', 'package');
         $items = $this->sessionItems();
+        $existingSites = is_array($items[$line]['websites'] ?? null) ? $items[$line]['websites'] : [];
         $quantity = $prefix !== ''
             ? 1
-            : min(10, ((int) ($items[$line]['quantity'] ?? 0)) + $quantity);
+            : min(10, ((int) ($items[$line]['quantity'] ?? 0)) + $postedQuantity);
+        $websites = $prefix !== ''
+            ? $chosen
+            : array_values(array_unique([...$existingSites, ...$chosen]));
         $order = $this->selectedPackageOrder($slug, $story, (string) ($data['order_type'] ?? ''));
 
         $items[$line] = [
@@ -158,6 +177,7 @@ class ShoppingController extends Controller
             'price_prefix' => $prefix,
             'quantity' => $quantity,
             'backlinks' => $story['count'],
+            'websites' => $websites,
             'link_validity' => $story['delivery'],
             'link_type' => 'Included',
             'article_length' => (string) $item['size'],
@@ -171,6 +191,71 @@ class ShoppingController extends Controller
         return back()
             ->with('open_cart', true)
             ->with('shopping_status', $item['label'].' was added to your cart.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $story
+     * @return array<int, string>|RedirectResponse
+     */
+    private function chosenPackageWebsites(string $slug, array $story, int $quantity, mixed $postedSites, ?string $orderType, NicheListingService $listings): array|RedirectResponse
+    {
+        $known = [];
+
+        foreach ($listings->catalogRows()['rows'] as $row) {
+            $domain = trim((string) ($row['domain'] ?? ''));
+
+            if ($domain === '') {
+                continue;
+            }
+
+            $known[mb_strtolower($domain)] = $domain;
+        }
+
+        $chosen = [];
+
+        foreach (is_array($postedSites) ? $postedSites : [] as $website) {
+            $key = mb_strtolower(trim((string) $website));
+
+            if ($key === '' || isset($chosen[$key])) {
+                continue;
+            }
+
+            if (! isset($known[$key])) {
+                return $this->websiteSelectionRedirect($slug, $quantity, $orderType, 'That website is not on the list.');
+            }
+
+            $chosen[$key] = $known[$key];
+        }
+
+        $websites = array_values($chosen);
+        $expected = PublicPackages::websiteLimit($story, $quantity);
+
+        if ($websites === []) {
+            return $this->websiteSelectionRedirect($slug, $quantity, $orderType, 'Choose the websites for this package before adding it to your cart.');
+        }
+
+        if ($expected !== null && count($websites) !== $expected) {
+            return $this->websiteSelectionRedirect($slug, $quantity, $orderType, 'Choose '.$expected.' websites for this package.');
+        }
+
+        if ($expected === null && count($websites) > 50) {
+            return $this->websiteSelectionRedirect($slug, $quantity, $orderType, 'Choose up to 50 websites for this package.');
+        }
+
+        return $websites;
+    }
+
+    private function websiteSelectionRedirect(string $slug, int $quantity, ?string $orderType, string $message): RedirectResponse
+    {
+        $query = ['slug' => $slug, 'quantity' => $quantity];
+
+        if (filled($orderType)) {
+            $query['order_type'] = $orderType;
+        }
+
+        return redirect()
+            ->route('packages.websites', $query)
+            ->with('shopping_error', $message);
     }
 
     /**
