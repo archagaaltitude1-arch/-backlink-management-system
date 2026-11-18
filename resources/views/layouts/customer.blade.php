@@ -4,7 +4,7 @@
     $userName = auth()->user()?->name ?? 'Guest';
     $userRole = 'Customer';
     $isAccountPage = auth()->check()
-        && request()->routeIs('customer.*', 'orders.cart', 'orders.checkout', 'orders.index', 'orders.show', 'orders.payment');
+        && request()->routeIs('customer.*', 'orders.cart', 'orders.checkout', 'orders.index', 'orders.show', 'orders.payment', 'orders.thanks');
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -52,6 +52,9 @@
             </div>
         </div>
         @endif
+        @unless (request()->routeIs('orders.payment'))
+            @include('customer.coupons.saved-popup')
+        @endunless
         @stack('scripts')
     </body>
 </html>

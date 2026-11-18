@@ -7,6 +7,7 @@
     $prefix = trim((string) ($package['price_prefix'] ?? ''));
     $money = $unit === null ? 'Price on request' : ($prefix === '' ? '' : $prefix.' ').'$'.number_format($unit, 2);
     $chooseHref = route('packages.websites', $package['slug']);
+    $selectedBacklinks = $selectedBacklinks ?? null;
 @endphp
 
 @section('document_title', $title.' | BacklinkPro')
@@ -71,6 +72,9 @@
 
     <section class="bg-[#F7F8FA]">
         <div class="pk-wrap">
+            @if (session('shopping_status'))
+                <p class="pk-note" role="status">{{ session('shopping_status') }}</p>
+            @endif
             <nav class="pk-crumb" aria-label="Breadcrumb">
                 <a href="{{ url('/') }}">Home</a>
                 <span aria-hidden="true"> / </span>
@@ -191,7 +195,10 @@
                                     </label>
                                 @endforelse
                             </fieldset>
-                            @if (($package['price_prefix'] ?? '') === '')
+                            @if (! empty($selectedBacklinks))
+                                <input type="hidden" name="backlinks" value="{{ $selectedBacklinks }}">
+                            @endif
+                            @if (($package['price_prefix'] ?? '') === '' && empty($selectedBacklinks))
                                 <div class="pk-qty">
                                     <button type="button" data-pk-step="-1" aria-label="Decrease quantity">−</button>
                                     <input type="number" min="1" max="10" value="1" data-pk-input aria-label="Quantity">
@@ -208,7 +215,7 @@
                                     <strong data-pk-sub>{{ $money }}</strong>
                                 </div>
                             </div>
-                            <p class="pk-note">{{ data_get($story, 'note', 'Next, choose the websites for this package. Anchor text and target pages are added at checkout.') }}</p>
+                            <p class="pk-note">@if (! empty($selectedBacklinks)) Next, choose {{ $selectedBacklinks }} websites for this package. @else {{ data_get($story, 'note', 'Next, choose the websites for this package. Anchor text and target pages are added at checkout.') }} @endif</p>
                             <button class="pk-cart" type="submit">Choose Backlinks</button>
                         </form>
 

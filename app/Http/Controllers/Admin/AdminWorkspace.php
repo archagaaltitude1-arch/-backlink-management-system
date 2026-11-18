@@ -127,16 +127,16 @@ class AdminWorkspace
 
     public function sync(User $admin): void
     {
-        Order::query()->with('customer:id,name')->latest()->limit(12)->get()->each(function (Order $order) use ($admin): void {
-            $this->store($admin, 'order-'.$order->id, 'New customer order', ($order->customer?->name ?? 'A customer').' placed '.$order->order_number.'.', route('admin.orders.show', $order), $order->created_at);
+        Order::query()->with('customer:id,name')->where('payment_status', 'paid')->latest()->limit(12)->get()->each(function (Order $order) use ($admin): void {
+            $this->store($admin, 'order-'.$order->id, 'New customer order', ($order->customer?->name ?? 'A customer').' paid for '.$order->order_number.'.', route('admin.orders.show', $order), $order->updated_at);
         });
 
-        Order::query()->with('customer:id,name')->where('order_status', 'pending')->latest()->limit(12)->get()->each(function (Order $order) use ($admin): void {
-            $this->store($admin, 'pending-'.$order->id, 'Pending order', $order->order_number.' is still pending and needs attention.', route('admin.orders.show', $order), $order->created_at);
+        Order::query()->with('customer:id,name')->where('payment_status', 'paid')->where('order_status', 'awaiting_approval')->latest()->limit(12)->get()->each(function (Order $order) use ($admin): void {
+            $this->store($admin, 'approval-'.$order->id, 'Order ready for approval', $order->order_number.' is paid and waiting for admin approval before SEO staff can be assigned.', route('admin.orders.show', $order), $order->updated_at);
         });
 
-        Order::query()->with('customer:id,name')->whereHas('items', fn ($query) => $query->whereDoesntHave('assignment'))->latest()->limit(12)->get()->each(function (Order $order) use ($admin): void {
-            $this->store($admin, 'unassigned-'.$order->id, 'Waiting for staff assignment', $order->order_number.' has a placement that is not assigned to SEO staff.', route('admin.orders.show', $order), $order->created_at);
+        Order::query()->with('customer:id,name')->where('payment_status', 'paid')->whereIn('order_status', ['processing', 'completed'])->whereHas('items', fn ($query) => $query->whereDoesntHave('assignment'))->latest()->limit(12)->get()->each(function (Order $order) use ($admin): void {
+            $this->store($admin, 'unassigned-'.$order->id, 'Waiting for staff assignment', $order->order_number.' is approved and has a placement that is not assigned to SEO staff.', route('admin.orders.show', $order), $order->created_at);
         });
 
         Order::query()->with('customer:id,name')->where('order_status', 'completed')->latest()->limit(12)->get()->each(function (Order $order) use ($admin): void {

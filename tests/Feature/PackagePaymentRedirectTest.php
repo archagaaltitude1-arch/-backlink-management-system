@@ -13,54 +13,41 @@ class PackagePaymentRedirectTest extends TestCase
 {
     use RefreshDatabase;
 
-    #[TestWith(['Pro Text Link Package', 'pro-text-link', 'Text link', 40])]
-    #[TestWith(['Enterprise Contextual Link Package', 'enterprise-contextual-link', 'Contextual', 60])]
-    #[TestWith(['Professional Guest Post Package', 'professional-guest-post', 'Guest post', 70])]
-    #[TestWith(['Starter Guest Post Package', 'starter-guest-post', 'Guest post', 50])]
-    public function test_paid_package_opens_websites_for_that_service(string $name, string $slug, string $type, int $dr): void
+    #[TestWith(['Pro Text Link Package'])]
+    #[TestWith(['Enterprise Contextual Link Package'])]
+    #[TestWith(['Professional Guest Post Package'])]
+    #[TestWith(['Starter Guest Post Package'])]
+    #[TestWith(['Growth Backlink Package'])]
+    public function test_paid_package_opens_a_thank_you_page_with_an_invoice(string $name): void
     {
         Notification::fake();
         $customer = User::factory()->create();
         $order = $this->packageOrder($customer, $name);
 
-        $url = route('publishers.index', [
-            'type' => $type,
-            'dr_min' => $dr,
-            'package' => $slug,
-            'confirmed' => '1',
-        ]);
-
         $this->actingAs($customer)->post(route('orders.payment.process', $order), [
             'payment_method' => 'demo_card',
             'demo_result' => 'success',
-        ])->assertRedirect($url);
+        ])->assertRedirect(route('orders.thanks', $order));
 
-        $this->get($url)
+        $this->get(route('orders.thanks', $order))
             ->assertOk()
-            ->assertSee('Payment confirmed. These websites match your '.$name.'.', false)
-            ->assertSee('value="'.$type.'" selected', false)
-            ->assertSee('value="'.$dr.'" selected', false)
-            ->assertSee($type.' websites');
-    }
+            ->assertSee('Thank you', false)
+            ->assertSee('Download invoice', false)
+            ->assertSee('Shop more', false)
+            ->assertSee('Shop more to gain more discounts', false)
+            ->assertSee('Shop 2 more orders to earn 20% off.', false)
+            ->assertDontSee('Select Backlink Websites', false);
 
-    public function test_paid_display_package_opens_the_publisher_chart(): void
-    {
-        Notification::fake();
-        $customer = User::factory()->create();
-        $order = $this->packageOrder($customer, 'Growth Backlink Package');
-        $url = route('publishers.index', [
-            'package' => 'display-growth',
-            'confirmed' => '1',
-        ]);
+        $this->get(route('orders.payment', $order))
+            ->assertRedirect(route('orders.thanks', $order));
 
-        $this->actingAs($customer)->post(route('orders.payment.process', $order), [
-            'payment_method' => 'demo_card',
-            'demo_result' => 'success',
-        ])->assertRedirect($url);
-
-        $this->get($url)
+        $this->get(route('customer.invoices.download', $order->invoice()->firstOrFail()))
             ->assertOk()
-            ->assertSee('Payment confirmed. These websites match your Growth Backlink Package.', false);
+            ->assertDownload();
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('orders.thanks', $order))
+            ->assertNotFound();
     }
 
     public function test_declined_package_payment_stays_on_the_order(): void
@@ -74,9 +61,10 @@ class PackagePaymentRedirectTest extends TestCase
         ])->assertRedirect(route('orders.show', $order));
 
         $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => 'failed']);
+        $this->get(route('orders.thanks', $order))->assertRedirect(route('orders.payment', $order));
     }
 
-    public function test_paid_publisher_order_stays_on_the_order(): void
+    public function test_paid_publisher_order_opens_the_thank_you_page(): void
     {
         Notification::fake();
         $customer = User::factory()->create();
@@ -85,7 +73,7 @@ class PackagePaymentRedirectTest extends TestCase
         $this->actingAs($customer)->post(route('orders.payment.process', $order), [
             'payment_method' => 'demo_card',
             'demo_result' => 'success',
-        ])->assertRedirect(route('orders.show', $order));
+        ])->assertRedirect(route('orders.thanks', $order));
     }
 
     private function packageOrder(User $customer, string $name): Order

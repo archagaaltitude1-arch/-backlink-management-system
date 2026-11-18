@@ -19,7 +19,7 @@
         <section>
             <p class="text-xs font-semibold tracking-wider text-brand uppercase">Admin</p>
             <h1 class="mt-2 text-2xl font-semibold">Order Management</h1>
-            <p class="mt-2 max-w-3xl text-sm leading-6 text-navy/70">Customer orders arrive here. Assign each placement to an SEO staff member so they can publish the backlink.</p>
+            <p class="mt-2 max-w-3xl text-sm leading-6 text-navy/70">Unpaid orders stay with the customer. After payment, approve the order here, then assign each placement to an SEO staff member.</p>
         </section>
         <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <article class="panel p-5">
@@ -79,6 +79,15 @@
                                 <p class="mt-2 text-xs text-navy/50">{{ $order->created_at?->format('M j, Y') }}</p>
                             </div>
                         </div>
+                        @if ($order->payment_status !== 'paid')
+                            <p class="mt-4 text-sm text-navy/60">Waiting for customer payment. Approval and SEO assignment start after payment is completed.</p>
+                        @elseif ($order->order_status === 'awaiting_approval')
+                            <form method="POST" action="{{ route('admin.orders.approve', $order) }}" class="mt-4 flex flex-col gap-3 rounded-xl border border-navy/10 bg-canvas/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+                                @csrf
+                                <p class="text-sm">Payment is complete. Approve this order, then assign the work to SEO staff.</p>
+                                <button type="submit" class="btn-primary">Approve order</button>
+                            </form>
+                        @endif
                         @forelse ($order->items as $item)
                             @php
                                 $assignmentStatus = $item->assignment?->status;

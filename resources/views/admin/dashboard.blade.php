@@ -58,7 +58,7 @@
             <div class="flex flex-col gap-3 border-b border-navy/10 px-5 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-6">
                 <div>
                     <h2 class="text-lg font-semibold">Customer orders</h2>
-                    <p class="mt-1 text-sm text-navy/60">New customer orders arrive here. Assign each one to an SEO staff member.</p>
+                    <p class="mt-1 text-sm text-navy/60">Paid orders arrive here for approval. After you approve an order, assign each placement to an SEO staff member.</p>
                 </div>
                 <p class="text-sm text-navy/70">
                     Active staff:
@@ -69,6 +69,16 @@
                     @endforelse
                 </p>
             </div>
+            @foreach ($awaitingApprovalOrders as $approvalOrder)
+                <form method="POST" action="{{ route('admin.orders.approve', $approvalOrder) }}" class="flex flex-col gap-3 border-b border-navy/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                    @csrf
+                    <div class="min-w-0">
+                        <p class="font-medium">{{ $approvalOrder->order_number }}</p>
+                        <p class="mt-1 text-xs text-navy/55">{{ $approvalOrder->customer?->name ?? 'Customer' }} · Payment complete · Approve before SEO assignment</p>
+                    </div>
+                    <button type="submit" class="btn-primary">Approve order</button>
+                </form>
+            @endforeach
             @forelse ($unassignedItems as $item)
                 <form method="POST" action="{{ route('admin.orders.assign', [$item->order, $item]) }}" class="grid gap-3 border-b border-navy/10 px-5 py-4 last:border-b-0 sm:px-6 lg:grid-cols-[minmax(0,1fr)_16rem_auto] lg:items-end">
                     @csrf
@@ -88,7 +98,7 @@
                 </form>
             @empty
                 <div class="grid gap-3 px-5 py-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_16rem_auto] lg:items-end">
-                    <p class="text-sm text-navy/60">No customer orders are waiting. A new order will show up in this list.</p>
+                    <p class="text-sm text-navy/60">No approved orders are waiting for SEO staff. Approve a paid order before assigning the work.</p>
                     <div>
                         <label for="dashboard-staff-empty" class="text-sm font-medium">SEO staff</label>
                         <select id="dashboard-staff-empty" class="mt-2 w-full rounded-xl border border-navy/15 bg-white px-4 py-2.5 text-sm outline-none" disabled>
@@ -190,8 +200,16 @@
                 <ul class="divide-y divide-navy/10">
                     @forelse ($recentOrders as $order)
                         @php
-                            $needsStaff = $order->items->isEmpty() || $order->items->contains(fn ($item) => $item->assignment === null);
+                            $needsStaff = $order->payment_status === 'paid'
+                                && in_array($order->order_status, ['processing', 'completed'], true)
+                                && ($order->items->isEmpty() || $order->items->contains(fn ($item) => $item->assignment === null));
                             $assignees = $order->items->map(fn ($item) => $item->assignment?->staff?->name)->filter()->unique()->join(', ');
+                            $queueLabel = match (true) {
+                                $order->payment_status !== 'paid' => 'Awaiting payment',
+                                $order->order_status === 'awaiting_approval' => 'Awaiting approval',
+                                $needsStaff => 'Needs SEO staff',
+                                default => $assignees !== '' ? $assignees : 'Assigned',
+                            };
                         @endphp
                         <li class="flex items-center justify-between gap-4 px-5 py-3.5 text-sm sm:px-6">
                             <div class="min-w-0">
@@ -199,7 +217,7 @@
                                 <p class="truncate text-xs text-navy/55">{{ $order->customer?->name ?? 'Guest checkout' }}</p>
                             </div>
                             <div class="text-right">
-                                <p class="text-xs font-medium {{ $needsStaff ? 'text-amber-800' : 'text-navy' }}">{{ $needsStaff ? 'Needs SEO staff' : $assignees }}</p>
+                                <p class="text-xs font-medium {{ $needsStaff ? 'text-amber-800' : 'text-navy' }}">{{ $queueLabel }}</p>
                                 <a href="{{ route('admin.orders') }}" class="text-xs font-semibold text-brand">Assign</a>
                             </div>
                         </li>

@@ -65,6 +65,59 @@ class AdminOrderManagementTest extends TestCase
             ->assertSee('Completed');
     }
 
+    public function test_unpaid_orders_wait_for_payment_before_approval_and_assignment(): void
+    {
+        $customer = $this->customer();
+        $order = $this->order($customer, 'BM-ADMIN-UNPAID', 'pending', 'pending');
+        $order->items()->create([
+            'item_name' => 'Starter Text Link Package',
+            'unit_price' => 35.10,
+            'quantity' => 1,
+            'target_url' => 'https://example.com/starter',
+            'anchor_text' => 'starter links',
+            'article_topic' => 'Starter campaign',
+        ]);
+
+        $this->actingAs($this->admin())
+            ->get(route('admin.orders'))
+            ->assertSee('BM-ADMIN-UNPAID')
+            ->assertSee('Waiting for customer payment')
+            ->assertDontSee('Approve order')
+            ->assertDontSee('Assign to SEO staff');
+
+        $this->post(route('admin.orders.approve', $order))
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertSame('pending', $order->fresh()->order_status);
+    }
+
+    public function test_paid_orders_are_approved_before_seo_staff_can_be_assigned(): void
+    {
+        $customer = $this->customer();
+        $order = $this->order($customer, 'BM-ADMIN-PAID', 'paid', 'awaiting_approval');
+        $order->items()->create([
+            'item_name' => 'Guest Post Placement',
+            'unit_price' => 120,
+            'quantity' => 1,
+            'target_url' => 'https://example.com/guest',
+            'anchor_text' => 'guest post',
+            'article_topic' => 'Guest campaign',
+        ]);
+
+        $this->actingAs($this->admin())
+            ->get(route('admin.orders'))
+            ->assertSee('Approve order')
+            ->assertDontSee('Assign to SEO staff');
+
+        $this->post(route('admin.orders.approve', $order))->assertRedirect();
+        $this->assertSame('processing', $order->fresh()->order_status);
+
+        $this->get(route('admin.orders'))
+            ->assertSee('Assign to SEO staff')
+            ->assertDontSee('Approve order');
+    }
+
     public function test_admin_order_search_hides_orders_that_do_not_match(): void
     {
         $customer = $this->customer();

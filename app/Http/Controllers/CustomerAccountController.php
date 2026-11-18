@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\BillingAddress;
+use App\Models\Coupon;
 use App\Models\CreditPackage;
 use App\Models\CustomerProject;
+use App\Models\FirstOrderRedemption;
 use App\Models\Invoice;
 use App\Models\OrderAssignment;
 use App\Models\PaymentMethod;
 use App\Models\SavedWebsite;
+use App\Support\CouponCart;
+use App\Support\CustomerDiscounts;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,6 +39,8 @@ class CustomerAccountController extends Controller
             'orderCount' => $customer->orders()->count(),
             'savedWebsiteCount' => $customer->savedWebsites()->count(),
             'unreadNotificationCount' => $customer->unreadNotifications()->count(),
+            'firstOrder' => app(CustomerDiscounts::class)->firstOrderOffer($customer),
+            'availableCoupons' => app(CustomerDiscounts::class)->orderRewards($customer),
         ]);
     }
 
@@ -232,6 +238,84 @@ class CustomerAccountController extends Controller
         $savedWebsite->delete();
 
         return back()->with('success', 'Saved website removed.');
+    }
+
+    public function coupons(Request $request): View
+    {
+        $customer = $request->user();
+        $usedIds = $customer->couponUsages()->pluck('coupon_id');
+        $coupons = Coupon::query()
+            ->where(function ($query) use ($customer): void {
+                $query->where('customer_id', $customer->id)->orWhereNull('customer_id');
+            })
+            ->latest()
+            ->get();
+        $available = $coupons->filter(fn (Coupon $coupon): bool => $coupon->is_active
+            && ($coupon->expires_at === null || $coupon->expires_at->isFuture())
+            && ($coupon->starts_at === null || $coupon->starts_at->isPast())
+            && ! $usedIds->contains($coupon->id));
+        $used = $coupons->filter(fn (Coupon $coupon): bool => $usedIds->contains($coupon->id));
+        $expired = $coupons->reject(fn (Coupon $coupon): bool => $available->contains($coupon) || $used->contains($coupon));
+
+        return view('customer.coupons', [
+            'firstOrder' => app(CustomerDiscounts::class)->firstOrderOffer($customer),
+            'redeemedFirstOrder' => FirstOrderRedemption::query()->where('customer_id', $customer->id)->first(),
+            'available' => $available,
+            'used' => $used,
+            'expired' => $expired,
+        ]);
+    }
+
+    public function applyCoupon(Request $request, Coupon $coupon): RedirectResponse
+    {
+        $coupon = $this->rewardCoupon($request, $coupon);
+
+        if ($coupon->expires_at !== null && $coupon->expires_at->isPast()) {
+            return back()->withErrors(['coupon_code' => 'Coupon has expired.']);
+        }
+
+        session()->forget('shopping_coupon_skipped');
+        session(['shopping_coupon' => $coupon->code]);
+
+        $cart = session('shopping_cart', []);
+
+        if (is_array($cart) && $cart !== []) {
+            return redirect()->route('shopping.checkout')
+                ->with('shopping_status', 'Coupon '.$coupon->code.' applied.');
+        }
+
+        $rewardOrder = $coupon->rewardOrder()->with('items')->first();
+        $purchase = $rewardOrder === null ? '' : CouponCart::fromNamedItems($rewardOrder->items)['purchase'];
+
+        return redirect()->route($purchase === 'package' ? 'packages.index' : 'publishers.index')
+            ->with('success', 'Coupon '.$coupon->code.' is ready for a package or an individual backlink. It applies at checkout.');
+    }
+
+    public function saveCoupon(Request $request, Coupon $coupon): RedirectResponse
+    {
+        $coupon = $this->rewardCoupon($request, $coupon);
+
+        if ($coupon->expires_at !== null && $coupon->expires_at->isPast()) {
+            return back()->withErrors(['coupon_code' => 'Coupon has expired.']);
+        }
+
+        if ($coupon->saved_for_later_at === null) {
+            $coupon->update(['saved_for_later_at' => now()]);
+        }
+
+        return back()->with('saved_coupon_popup', [
+            'code' => $coupon->code,
+            'summary' => $coupon->discountSummary(),
+            'deadline' => $coupon->expires_at?->format('M j, Y') ?? 'the listed date',
+        ]);
+    }
+
+    private function rewardCoupon(Request $request, Coupon $coupon): Coupon
+    {
+        abort_unless($coupon->customer_id === $request->user()->id && $coupon->type === 'order_reward', 404);
+        abort_if($coupon->usages()->where('customer_id', $request->user()->id)->exists(), 404);
+
+        return $coupon;
     }
 
     public function notifications(Request $request): View

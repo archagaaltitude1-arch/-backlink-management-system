@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\ArticleApprovalController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CreditPricingController;
 use App\Http\Controllers\Admin\CustomerStatisticController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -131,6 +132,16 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/admin/packages/{package}', [PackageController::class, 'update'])->name('admin.packages.update');
     Route::delete('/admin/packages/{package}', [PackageController::class, 'destroy'])->name('admin.packages.destroy');
 
+    Route::get('/admin/coupons', [CouponController::class, 'index'])->name('admin.coupons');
+    Route::put('/admin/coupons/campaigns/{campaign}', [CouponController::class, 'updateCampaign'])->name('admin.coupons.campaigns.update');
+    Route::get('/admin/coupons/create', [CouponController::class, 'create'])->name('admin.coupons.create');
+    Route::post('/admin/coupons', [CouponController::class, 'store'])->name('admin.coupons.store');
+    Route::get('/admin/coupons/{coupon}', [CouponController::class, 'show'])->name('admin.coupons.show');
+    Route::get('/admin/coupons/{coupon}/edit', [CouponController::class, 'edit'])->name('admin.coupons.edit');
+    Route::put('/admin/coupons/{coupon}', [CouponController::class, 'update'])->name('admin.coupons.update');
+    Route::post('/admin/coupons/{coupon}/activation', [CouponController::class, 'activate'])->name('admin.coupons.activate');
+    Route::post('/admin/coupons/{coupon}/send', [CouponController::class, 'send'])->name('admin.coupons.send');
+
     Route::get('/admin/credit-pricing/create', [CreditPricingController::class, 'create'])->name('admin.credit-pricing.create');
     Route::post('/admin/credit-pricing', [CreditPricingController::class, 'store'])->name('admin.credit-pricing.store');
     Route::get('/admin/credit-pricing/{creditPricing}/edit', [CreditPricingController::class, 'edit'])->name('admin.credit-pricing.edit');
@@ -143,6 +154,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/orders', [AdminOrderController::class, 'index'])->name('admin.orders');
     Route::get('/admin/orders/{order}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
     Route::post('/admin/orders/{order}/approve', [AdminOrderController::class, 'approve'])->name('admin.orders.approve');
+    Route::post('/admin/orders/{order}/coupon', [AdminOrderController::class, 'sendCoupon'])->name('admin.orders.coupon');
     Route::post('/admin/orders/{order}/items/{orderItem}/assign', [AdminOrderController::class, 'assign'])->name('admin.orders.assign');
     Route::get('/admin/payments', [AdminPaymentController::class, 'index'])->name('admin.payments');
     Route::get('/admin/payments/{payment}', [AdminPaymentController::class, 'show'])->name('admin.payments.show');
@@ -180,6 +192,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/customer/saved-websites', [CustomerAccountController::class, 'savedWebsites'])->name('customer.saved-websites');
     Route::post('/customer/saved-websites', [CustomerAccountController::class, 'storeSavedWebsite'])->name('customer.saved-websites.store');
     Route::delete('/customer/saved-websites/{savedWebsite}', [CustomerAccountController::class, 'destroySavedWebsite'])->name('customer.saved-websites.destroy');
+    Route::get('/customer/coupons', [CustomerAccountController::class, 'coupons'])->name('customer.coupons');
+    Route::post('/customer/coupons/{coupon}/apply', [CustomerAccountController::class, 'applyCoupon'])->name('customer.coupons.apply');
+    Route::post('/customer/coupons/{coupon}/save', [CustomerAccountController::class, 'saveCoupon'])->name('customer.coupons.save');
     Route::get('/customer/notifications', [CustomerAccountController::class, 'notifications'])->name('customer.notifications');
     Route::patch('/customer/notifications/{notification}/read', [CustomerAccountController::class, 'markNotificationRead'])->name('customer.notifications.read');
     Route::get('/customer/projects', [CustomerAccountController::class, 'projects'])->name('customer.projects');
@@ -198,7 +213,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/orders', [OrderController::class, 'placeOrder'])->name('orders.store');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}/payment', [PaymentController::class, 'showOrderPayment'])->name('orders.payment');
+    Route::post('/orders/{order}/coupon', [PaymentController::class, 'applyCoupon'])->name('orders.payment.coupon');
+    Route::delete('/orders/{order}/coupon', [PaymentController::class, 'removeCoupon'])->name('orders.payment.coupon.destroy');
     Route::post('/orders/{order}/payment', [PaymentController::class, 'payOrder'])->name('orders.payment.process');
+    Route::get('/orders/{order}/thanks', [OrderController::class, 'thanks'])->name('orders.thanks');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
     Route::prefix('/api')->name('api.')->group(function () {

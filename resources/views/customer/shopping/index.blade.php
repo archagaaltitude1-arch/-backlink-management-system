@@ -259,8 +259,11 @@
 
                     <aside class="co-pay" aria-label="Order total">
                         <div class="co-row"><span>Subtotal</span><strong>${{ number_format($subtotal, 2) }}</strong></div>
+                        @if (($packageDiscount ?? 0) > 0)
+                            <div class="co-row"><span>Package discount</span><strong>- ${{ number_format($packageDiscount, 2) }}</strong></div>
+                        @endif
                         @if ($discount > 0)
-                            <div class="co-row"><span>Coupon {{ $coupon }}</span><strong>- ${{ number_format($discount, 2) }}</strong></div>
+                            <div class="co-row"><span>{{ $offerLabel ?: 'Discount' }} {{ $coupon }}</span><strong>- ${{ number_format($discount, 2) }}</strong></div>
                         @endif
                         <div class="co-row co-total"><span>Total</span><strong>${{ number_format($total, 2) }}</strong></div>
                         @if (collect($items)->contains(fn ($row) => filled($row['price_prefix'] ?? null)))

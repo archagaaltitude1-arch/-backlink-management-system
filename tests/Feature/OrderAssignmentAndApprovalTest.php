@@ -81,7 +81,7 @@ class OrderAssignmentAndApprovalTest extends TestCase
             ->assertOk()
             ->assertSee('Customer orders')
             ->assertSee('Maya Staff')
-            ->assertSee('No customer orders are waiting');
+            ->assertSee('No approved orders are waiting for SEO staff');
     }
 
     public function test_admin_assigns_a_customer_order_item_to_staff(): void
