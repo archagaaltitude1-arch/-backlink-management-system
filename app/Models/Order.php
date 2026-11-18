@@ -2,20 +2,43 @@
 
 namespace App\Models;
 
+use App\Support\CustomerDiscounts;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 class Order extends Model
 {
-    protected $fillable = ['order_number', 'customer_id', 'session_id', 'total_amount', 'discount_amount', 'coupon_code', 'payment_status', 'order_status'];
+    protected $fillable = ['order_number', 'customer_id', 'session_id', 'total_amount', 'discount_amount', 'package_discount_amount', 'coupon_code', 'applied_coupon_codes', 'offer_type', 'payment_status', 'order_status'];
 
     protected function casts(): array
     {
-        return ['total_amount' => 'decimal:2', 'discount_amount' => 'decimal:2'];
+        return [
+            'total_amount' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
+            'package_discount_amount' => 'decimal:2',
+            'applied_coupon_codes' => 'array',
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function appliedCouponCodes(): array
+    {
+        $stored = $this->applied_coupon_codes;
+
+        if (is_array($stored) && $stored !== []) {
+            return array_values(array_filter($stored, fn (mixed $code): bool => is_string($code) && $code !== ''));
+        }
+
+        if (filled($this->coupon_code) && $this->offer_type !== 'first_order') {
+            return [Str::upper((string) $this->coupon_code)];
+        }
+
+        return [];
     }
 
     public function customer(): BelongsTo
@@ -59,34 +82,11 @@ class Order extends Model
             return;
         }
 
-        $this->rewardCoupon()->firstOrCreate([], [
-            'customer_id' => $this->customer_id,
-            'code' => 'THANKYOU-'.Str::upper(Str::random(16)),
-            'discount_type' => 'percentage',
-            'discount_value' => 10,
-            'usage_limit' => 1,
-            'per_customer_limit' => 1,
-            'expires_at' => now()->addDays(30),
-            'is_active' => true,
-        ]);
+        app(CustomerDiscounts::class)->rewardAfterPayment($this->fresh());
     }
 
     public function reservePaymentCoupon(User $customer): void
     {
-        if (! $this->coupon_code || $customer->couponUsages()->where('order_id', $this->id)->exists()) {
-            return;
-        }
-
-        $coupon = Coupon::query()->where('code', $this->coupon_code)->lockForUpdate()->first();
-        $subtotal = (float) $this->total_amount + (float) $this->discount_amount;
-        if (! $coupon || ! $coupon->isAvailableTo($customer, $subtotal)) {
-            throw ValidationException::withMessages(['coupon_code' => 'This discount is no longer available. Start a new checkout to continue.']);
-        }
-
-        $customer->couponUsages()->create([
-            'coupon_id' => $coupon->id,
-            'order_id' => $this->id,
-            'discount_amount' => $this->discount_amount,
-        ]);
+        app(CustomerDiscounts::class)->redeem($this, $customer);
     }
 }

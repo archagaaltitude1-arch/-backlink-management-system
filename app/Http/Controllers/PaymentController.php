@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\StripeCheckout;
+use App\Models\Coupon;
 use App\Models\CreditPackage;
 use App\Models\CreditReservation;
 use App\Models\CreditTransaction;
@@ -11,7 +12,8 @@ use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Wallet;
 use App\Notifications\OrderPlacedNotification;
-use App\Support\PublicPackages;
+use App\Support\CouponCart;
+use App\Support\CustomerDiscounts;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,7 +40,132 @@ class PaymentController extends Controller
             return response()->json(['data' => ['order_number' => $order->order_number, 'amount' => $order->total_amount, 'gateway' => StripeCheckout::usesDemo() ? 'demo' : 'stripe']]);
         }
 
-        return view('orders.payment', compact('order'));
+        $discounts = app(CustomerDiscounts::class);
+        DB::transaction(function () use ($discounts, $order, $request): void {
+            $discounts->issueOrderReward($order, $request->user());
+        });
+        $order = $order->fresh();
+        $subtotal = $this->orderSubtotal($order);
+        $context = CouponCart::fromNamedItems($order->items);
+        $rewards = $discounts->orderRewards($request->user())
+            ->filter(fn (Coupon $coupon): bool => $coupon->rejectionFor($request->user(), $subtotal, $context) === null)
+            ->keyBy(fn (Coupon $coupon): string => $coupon->code);
+        $appliedCoupons = collect($order->appliedCouponCodes())
+            ->map(fn (string $code): ?Coupon => $rewards->get($code))
+            ->filter()
+            ->values();
+        $appliedCodes = $appliedCoupons->map(fn (Coupon $coupon): string => $coupon->code)->all();
+        $availableCoupons = $rewards
+            ->reject(fn (Coupon $coupon): bool => in_array($coupon->code, $appliedCodes, true))
+            ->values();
+
+        return view('orders.payment', [
+            'order' => $order,
+            'couponOffer' => null,
+            'appliedCoupons' => $appliedCoupons,
+            'availableCoupons' => $availableCoupons,
+        ]);
+    }
+
+    public function applyCoupon(Request $request, Order $order): RedirectResponse
+    {
+        abort_unless($order->customer_id === $request->user()->id, 404);
+
+        if ($blocked = $this->couponChangeBlocked($order)) {
+            return back()->withErrors(['coupon_code' => $blocked]);
+        }
+
+        $data = $request->validate(['coupon_code' => ['required', 'string', 'max:40']]);
+        $coupon = Coupon::findByCode($data['coupon_code']);
+        $subtotal = $this->orderSubtotal($order);
+        $message = $coupon === null
+            ? 'Invalid coupon code.'
+            : $coupon->rejectionFor($request->user(), $subtotal, CouponCart::fromNamedItems($order->items));
+
+        if ($message !== null) {
+            return back()->withErrors(['coupon_code' => $message]);
+        }
+
+        $previousTotal = (float) $order->total_amount;
+        $alreadyApplied = in_array($coupon->code, $order->appliedCouponCodes(), true);
+        $offer = app(CustomerDiscounts::class)->combinedOffer(
+            $request->user(),
+            $subtotal,
+            CouponCart::fromNamedItems($order->items),
+            [...$order->appliedCouponCodes(), $coupon->code],
+        );
+
+        if (! in_array($coupon->code, $offer['codes'], true) || $offer['discount'] <= 0) {
+            return back()->withErrors(['coupon_code' => 'This coupon does not reduce the amount due.']);
+        }
+
+        $order->update([
+            'coupon_code' => $coupon->code,
+            'applied_coupon_codes' => $offer['codes'],
+            'offer_type' => $offer['offer_type'],
+            'discount_amount' => $offer['discount'],
+            'total_amount' => $offer['total'],
+        ]);
+        session(['payment_coupon_choice.'.$order->id => $coupon->code]);
+
+        $amountDue = number_format($offer['total'], 2);
+        $message = $alreadyApplied || round($previousTotal, 2) === round($offer['total'], 2)
+            ? 'Coupon '.$coupon->code.' is already on this order. Amount due is $'.$amountDue.'.'
+            : 'Coupon '.$coupon->code.' applied. Amount due changed from $'.number_format($previousTotal, 2).' to $'.$amountDue.'.';
+
+        return back()->with('success', $message);
+    }
+
+    public function removeCoupon(Request $request, Order $order): RedirectResponse
+    {
+        abort_unless($order->customer_id === $request->user()->id, 404);
+
+        if ($blocked = $this->couponChangeBlocked($order)) {
+            return back()->withErrors(['coupon_code' => $blocked]);
+        }
+
+        $remove = Str::upper(trim((string) $request->input('coupon_code', '')));
+        $remaining = $remove === ''
+            ? []
+            : array_values(array_filter(
+                $order->appliedCouponCodes(),
+                fn (string $code): bool => $code !== $remove,
+            ));
+        $context = CouponCart::fromNamedItems($order->items);
+        $subtotal = $this->orderSubtotal($order);
+
+        if ($remaining === []) {
+            $quote = app(CustomerDiscounts::class)->quote(
+                $request->user(),
+                $subtotal,
+                (float) $order->package_discount_amount,
+                $context,
+                null,
+            );
+            $order->update([
+                'coupon_code' => $quote['coupon_code'],
+                'applied_coupon_codes' => null,
+                'offer_type' => $quote['offer_type'],
+                'discount_amount' => $quote['offer_discount'],
+                'total_amount' => $quote['total'],
+            ]);
+        } else {
+            $offer = app(CustomerDiscounts::class)->combinedOffer($request->user(), $subtotal, $context, $remaining);
+            $order->update([
+                'coupon_code' => $offer['codes'][0] ?? null,
+                'applied_coupon_codes' => $offer['codes'],
+                'offer_type' => $offer['offer_type'],
+                'discount_amount' => $offer['discount'],
+                'total_amount' => $offer['total'],
+            ]);
+        }
+
+        session()->forget('payment_coupon_choice.'.$order->id);
+        $skipped = session('skipped_order_coupons', []);
+        $skipped[] = $order->id;
+        session(['skipped_order_coupons' => array_values(array_unique($skipped))]);
+
+        return back()->with('success', 'Coupon removed. Amount due is $'.number_format((float) $order->fresh()->total_amount, 2).'.');
     }
 
     public function payOrder(Request $request, Order $order, StripeCheckout $checkout): RedirectResponse|JsonResponse
@@ -47,7 +174,7 @@ class PaymentController extends Controller
         if (! StripeCheckout::usesDemo() || $request->input('payment_method') === 'stripe') {
             $url = $checkout->start($request->user(), $order);
 
-            return $this->stripeRedirect($request, $url, $this->paidSitesUrl($order) ?? route('orders.show', $order));
+            return $this->stripeRedirect($request, $url, route('orders.thanks', $order));
         }
 
         $data = $request->validate([
@@ -112,30 +239,11 @@ class PaymentController extends Controller
 
     private function afterPayment(Order $order): RedirectResponse
     {
-        $sites = $this->paidPackageSites($order);
-
-        if ($sites === null) {
-            return redirect()->route('orders.show', $order)
-                ->with('success', 'Payment confirmed.');
+        if ($order->fresh()->order_status === 'awaiting_details') {
+            return redirect()->route('orders.show', $order);
         }
 
-        return redirect()->to($sites['url'])
-            ->with('success', 'Payment confirmed. These websites match your '.$sites['label'].'.');
-    }
-
-    private function paidSitesUrl(Order $order): ?string
-    {
-        return $this->paidPackageSites($order)['url'] ?? null;
-    }
-
-    /**
-     * @return array{url: string, label: string}|null
-     */
-    private function paidPackageSites(Order $order): ?array
-    {
-        $order->loadMissing('items');
-
-        return PublicPackages::paidSites($order->items->pluck('item_name'));
+        return redirect()->route('orders.thanks', $order);
     }
 
     public function history(Request $request): View|JsonResponse
@@ -296,5 +404,23 @@ class PaymentController extends Controller
         });
 
         return response()->json(['data' => $result]);
+    }
+
+    private function couponChangeBlocked(Order $order): ?string
+    {
+        if ($order->payment_status === 'paid') {
+            return 'This order is already paid.';
+        }
+
+        if ($order->payments()->where('gateway', 'stripe')->where('status', 'pending')->exists()) {
+            return 'A Stripe checkout is pending for this order. Complete it or wait for it to expire.';
+        }
+
+        return null;
+    }
+
+    private function orderSubtotal(Order $order): float
+    {
+        return round((float) $order->total_amount + (float) $order->discount_amount, 2);
     }
 }

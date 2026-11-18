@@ -64,6 +64,9 @@
                 </form>
 
                 <div class="mt-6 border-t border-navy/10 pt-5">
+                    @if (($offer['offer_discount'] ?? 0) > 0 && ! $cart->coupon_code)
+                        <div class="mb-3 flex justify-between text-sm text-green-700"><span>{{ $offer['offer_label'] }}</span><span>−${{ number_format($offer['offer_discount'], 2) }}</span></div>
+                    @endif
                     @if ($cart->coupon_code)
                         <div class="mb-3 flex justify-between text-sm"><span>Subtotal</span><span>${{ number_format($subtotal, 2) }}</span></div>
                         <div class="mb-3 flex justify-between text-sm text-green-700"><span>Coupon {{ $cart->coupon_code }}</span><span>−${{ number_format($cart->coupon_discount, 2) }}</span></div>

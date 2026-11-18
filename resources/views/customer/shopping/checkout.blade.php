@@ -52,6 +52,7 @@
             box-shadow: 0 0 0 3px rgba(255, 73, 23, 0.12);
         }
         .ck-error { margin: 0; color: #C0340D; font-size: 13px; font-weight: 700; }
+        .ck-hint { color: #4A5560; font-size: 12px; font-weight: 600; }
         .ck-coupon-box {
             margin-top: 16px;
             border: 1px dashed #E3E5E8;
@@ -110,6 +111,39 @@
         .ck-back { display: inline-flex; margin-top: 14px; color: #C0340D; font-size: 14px; font-weight: 700; text-decoration: none; }
         .ck-back:hover { text-decoration: underline; }
         .ck-wrap :focus-visible { outline: 2px solid #D63A10; outline-offset: 2px; }
+        .ck-popup {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(21, 32, 41, 0.45);
+            padding: 16px;
+        }
+        .ck-popup-card {
+            width: min(100%, 420px);
+            border: 1px solid #E3E5E8;
+            border-radius: 20px;
+            background: #fff;
+            padding: 22px;
+        }
+        .ck-popup-card h2 { margin: 0; font-family: Montserrat, sans-serif; font-size: 22px; font-weight: 800; }
+        .ck-popup-card p { margin: 10px 0 0; color: #4A5560; font-size: 14px; line-height: 1.5; }
+        .ck-popup-code {
+            margin: 16px 0;
+            border-radius: 12px;
+            background: #F7F8FA;
+            padding: 14px;
+            text-align: center;
+            font-family: Montserrat, sans-serif;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+        }
+        .ck-popup-actions { display: flex; gap: 8px; }
+        .ck-popup-actions form, .ck-popup-actions button { flex: 1; }
+        .ck-popup-actions .ck-apply, .ck-popup-actions .ck-remove { width: 100%; }
         @media (min-width: 900px) {
             .ck-grid { grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr); }
             .ck-fields { grid-template-columns: 1fr 1fr; }
@@ -117,6 +151,28 @@
         }
     </style>
 
+    @include('customer.coupons.select-saved-popup', [
+        'savedRewards' => $orderRewards ?? [],
+        'applyUrl' => route('shopping.coupon'),
+        'appliedCode' => $coupon,
+    ])
+    @if ($couponOffer)
+        <div class="ck-popup" data-coupon-popup role="dialog" aria-modal="true" aria-labelledby="coupon-popup-title">
+            <div class="ck-popup-card">
+                <h2 id="coupon-popup-title">Your coupon code</h2>
+                <p>{{ $couponOffer->discountSummary() }} for {{ $couponOffer->packageLabel() }}. Apply this code before you place the order.</p>
+                <p class="ck-popup-code">{{ $couponOffer->code }}</p>
+                <div class="ck-popup-actions">
+                    <form method="POST" action="{{ route('shopping.coupon') }}">
+                        @csrf
+                        <input type="hidden" name="coupon_code" value="{{ $couponOffer->code }}">
+                        <button class="ck-apply" type="submit">Apply</button>
+                    </form>
+                    <button class="ck-remove" type="button" onclick="this.closest('[data-coupon-popup]').remove()">Close</button>
+                </div>
+            </div>
+        </div>
+    @endif
     <section class="ck">
         <div class="ck-wrap">
             <nav class="ck-crumb" aria-label="Breadcrumb">
@@ -159,6 +215,9 @@
                             <p class="ck-meta">
                                 {{ $item['order_label'] ?? 'Placement' }}
                                 · Qty {{ $qty }}
+                                @if (($item['kind'] ?? '') === 'package' && is_array($item['websites'] ?? null) && $item['websites'] !== [])
+                                    · {{ implode(', ', $item['websites']) }}
+                                @endif
                             </p>
                             <p class="ck-price">{{ $prefix !== '' ? $prefix.' ' : '' }}${{ number_format($lineTotal, 2) }}</p>
 
@@ -171,13 +230,20 @@
                                 </label>
                                 <label>
                                     Anchor text *
-                                    <input type="text" name="items[{{ $index }}][anchor_text]" value="{{ old('items.'.$index.'.anchor_text') }}" required maxlength="255" placeholder="Your brand or keyword">
+                                    <input type="text" name="items[{{ $index }}][anchor_text]" value="{{ old('items.'.$index.'.anchor_text') }}" required minlength="15" maxlength="20" placeholder="15–20 characters">
+                                    <span class="ck-hint">Use 15–20 characters.</span>
                                     @error('items.'.$index.'.anchor_text')<p class="ck-error">{{ $message }}</p>@enderror
                                 </label>
                                 <label>
                                     Article topic *
                                     <input type="text" name="items[{{ $index }}][article_topic]" value="{{ old('items.'.$index.'.article_topic', $item['content_topic'] ?? '') }}" required maxlength="255" placeholder="Topic for this placement">
                                     @error('items.'.$index.'.article_topic')<p class="ck-error">{{ $message }}</p>@enderror
+                                </label>
+                                <label class="ck-span">
+                                    Keywords
+                                    <input type="text" name="items[{{ $index }}][keywords]" value="{{ old('items.'.$index.'.keywords') }}" maxlength="500" placeholder="keyword one, keyword two" data-max-keywords="5" autocomplete="off">
+                                    <span class="ck-hint">Separate with commas. <span data-keyword-count>0 / 5</span> keywords.</span>
+                                    @error('items.'.$index.'.keywords')<p class="ck-error">{{ $message }}</p>@enderror
                                 </label>
                                 <label class="ck-span">
                                     Additional requirements
@@ -193,20 +259,27 @@
                     <h2>Order summary</h2>
                     <div class="ck-row"><span>Items</span><strong>{{ $quantity }}</strong></div>
                     <div class="ck-row"><span>Subtotal</span><strong>${{ number_format($subtotal, 2) }}</strong></div>
+                    @if (($packageDiscount ?? 0) > 0)
+                        <div class="ck-row"><span>Package discount</span><strong>-${{ number_format($packageDiscount, 2) }}</strong></div>
+                    @endif
                     @if ($discount > 0)
-                        <div class="ck-row"><span>Coupon {{ $coupon }}</span><strong>-${{ number_format($discount, 2) }}</strong></div>
+                        <div class="ck-row"><span>{{ $offerLabel ?: 'Discount' }} {{ $coupon }}</span><strong>-${{ number_format($discount, 2) }}</strong></div>
                     @endif
                     <div class="ck-row ck-total"><span>Total</span><span>${{ number_format($total, 2) }}</span></div>
 
                     <div class="ck-coupon-box">
-                        <p>Have a coupon? Enter your code</p>
-                        <div class="ck-coupon-row">
-                            <input form="checkout-coupon" type="text" name="coupon_code" value="{{ old('coupon_code', $coupon) }}" maxlength="40" placeholder="COUPON CODE" aria-label="Coupon code">
-                            <button class="ck-apply" form="checkout-coupon" type="submit">Apply</button>
-                            @if ($coupon)
+                        @if ($coupon)
+                            <p>Coupon {{ $coupon }} is applied to this order.</p>
+                            <div class="ck-coupon-row">
                                 <button class="ck-remove" form="checkout-coupon-remove" type="submit">Remove</button>
-                            @endif
-                        </div>
+                            </div>
+                        @else
+                            <p>Have a coupon? Enter your code</p>
+                            <div class="ck-coupon-row">
+                                <input form="checkout-coupon" type="text" name="coupon_code" value="{{ old('coupon_code', $coupon) }}" maxlength="40" placeholder="COUPON CODE" aria-label="Coupon code">
+                                <button class="ck-apply" form="checkout-coupon" type="submit">Apply</button>
+                            </div>
+                        @endif
                         @error('coupon_code')<p class="ck-error" style="margin-top:8px">{{ $message }}</p>@enderror
                     </div>
 
@@ -226,4 +299,5 @@
             </form>
         </div>
     </section>
+    <x-limit-keywords-script />
 @endsection

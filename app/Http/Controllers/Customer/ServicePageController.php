@@ -8,6 +8,7 @@ use App\Models\Package;
 use App\Models\Service;
 use App\Models\Website;
 use App\Services\Customer\NicheListingService;
+use App\Support\PublicPackages;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -70,6 +71,9 @@ class ServicePageController extends Controller
         $page = $services[$slug];
         $page['slug'] = $slug;
         $page['tiers'] = $this->tiersFor($page);
+        $page['package_tabs'] = in_array($slug, PublicPackages::tieredServices(), true)
+            ? PublicPackages::tabs($slug)
+            : null;
         $page['trust'] = $this->trustItems();
         $page['buttons'] = $shared['buttons'] ?? [];
         $page['reviews_title'] = $shared['reviews_title'] ?? 'What Our Customers Say';

@@ -34,7 +34,7 @@
         <section id="credit-packages" class="space-y-4">
             <h2 class="text-xl font-semibold">Credit packages</h2>
             @if ($demo)
-                <p class="text-sm text-navy/65">Stripe payment demo. No money will be charged.</p>
+                <p class="text-sm text-navy/65">Dummy payment gateway. No money is charged. Use this until Stripe is connected.</p>
             @endif
             @if (! $stripe && ! $demo)
                 <p class="text-sm text-navy/65" role="status">Stripe checkout is currently unavailable.</p>
@@ -56,7 +56,7 @@
                             @if ($demo)
                                 <form method="POST" action="{{ route('customer.wallet.purchase', $package) }}">
                                     @csrf
-                                    <button class="btn-primary w-full" type="submit">Simulate Stripe purchase</button>
+                                    <button class="btn-primary w-full" type="submit">Buy with dummy gateway</button>
                                 </form>
                             @endif
                         </div>

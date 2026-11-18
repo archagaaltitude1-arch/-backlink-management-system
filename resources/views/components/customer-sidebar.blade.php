@@ -14,6 +14,7 @@
         ['label' => 'Services', 'route' => 'customer.services', 'icon' => 'services'],
         ['label' => 'Cart', 'route' => 'orders.cart', 'icon' => 'orders'],
         ['label' => 'Orders', 'route' => 'orders.index', 'icon' => 'orders'],
+        ['label' => 'Coupons', 'route' => 'customer.coupons', 'icon' => 'orders'],
         ['label' => 'Wallet', 'route' => 'customer.wallet', 'icon' => 'orders'],
         ['label' => 'Payments', 'route' => 'customer.payment-history', 'icon' => 'orders'],
         ['label' => 'Payment methods', 'route' => 'customer.payment-methods', 'icon' => 'profile'],

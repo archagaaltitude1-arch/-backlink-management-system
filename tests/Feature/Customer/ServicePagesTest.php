@@ -103,17 +103,33 @@ class ServicePagesTest extends TestCase
                 ->assertOk()
                 ->assertSee($product['label'], false)
                 ->assertSee($price, false)
-                ->assertSee('Add to cart', false)
+                ->assertSee('Choose Backlinks', false)
+                ->assertSee('/packages/'.$product['slug'].'/websites', false)
+                ->assertDontSee('Add to cart', false)
                 ->assertSee('Publishing rules', false);
         }
 
-        $this->from('/packages/pro-contextual-link')
+        $selection = route('packages.websites', ['slug' => 'pro-contextual-link', 'order_type' => 'placement']);
+
+        $this->from($selection)
             ->post('/cart', [
                 'package_slug' => 'pro-contextual-link',
                 'quantity' => 1,
                 'order_type' => 'placement',
+                'websites' => [
+                    'farmpulse.example',
+                    'agrarblatt.example',
+                    'greenfieldsjournal.example',
+                    'cosechadiaria.example',
+                    'campoforte.example',
+                    'agromercado.example',
+                    'terraviva.example',
+                    'voedselvandaag.example',
+                    'shambanews.example',
+                    'soilandseed.example',
+                ],
             ])
-            ->assertRedirect('/packages/pro-contextual-link');
+            ->assertRedirect($selection);
 
         $line = array_values(session('shopping_cart'))[0];
         $this->assertSame('Pro Contextual Link Package', $line['display_name']);

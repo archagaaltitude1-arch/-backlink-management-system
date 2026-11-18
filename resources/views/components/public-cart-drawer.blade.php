@@ -23,10 +23,12 @@
         }
 
         $cartQty += $qty;
+        $websiteCount = is_array($item['websites'] ?? null) ? count($item['websites']) : 0;
         $cartItems[] = [
             'line' => $line,
             'title' => $title,
             'order_label' => $orderLabel,
+            'websites_label' => $websiteCount > 0 ? $websiteCount.' '.($websiteCount === 1 ? 'website' : 'websites') : '',
             'quantity' => $qty,
             'money' => $money,
             'kind' => (string) ($item['kind'] ?? 'publisher'),
@@ -248,6 +250,9 @@
                             <div class="cart-drawer-copy">
                                 <h3>{{ $item['title'] }}</h3>
                                 <p><span style="color:#4A5560">Order Type:</span> {{ $item['order_label'] }}</p>
+                                @if ($item['websites_label'] !== '')
+                                    <p>{{ $item['websites_label'] }}</p>
+                                @endif
                                 <strong>{{ $item['money'] }}</strong>
                             </div>
                             <form method="POST" action="{{ route('shopping.destroy') }}">

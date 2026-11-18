@@ -33,6 +33,10 @@
     $insertionPrice = (bool) ($insertionPrice ?? false);
     $currentSlug = $currentSlug ?? null;
     $paidLabel = $paidLabel ?? '';
+    $showProject = (bool) ($showProject ?? true);
+    $selectable = (bool) ($selectable ?? false);
+    $selectionForm = $selectionForm ?? '';
+    $selectionLimit = $selectionLimit ?? null;
 @endphp
 
 <style>
@@ -71,6 +75,9 @@
     .pub-kicker { margin: 0 0 12px; color: #C0340D; font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
     .pub-embed-head h2 { margin: 0; font-family: Montserrat, sans-serif; font-size: clamp(28px, 3vw, 40px); font-weight: 800; line-height: 1.12; }
     .pub-embed-head p:last-child { max-width: 46rem; margin: 16px auto 0; color: #4A5560; font-size: 17px; line-height: 1.65; }
+    .pub-select-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; border: 1px solid #E3E5E8; border-radius: 16px; background: #fff; padding: 16px; }
+    .pub-select-bar p { margin: 0; font-weight: 800; }
+    .pub-select-bar button:disabled { opacity: .45; cursor: not-allowed; }
     .pub-wrap :focus-visible { outline: 2px solid #D63A10; outline-offset: 2px; }
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
     @media (min-width: 800px) {
@@ -126,6 +133,7 @@
             @endif
         @endunless
 
+        @if ($showProject)
         <div class="pub-project">
             <div>
                 <h2>Create project</h2>
@@ -143,6 +151,7 @@
             </form>
             <p id="create-project-status" class="pub-note" role="status"></p>
         </div>
+        @endif
 
         @if ($total === 0)
             <p class="pub-empty">No publisher is listed yet.</p>
@@ -177,9 +186,15 @@
             </div>
 
             <div class="pub-table" id="all-publishers">
-                @include('customer.sites.table', ['rows' => $rows, 'demo' => $demo, 'filterable' => true, 'insertionPrice' => $insertionPrice])
+                @include('customer.sites.table', ['rows' => $rows, 'demo' => $demo, 'filterable' => true, 'insertionPrice' => $insertionPrice, 'selectable' => $selectable, 'selectionForm' => $selectionForm])
                 <p class="pub-empty" id="publisher-empty" hidden>No publisher matches these filters.</p>
             </div>
+            @if ($selectable)
+                <div class="pub-select-bar">
+                    <p id="selection-count" aria-live="polite">@if ($selectionLimit) 0/{{ $selectionLimit }} @else 0 websites selected @endif</p>
+                    <button class="pub-create" type="submit" data-selection-submit @if ($selectionForm !== '') form="{{ $selectionForm }}" @endif>{{ $selectionButton ?? (! empty($orderId ?? null) ? 'Confirm websites' : 'Add to cart') }}</button>
+                </div>
+            @endif
         @endif
     </div>
 </section>

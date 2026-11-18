@@ -36,6 +36,7 @@
             @include('components.public-footer')
         </div>
         @include('components.public-cart-drawer')
+        @include('customer.coupons.saved-popup')
         @stack('scripts')
     </body>
 </html>

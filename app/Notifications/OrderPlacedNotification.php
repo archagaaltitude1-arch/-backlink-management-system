@@ -52,9 +52,6 @@ class OrderPlacedNotification extends Notification
                 );
             }
 
-            if ($coupon = $this->order->rewardCoupon) {
-                $message->line('Use '.$coupon->code.' for 10% off your next order. This one-use code expires on '.$coupon->expires_at->format('M j, Y').'.');
-            }
         }
 
         return $message->action($successful ? 'View order and invoice' : 'View order', route('orders.show', $this->order));

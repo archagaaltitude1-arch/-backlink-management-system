@@ -37,6 +37,25 @@
                 @endif
             </article>
         </section>
+        @if ($order->payment_status !== 'paid' && $order->customer)
+            <form method="POST" action="{{ route('admin.orders.coupon', $order) }}" class="panel flex flex-col gap-4 p-5 sm:flex-row sm:items-end sm:justify-between">
+                @csrf
+                <div class="min-w-0 flex-1">
+                    <h2 class="text-lg font-semibold">Send coupon before payment</h2>
+                    <p class="mt-1 text-sm text-navy/65">Show this code in a popup on {{ $order->customer->name }}'s checkout page. They apply it there, and it is counted only after payment succeeds.</p>
+                    <label for="coupon_id" class="mt-4 block text-sm font-medium">Active coupon</label>
+                    <select id="coupon_id" name="coupon_id" class="mt-2 w-full rounded-xl border border-navy/15 bg-white px-4 py-2.5 text-sm sm:max-w-sm" @disabled($coupons->isEmpty())>
+                        @forelse ($coupons as $coupon)
+                            <option value="{{ $coupon->id }}">{{ $coupon->code }} · {{ $coupon->discountSummary() }}</option>
+                        @empty
+                            <option value="">No active coupons</option>
+                        @endforelse
+                    </select>
+                    @error('coupon_id') <p class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
+                </div>
+                <button type="submit" class="btn-primary" @disabled($coupons->isEmpty())>Send coupon</button>
+            </form>
+        @endif
         @if ($order->payment_status === 'paid' && $order->order_status === 'awaiting_approval')
             <form method="POST" action="{{ route('admin.orders.approve', $order) }}" class="panel flex flex-wrap items-center justify-between gap-4 p-5">
                 @csrf

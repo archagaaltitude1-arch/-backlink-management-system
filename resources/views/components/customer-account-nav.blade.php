@@ -4,6 +4,7 @@
         ['Wallet', 'customer.wallet', 'M3 6h16v13H3z M19 10h3v5h-7v-5z'],
         ['Invoices', 'customer.invoices', 'M6 3h9l4 4v14H6z M9 12h7m-7 4h7'],
         ['Service orders', 'orders.index', 'M3 8h18v13H3z M7 8l2-5h6l2 5m-5 0v5'],
+        ['Available coupons', 'customer.coupons', 'M4 7h16v10H4z M8 7v10 M4 12h4'],
         ['Projects', 'customer.projects', 'M3 6h7l2 2h9v12H3z'],
         ['Addresses', 'customer.addresses', 'M3 10l9-7 9 7v11H3z M9 21v-7h6v7'],
         ['Notifications', 'customer.notifications', 'M5 17h14l-2-3V9a5 5 0 0 0-10 0v5z M10 21h4'],
@@ -46,7 +47,7 @@
                     [$label, $routeName, $icon] = $link;
                     $fragment = $link[3] ?? '';
                     $active = ! $fragment && (request()->routeIs($routeName)
-                        || ($routeName === 'orders.index' && request()->routeIs('orders.show', 'orders.payment')));
+                        || ($routeName === 'orders.index' && request()->routeIs('orders.show', 'orders.payment', 'orders.thanks')));
                 @endphp
                 <a href="{{ route($routeName).$fragment }}"
                     @class([

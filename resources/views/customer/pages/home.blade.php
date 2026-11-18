@@ -308,123 +308,147 @@
         </div>
     </section>
 
-    <section class="bg-[#F4F6FB]" aria-labelledby="services-heading">
+    <section class="relative overflow-hidden bg-[#EEF2F6]" aria-labelledby="services-heading">
         <style>
-            .service-option,
-            .service-price-btn {
-                transition: background-color .15s ease, color .15s ease, box-shadow .15s ease, transform .15s ease;
+            .svc-modern {
+                position: relative;
+                display: flex;
+                height: 100%;
+                flex-direction: column;
+                overflow: hidden;
+                border: 1px solid rgba(21, 32, 41, 0.08);
+                border-radius: 24px;
+                background:
+                    linear-gradient(180deg, #FFFFFF 0%, #FBFCFD 100%);
+                box-shadow: 0 18px 40px -28px rgba(21, 32, 41, 0.45);
+                transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
             }
-            .service-option {
+            .svc-modern::before {
+                content: "";
+                position: absolute;
+                inset: 0 0 auto;
+                height: 3px;
+                background: linear-gradient(90deg, #FF6A3D, #D63A10);
+                opacity: .9;
+            }
+            .svc-modern:hover {
+                transform: translateY(-4px);
+                border-color: rgba(214, 58, 16, 0.22);
+                box-shadow: 0 28px 48px -24px rgba(21, 32, 41, 0.35);
+            }
+            .svc-modern.is-featured {
+                border-color: rgba(214, 58, 16, 0.28);
+                background:
+                    radial-gradient(ellipse 80% 50% at 100% 0%, rgba(255, 73, 23, 0.08), transparent 55%),
+                    linear-gradient(180deg, #FFFFFF 0%, #FFF8F5 100%);
+                box-shadow: 0 24px 44px -22px rgba(214, 58, 16, 0.28);
+            }
+            .svc-option {
                 display: flex;
                 align-items: center;
-                min-height: 44px;
-                padding: 8px 14px;
-                border-radius: 14px;
-                background: rgba(255, 255, 255, .78);
-                color: var(--tone);
-                font-size: 14px;
+                min-height: 42px;
+                padding: 8px 12px;
+                border: 1px solid #E3E8EE;
+                border-radius: 12px;
+                background: #F7F9FB;
+                color: #152029;
+                font-size: 13.5px;
                 font-weight: 700;
-                line-height: 1.3;
-                box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone) 22%, transparent);
+                line-height: 1.35;
+                transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
             }
-            .service-option:hover {
-                background: #fff;
-                box-shadow: 0 8px 16px rgba(21, 32, 41, .08), inset 0 0 0 1px var(--tone);
+            .svc-option:hover {
+                border-color: #FF4917;
+                background: #FFF1EC;
+                color: #C0340D;
                 transform: translateY(-1px);
             }
-            .service-price-btn {
-                display: flex;
-                align-items: center;
-                justify-content: center;
+            .svc-cta {
+                display: inline-flex;
                 width: 100%;
                 min-height: 48px;
-                padding: 10px 16px;
-                border-radius: 999px;
-                background: var(--tone);
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                border-radius: 14px;
+                background: #152029;
                 color: #fff;
                 font-size: 14px;
                 font-weight: 700;
-                line-height: 1.25;
-                text-align: center;
-                box-shadow: 0 10px 18px color-mix(in srgb, var(--tone) 32%, transparent);
+                transition: background-color .15s ease, transform .15s ease, box-shadow .15s ease;
             }
-            .service-price-btn svg {
-                display: inline-block;
-                margin-left: 6px;
-                vertical-align: -3px;
-                transition: transform .15s ease;
-            }
-            .service-price-btn:hover {
-                background: #152029;
-                box-shadow: 0 12px 22px rgba(21, 32, 41, .18);
+            .svc-cta svg { transition: transform .15s ease; }
+            .svc-cta:hover {
+                background: #FF4917;
+                box-shadow: 0 14px 28px -16px rgba(255, 73, 23, 0.7);
                 transform: translateY(-1px);
             }
-            .service-price-btn:hover svg {
-                transform: translateX(3px);
-            }
-            .service-option:focus-visible,
-            .service-price-btn:focus-visible {
+            .svc-cta:hover svg { transform: translateX(3px); }
+            .svc-option:focus-visible,
+            .svc-cta:focus-visible {
                 outline: 2px solid #D63A10;
                 outline-offset: 2px;
             }
-            .service-card { text-align: center; }
-            .service-card-top { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
-            .service-option { justify-content: center; text-align: center; }
+            @media (prefers-reduced-motion: reduce) {
+                .svc-modern,
+                .svc-modern:hover,
+                .svc-option,
+                .svc-cta,
+                .svc-cta svg { transition: none; transform: none; }
+            }
         </style>
-        @php
-            $serviceTones = [
-                'text-link' => ['bg' => '#F3E9FB', 'ink' => '#6D28D9'],
-                'contextual-link' => ['bg' => '#E7F6EF', 'ink' => '#0F766E'],
-                'guest-post' => ['bg' => '#FDECDC', 'ink' => '#C2410C'],
-                'niche-edit' => ['bg' => '#E7F3FC', 'ink' => '#1D4ED8'],
-            ];
-                                    @endphp
-        <div class="mx-auto px-6 py-14 lg:py-[88px]">
-            <div class="mx-auto max-w-4xl text-center">
+        <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+            <div class="absolute -top-24 right-[-10%] h-72 w-72 rounded-full bg-[#FF4917]/10 blur-3xl"></div>
+            <div class="absolute bottom-[-20%] left-[-8%] h-80 w-80 rounded-full bg-[#152029]/06 blur-3xl"></div>
+        </div>
+        <div class="relative mx-auto px-6 py-14 lg:py-[88px]">
+            <div class="mx-auto max-w-3xl text-center">
                 <p class="text-sm font-bold tracking-[0.08em] text-[#C0340D] uppercase">Our services</p>
-                <h2 id="services-heading" class="mt-3 font-display text-[30px] leading-tight font-extrabold text-navy lg:text-[40px]">
-                    <span class="text-[#5B4BDB]">BacklinkPro</span> Link Building Services Built Around Real Results
+                <h2 id="services-heading" class="mt-3 font-display text-[30px] leading-tight font-extrabold tracking-[-0.02em] text-navy lg:text-[40px]">
+                    Link building services built around real results
                 </h2>
-                <p class="mt-4 text-[17px] leading-8 font-medium text-navy sm:text-[19px]">Order text links, contextual links, guest posts and niche edits on checked publisher websites, with clear metrics, fast delivery and reports made for agencies and in-house teams.</p>
+                <p class="mt-4 text-[17px] leading-8 text-[#4A5560]">Order text links, contextual links, guest posts and niche edits on checked publisher websites—with clear metrics, fast delivery, and reports made for agencies and in-house teams.</p>
             </div>
 
             @unless ($servicesPublished)
-                <p class="mx-auto mt-6 max-w-3xl rounded-[20px] border border-dashed border-[#C5CBD1] bg-white px-5 py-4 text-center text-base leading-7 text-[#4A5560]" role="status">Service prices are not published yet. The four services below describe what we offer. A starting price appears on a card once that service is active.</p>
+                <p class="mx-auto mt-6 max-w-3xl rounded-2xl border border-dashed border-[#C5CBD1] bg-white/80 px-5 py-4 text-center text-base leading-7 text-[#4A5560] backdrop-blur-sm" role="status">Service prices are not published yet. The four services below describe what we offer. A starting price appears on a card once that service is active.</p>
             @endunless
 
-            <div class="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
                 @foreach ($serviceCards as $card)
-                    @php
-                        $tone = $serviceTones[$card['slug']] ?? ['bg' => '#FFF1EC', 'ink' => '#D63A10'];
-                    @endphp
-                    <article class="service-card flex h-full flex-col rounded-[22px] p-5" style="background-color: {{ $tone['bg'] }};">
-                        <div class="service-card-top">
-                            <span class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/80" style="color: {{ $tone['ink'] }};">
+                    <article @class(['svc-modern p-5 sm:p-6', 'is-featured' => $card['featured']])>
+                        <div class="flex items-start justify-between gap-3">
+                            <span class="grid h-12 w-12 place-items-center rounded-2xl bg-[#FFF1EC] text-[#FF4917] shadow-[inset_0_0_0_1px_rgba(255,73,23,0.12)]" aria-hidden="true">
                                 <x-ui.icon :name="$card['icon']" />
                             </span>
-                            <div class="min-w-0">
-                                <h3 class="font-display text-[20px] leading-tight font-extrabold" style="color: {{ $tone['ink'] }};">{{ $card['title'] }}</h3>
-                                @if ($card['featured'])
-                                    <p class="mt-1 text-xs font-bold tracking-wide uppercase" style="color: {{ $tone['ink'] }};">Most popular</p>
-                                @endif
-                                @if ($card['price'])
-                                    <p class="mt-1 text-sm font-bold text-navy">{{ $card['price'] }}</p>
-                                    @endif
-                            </div>
+                            @if ($card['featured'])
+                                <span class="rounded-full bg-[#FF4917] px-2.5 py-1 text-[11px] font-bold tracking-wide text-white uppercase">Most popular</span>
+                            @endif
                         </div>
-                        <p class="mt-4 text-[15px] leading-6 text-navy/80">{{ $card['description'] }}</p>
-                        <p class="mt-3 text-[15px] leading-6 text-[#4A5560]">Best for: {{ $card['best_for'] }}</p>
-                        <p class="mt-4 text-[13px] font-bold tracking-wide text-navy uppercase">Popular options</p>
+
+                        <div class="mt-5">
+                            <h3 class="font-display text-[22px] leading-tight font-extrabold tracking-[-0.02em] text-navy">{{ $card['title'] }}</h3>
+                            @if ($card['price'])
+                                <p class="mt-2 text-[15px] font-bold text-[#C0340D]">{{ $card['price'] }}</p>
+                            @endif
+                        </div>
+
+                        <p class="mt-3 text-[15px] leading-6 text-[#4A5560]">{{ $card['description'] }}</p>
+                        <p class="mt-3 text-[14px] leading-6 text-navy/70"><span class="font-bold text-navy">Best for:</span> {{ $card['best_for'] }}</p>
+
+                        <p class="mt-5 text-[11px] font-bold tracking-[0.14em] text-navy/45 uppercase">Popular options</p>
                         <ul class="mt-2 space-y-2">
                             @foreach ($card['options'] as $option)
                                 <li>
-                                    <a href="{{ $option['href'] }}" class="service-option" style="--tone: {{ $tone['ink'] }};">{{ $option['label'] }}</a>
+                                    <a href="{{ $option['href'] }}" class="svc-option">{{ $option['label'] }}</a>
                                 </li>
                             @endforeach
                         </ul>
+
                         <div class="mt-auto pt-5">
-                            <a href="{{ $card['cta_href'] ?? url('/services/'.$card['slug']) }}" class="service-price-btn" style="--tone: {{ $tone['ink'] }};">
-                                <span>{{ $card['button'] }}<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                            <a href="{{ $card['cta_href'] ?? url('/services/'.$card['slug']) }}" class="svc-cta">
+                                {{ $card['button'] }}
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </a>
                         </div>
                     </article>

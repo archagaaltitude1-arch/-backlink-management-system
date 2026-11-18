@@ -199,6 +199,9 @@
                                             <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m13 7 4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
                                         </p>
                                         <p><span class="co-k">Order type:</span> {{ $item['order_label'] ?? 'Write and publish for me' }}@if (! empty($item['order_help'])) ({{ $item['order_help'] }})@endif</p>
+                                        @if (($item['kind'] ?? '') === 'package' && is_array($item['websites'] ?? null) && $item['websites'] !== [])
+                                            <p><span class="co-k">Websites:</span> {{ implode(', ', $item['websites']) }}</p>
+                                        @endif
                                         @if (($item['kind'] ?? '') !== 'package')
                                             <p><span class="co-k">Your article topic:</span> {{ $item['content_topic'] ?? 'General' }}</p>
                                         @endif
@@ -256,8 +259,11 @@
 
                     <aside class="co-pay" aria-label="Order total">
                         <div class="co-row"><span>Subtotal</span><strong>${{ number_format($subtotal, 2) }}</strong></div>
+                        @if (($packageDiscount ?? 0) > 0)
+                            <div class="co-row"><span>Package discount</span><strong>- ${{ number_format($packageDiscount, 2) }}</strong></div>
+                        @endif
                         @if ($discount > 0)
-                            <div class="co-row"><span>Coupon {{ $coupon }}</span><strong>- ${{ number_format($discount, 2) }}</strong></div>
+                            <div class="co-row"><span>{{ $offerLabel ?: 'Discount' }} {{ $coupon }}</span><strong>- ${{ number_format($discount, 2) }}</strong></div>
                         @endif
                         <div class="co-row co-total"><span>Total</span><strong>${{ number_format($total, 2) }}</strong></div>
                         @if (collect($items)->contains(fn ($row) => filled($row['price_prefix'] ?? null)))

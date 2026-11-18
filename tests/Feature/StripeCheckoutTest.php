@@ -45,11 +45,15 @@ class StripeCheckoutTest extends TestCase
         ])->assertRedirect('https://checkout.stripe.com/c/pay/cs_test_order');
 
         $payment = $order->payments()->firstOrFail();
+        $this->assertSame(route('orders.thanks', $order).'?stripe=returned', $payment->metadata['success_url']);
         $this->post(route('orders.payment.process', $order))->assertRedirect();
         $this->assertDatabaseCount('payments', 1);
         Http::assertSent(fn ($request) => $request['line_items'][0]['price_data']['unit_amount'] === 10800
             && $request->hasHeader('Idempotency-Key', $payment->transaction_id));
-        $this->get(route('orders.show', [$order, 'stripe' => 'returned']))->assertOk();
+        $this->get(route('orders.thanks', [$order, 'stripe' => 'returned']))
+            ->assertOk()
+            ->assertSee('Waiting for Stripe to confirm payment', false)
+            ->assertDontSee('Download invoice', false);
         $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => 'pending']);
         $this->assertDatabaseCount('invoices', 0);
 
@@ -61,17 +65,25 @@ class StripeCheckoutTest extends TestCase
 
         $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => 'paid', 'order_status' => 'awaiting_approval']);
         $this->assertDatabaseCount('invoices', 1);
-        $this->assertDatabaseCount('coupons', 1);
+        $this->get(route('orders.thanks', $order))
+            ->assertOk()
+            ->assertSee('Thank you', false)
+            ->assertSee('Download invoice', false);
+        $this->assertDatabaseMissing('coupons', ['reward_order_id' => $order->id]);
         Notification::assertSentToTimes($customer, OrderPlacedNotification::class, 1);
         Notification::assertSentTo($customer, OrderPlacedNotification::class, function (OrderPlacedNotification $notice) use ($customer, $order, $payment): bool {
             $mail = $notice->toMail($customer);
             $body = implode(' ', $mail->introLines);
             $receipt = $mail->rawAttachments[0];
 
-            $this->assertStringContainsString($order->rewardCoupon()->firstOrFail()->code, $body);
+            $this->assertStringNotContainsString('THANKYOU-', $body);
+            $this->assertStringNotContainsString('ORDER-', $body);
             $this->assertStringContainsString($payment->transaction_id, $body);
             $this->assertSame($order->invoice()->firstOrFail()->invoice_number.'.html', $receipt['name']);
-            $this->assertStringContainsString('Backlink Management', $receipt['data']);
+            $this->assertStringContainsString('Prime One Global (PVT) LTD.', $receipt['data']);
+            $this->assertStringContainsString('#146B, Goodshed Road,', $receipt['data']);
+            $this->assertStringContainsString('Thonikkal, Vavuniya, NP,', $receipt['data']);
+            $this->assertStringContainsString('Sri Lanka.', $receipt['data']);
             $this->assertStringContainsString($order->order_number, $receipt['data']);
             $this->assertStringContainsString($payment->transaction_id, $receipt['data']);
 
@@ -96,6 +108,39 @@ class StripeCheckoutTest extends TestCase
         $this->assertDatabaseCount('credit_transactions', 1);
     }
 
+    public function test_dummy_gateway_completes_an_order_until_stripe_is_configured(): void
+    {
+        config([
+            'services.stripe.demo' => false,
+            'services.stripe.secret' => null,
+            'services.stripe.webhook_secret' => null,
+        ]);
+        $customer = User::factory()->create();
+        $order = $customer->orders()->create([
+            'order_number' => 'BM-DUMMY-0001',
+            'session_id' => 'dummy-gateway',
+            'total_amount' => 35.10,
+            'payment_status' => 'pending',
+            'order_status' => 'pending',
+        ]);
+
+        $this->actingAs($customer)->get(route('orders.payment', $order))
+            ->assertOk()
+            ->assertSee('Pay with dummy gateway')
+            ->assertDontSee('Stripe checkout is currently unavailable');
+
+        $this->post(route('orders.payment.process', $order), [
+            'payment_method' => 'demo_card',
+            'demo_result' => 'success',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('orders', [
+            'id' => $order->id,
+            'payment_status' => 'paid',
+            'order_status' => 'awaiting_approval',
+        ]);
+    }
+
     public function test_customer_can_choose_stripe_while_demo_payments_are_enabled(): void
     {
         config(['services.stripe.demo' => true]);
@@ -106,9 +151,9 @@ class StripeCheckoutTest extends TestCase
         $package = CreditPackage::create(['name' => 'Starter credits', 'credits' => 100, 'price' => 29, 'is_active' => true]);
 
         $this->actingAs($customer)->get(route('orders.payment', $order))
-            ->assertOk()->assertSee('Pay with Stripe')->assertSee('Simulate payment');
+            ->assertOk()->assertSee('Pay with Stripe')->assertSee('Pay with dummy gateway');
         $this->get(route('customer.wallet'))
-            ->assertOk()->assertSee('Buy with Stripe')->assertSee('Simulate Stripe purchase');
+            ->assertOk()->assertSee('Buy with Stripe')->assertSee('Buy with dummy gateway');
 
         $this->post(route('orders.payment.process', $order), ['payment_method' => 'stripe'])
             ->assertRedirect('https://checkout.stripe.com/c/pay/cs_test_order');

@@ -102,8 +102,9 @@ class CustomerPurchaseTest extends TestCase
         $this->post(route('orders.store'), [
             'items' => [[
                 'target_url' => 'https://customer.example.test/landing',
-                'anchor_text' => 'customer growth tools',
+                'anchor_text' => 'growth platform',
                 'article_topic' => 'A practical guide to growth',
+                'keywords' => 'seo, growth, links',
                 'requirements' => 'Include a concise introduction.',
             ]],
         ])->assertRedirect();
@@ -115,27 +116,34 @@ class CustomerPurchaseTest extends TestCase
             $this->get($url)->assertOk()->assertSee('aria-label="My account"', false)->assertSee($order->order_number);
         }
 
-        $this->assertSame('120.00', $order->total_amount);
+        $this->assertSame('108.00', $order->total_amount);
+        $this->assertSame('12.00', $order->discount_amount);
         $this->assertDatabaseHas('order_items', [
             'order_id' => $order->id,
             'target_url' => 'https://customer.example.test/landing',
-            'anchor_text' => 'customer growth tools',
+            'anchor_text' => 'growth platform',
             'article_topic' => 'A practical guide to growth',
+            'keywords' => 'seo, growth, links',
             'requirements' => 'Include a concise introduction.',
         ]);
 
         $this->post(route('orders.payment.process', $order), [
             'payment_method' => 'demo_card',
             'demo_result' => 'success',
-        ])->assertRedirect(route('orders.show', $order));
+        ])->assertRedirect(route('orders.thanks', $order));
+
+        $this->get(route('orders.thanks', $order))
+            ->assertOk()
+            ->assertSee('Thank you', false)
+            ->assertSee('Download invoice', false);
 
         $this->assertDatabaseHas('payments', ['order_id' => $order->id, 'status' => 'successful', 'gateway' => 'demo']);
         $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => 'paid', 'order_status' => 'awaiting_approval']);
         $this->assertDatabaseHas('invoices', ['order_id' => $order->id, 'customer_id' => $customer->id]);
-        $coupon = $order->rewardCoupon()->firstOrFail();
-        Notification::assertSentTo($customer, OrderPlacedNotification::class, function (OrderPlacedNotification $notice) use ($customer, $coupon): bool {
-            return str_contains(implode(' ', $notice->toMail($customer)->introLines), $coupon->code);
-        });
+        $this->assertSame('108.00', $order->fresh()->total_amount);
+        $this->assertSame('first_order', $order->fresh()->offer_type);
+        $this->assertDatabaseHas('first_order_redemptions', ['customer_id' => $customer->id, 'order_id' => $order->id]);
+        Notification::assertSentTo($customer, OrderPlacedNotification::class);
         $this->get(route('customer.invoices.download', $order->invoice))->assertOk()->assertDownload();
 
         $this->post(route('orders.payment.process', $order), [
@@ -143,26 +151,22 @@ class CustomerPurchaseTest extends TestCase
             'demo_result' => 'success',
         ])->assertRedirect();
         $this->assertDatabaseCount('payments', 1);
-        $this->assertDatabaseCount('coupons', 1);
+        $this->assertDatabaseCount('first_order_redemptions', 1);
 
         $this->post(route('orders.cart.items.store'), ['product_key' => 'guest_post', 'quantity' => 1])->assertRedirect();
-        $this->postJson(route('api.cart.coupon'), ['coupon_code' => $coupon->code])
-            ->assertOk()->assertJsonPath('data.discount', 12);
         $this->post(route('orders.store'), [
             'items' => [[
                 'target_url' => 'https://customer.example.test/second',
-                'anchor_text' => 'next campaign',
+                'anchor_text' => 'second campaign',
                 'article_topic' => 'Planning a second campaign',
             ]],
         ])->assertRedirect();
         $nextOrder = $customer->orders()->where('id', '!=', $order->id)->firstOrFail();
+        $this->assertSame('120.00', $nextOrder->total_amount);
         $this->postJson(route('api.payments.orders.store', $nextOrder), [
             'payment_method' => 'demo_card',
             'demo_result' => 'success',
-        ])->assertOk()->assertJsonPath('data.payment.amount', '108.00');
-
-        $this->post(route('orders.cart.items.store'), ['product_key' => 'guest_post', 'quantity' => 1])->assertRedirect();
-        $this->postJson(route('api.cart.coupon'), ['coupon_code' => $coupon->code])->assertUnprocessable();
+        ])->assertOk()->assertJsonPath('data.payment.amount', '120.00');
     }
 
     public function test_coupon_discount_is_calculated_by_the_server(): void
@@ -193,7 +197,14 @@ class CustomerPurchaseTest extends TestCase
         $order = Order::query()->where('customer_id', $customer->id)->firstOrFail();
         $this->assertSame('108.00', $order->total_amount);
         $this->assertSame('12.00', $order->discount_amount);
-        $this->assertDatabaseHas('coupon_usages', ['coupon_id' => Coupon::where('code', 'SAVE10')->value('id'), 'customer_id' => $customer->id]);
+        $this->assertDatabaseMissing('coupon_usages', ['order_id' => $order->id]);
+
+        $this->post(route('orders.payment.process', $order), [
+            'payment_method' => 'demo_card',
+            'demo_result' => 'success',
+        ])->assertRedirect(route('orders.thanks', $order));
+
+        $this->assertDatabaseHas('coupon_usages', ['coupon_id' => Coupon::where('code', 'SAVE10')->value('id'), 'customer_id' => $customer->id, 'order_id' => $order->id]);
     }
 
     public function test_declined_payment_does_not_issue_an_invoice_or_consume_the_coupon(): void
@@ -213,7 +224,7 @@ class CustomerPurchaseTest extends TestCase
         $this->post(route('orders.cart.coupon'), ['coupon_code' => 'ONCE10']);
         $this->post(route('orders.store'), ['items' => [[
             'target_url' => 'https://customer.example.test/page',
-            'anchor_text' => 'resources',
+            'anchor_text' => 'resource hub page',
             'article_topic' => 'Useful resources',
         ]]]);
         $order = Order::query()->where('customer_id', $customer->id)->firstOrFail();

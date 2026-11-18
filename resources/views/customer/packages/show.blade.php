@@ -6,7 +6,8 @@
     $unit = is_numeric($package['price'] ?? null) ? (float) $package['price'] : null;
     $prefix = trim((string) ($package['price_prefix'] ?? ''));
     $money = $unit === null ? 'Price on request' : ($prefix === '' ? '' : $prefix.' ').'$'.number_format($unit, 2);
-    $cartPost = \Illuminate\Support\Facades\Route::has('shopping.store') ? route('shopping.store') : null;
+    $chooseHref = route('packages.websites', $package['slug']);
+    $selectedBacklinks = $selectedBacklinks ?? null;
 @endphp
 
 @section('document_title', $title.' | BacklinkPro')
@@ -71,6 +72,9 @@
 
     <section class="bg-[#F7F8FA]">
         <div class="pk-wrap">
+            @if (session('shopping_status'))
+                <p class="pk-note" role="status">{{ session('shopping_status') }}</p>
+            @endif
             <nav class="pk-crumb" aria-label="Breadcrumb">
                 <a href="{{ url('/') }}">Home</a>
                 <span aria-hidden="true"> / </span>
@@ -175,11 +179,7 @@
                         </div>
                     @endif
 
-                    @if ($cartPost)
-                        <form method="POST" action="{{ $cartPost }}" data-pk-order>
-                            @csrf
-                            <input type="hidden" name="package_slug" value="{{ $package['slug'] }}">
-                            <input type="hidden" name="package_id" value="{{ $package['package_id'] }}">
+                    <form method="GET" action="{{ $chooseHref }}" data-pk-order>
                             <input type="hidden" name="quantity" value="1" data-pk-qty>
                             <fieldset style="margin:18px 0 0;padding:0;border:0">
                                 <legend style="font-weight:800">Order type *</legend>
@@ -195,7 +195,10 @@
                                     </label>
                                 @endforelse
                             </fieldset>
-                            @if (($package['price_prefix'] ?? '') === '')
+                            @if (! empty($selectedBacklinks))
+                                <input type="hidden" name="backlinks" value="{{ $selectedBacklinks }}">
+                            @endif
+                            @if (($package['price_prefix'] ?? '') === '' && empty($selectedBacklinks))
                                 <div class="pk-qty">
                                     <button type="button" data-pk-step="-1" aria-label="Decrease quantity">−</button>
                                     <input type="number" min="1" max="10" value="1" data-pk-input aria-label="Quantity">
@@ -212,10 +215,9 @@
                                     <strong data-pk-sub>{{ $money }}</strong>
                                 </div>
                             </div>
-                            <p class="pk-note">{{ data_get($story, 'note', "After checkout you'll add your website URL, anchor text and target pages on the requirements page.") }}</p>
-                            <button class="pk-cart" type="submit">Add to cart</button>
+                            <p class="pk-note">@if (! empty($selectedBacklinks)) Next, choose {{ $selectedBacklinks }} websites for this package. @else {{ data_get($story, 'note', 'Next, choose the websites for this package. Anchor text and target pages are added at checkout.') }} @endif</p>
+                            <button class="pk-cart" type="submit">Choose Backlinks</button>
                         </form>
-                    @endif
 
                     <p class="pk-tat"><b>Estimated delivery</b> <span>{{ $story['delivery'] ?? 'Confirmed with the order' }}{{ isset($story['delivery_note']) ? '. '.$story['delivery_note'] : '' }}</span></p>
                     <p class="pk-help"><strong>Questions?</strong> <a href="{{ route('contact') }}">Contact us</a></p>

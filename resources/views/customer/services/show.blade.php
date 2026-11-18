@@ -267,6 +267,9 @@
             <p class="sp-kicker">Packages</p>
             <h2 id="packages-heading" class="sp-h2 font-display">{{ $page['packages_title'] }}</h2>
             <p class="sp-lead">{{ $page['packages_intro'] ?? 'Choose a package that fits your requirements.' }}</p>
+            @if (! empty($page['package_tabs']))
+                @include('customer.packages.tier-tabs', ['tabs' => $page['package_tabs'], 'service' => $page['slug']])
+            @else
             <div class="sp-plans" style="--plans: {{ count($page['tiers']) }}">
                     @foreach ($page['tiers'] as $tier)
                     <article id="tier-{{ \Illuminate\Support\Str::slug($tier['name']) }}" @class(['sp-plan scroll-mt-24', 'is-popular' => $tier['popular']])>
@@ -292,6 +295,7 @@
                         </article>
                     @endforeach
                 </div>
+            @endif
             <p class="sp-foot"><a href="{{ route('publishers.index') }}">Check out the publisher sites and individual pricing</a></p>
             <p class="sp-foot">Need a custom or bulk order? <a href="{{ $contact }}">Contact us</a></p>
         </div>

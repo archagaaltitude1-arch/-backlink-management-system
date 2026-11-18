@@ -2,6 +2,9 @@
 
 namespace App\Support;
 
+use App\Models\Package;
+use Illuminate\Support\Facades\Schema;
+
 class PublicPackages
 {
     /**
@@ -122,6 +125,233 @@ class PublicPackages
     }
 
     /**
+     * Customer-facing package choice, such as "Starter – 5 Backlinks".
+     *
+     * @param  array<string, mixed>  $item
+     * @param  array<string, mixed>  $story
+     */
+    public static function choiceLabel(array $item, array $story): string
+    {
+        $slug = (string) ($item['slug'] ?? '');
+        $level = str_starts_with($slug, 'display-')
+            ? (string) ($item['name'] ?? 'Package')
+            : ucfirst((string) explode('-', $slug, 2)[0]);
+        $count = $story['count'] ?? null;
+        $size = is_numeric($count) ? ((int) $count).' Backlinks' : 'Custom Backlinks';
+
+        return $level.' – '.$size;
+    }
+
+    /**
+     * How many websites this package order needs. Custom packages have no fixed count.
+     *
+     * @param  array<string, mixed>  $story
+     */
+    public static function websiteLimit(array $story, int $quantity): ?int
+    {
+        $count = $story['count'] ?? null;
+
+        if (! is_numeric($count)) {
+            return null;
+        }
+
+        return (int) $count * max(1, $quantity);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function tieredServices(): array
+    {
+        return ['guest-post', 'contextual-link', 'text-link'];
+    }
+
+    public static function serviceKey(string $slug): ?string
+    {
+        foreach (self::tieredServices() as $service) {
+            if (str_ends_with($slug, '-'.$service)) {
+                return $service;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array<string, array{key: string, label: string, min: int, max: int, discount: int, custom: bool, summary: string}>
+     */
+    public static function bands(): array
+    {
+        return [
+            'starter' => [
+                'key' => 'starter',
+                'label' => 'Starter',
+                'min' => 5,
+                'max' => 9,
+                'discount' => 5,
+                'custom' => false,
+                'summary' => 'A first campaign on checked publisher sites.',
+            ],
+            'professional' => [
+                'key' => 'professional',
+                'label' => 'Professional',
+                'min' => 10,
+                'max' => 19,
+                'discount' => 7,
+                'custom' => false,
+                'summary' => 'A broader campaign with a larger link count.',
+            ],
+            'pro' => [
+                'key' => 'pro',
+                'label' => 'Pro',
+                'min' => 20,
+                'max' => 29,
+                'discount' => 10,
+                'custom' => false,
+                'summary' => 'A high-volume campaign with the largest package discount.',
+            ],
+            'enterprise' => [
+                'key' => 'enterprise',
+                'label' => 'Enterprise',
+                'min' => 30,
+                'max' => 500,
+                'discount' => 0,
+                'custom' => true,
+                'summary' => 'Choose a custom quantity. The starting price is confirmed with our team before placement.',
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public static function bandForSlug(string $slug): ?array
+    {
+        if (self::serviceKey($slug) === null) {
+            return null;
+        }
+
+        $key = explode('-', $slug, 2)[0];
+
+        return self::bands()[$key] ?? null;
+    }
+
+    public static function backlinksAllowed(string $slug, int $count): bool
+    {
+        $band = self::bandForSlug($slug);
+
+        return $band !== null && $count >= $band['min'] && $count <= $band['max'];
+    }
+
+    /**
+     * @return array{custom: bool, quantity: int, unit: ?float, subtotal: ?float, discount_percent: int, discount_amount: float, final: float, starting: bool}
+     */
+    public static function quote(string $slug, int $quantity): array
+    {
+        $band = self::bandForSlug($slug);
+        $offer = self::offerBySlug($slug);
+        $fallback = [
+            'custom' => true,
+            'quantity' => max(1, $quantity),
+            'unit' => null,
+            'subtotal' => null,
+            'discount_percent' => 0,
+            'discount_amount' => 0.0,
+            'final' => 0.0,
+            'starting' => true,
+        ];
+
+        if ($band === null || $offer === null) {
+            return $fallback;
+        }
+
+        $quantity = max($band['min'], min($band['max'], $quantity));
+        $stored = self::storedPackagePrice((string) $offer['label']);
+        $packageTotal = $stored['price'] ?? (float) $offer['amount'];
+
+        if ($band['custom']) {
+            return [
+                'custom' => true,
+                'quantity' => $quantity,
+                'unit' => null,
+                'subtotal' => null,
+                'discount_percent' => 0,
+                'discount_amount' => 0.0,
+                'final' => round($packageTotal, 2),
+                'starting' => true,
+            ];
+        }
+
+        $divisor = $stored['quantity'] ?? (is_numeric($offer['count']) ? (int) $offer['count'] : 0);
+        $unit = $divisor > 0 ? round($packageTotal / $divisor, 2) : round($packageTotal, 2);
+        $subtotal = round($unit * $quantity, 2);
+        $discountAmount = round($subtotal * ($band['discount'] / 100), 2);
+
+        return [
+            'custom' => false,
+            'quantity' => $quantity,
+            'unit' => $unit,
+            'subtotal' => $subtotal,
+            'discount_percent' => $band['discount'],
+            'discount_amount' => $discountAmount,
+            'final' => round($subtotal - $discountAmount, 2),
+            'starting' => false,
+        ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public static function tabs(string $service): array
+    {
+        $tabs = [];
+
+        foreach (self::bands() as $band) {
+            $slug = $band['key'].'-'.$service;
+            $tabs[] = [
+                ...$band,
+                'slug' => $slug,
+                'quote' => self::quote($slug, $band['min']),
+            ];
+        }
+
+        return $tabs;
+    }
+
+    /**
+     * @return array{price: float, quantity: ?int}|null
+     */
+    private static function storedPackagePrice(string $label): ?array
+    {
+        if (! class_exists(Package::class) || ! Schema::hasTable('packages')) {
+            return null;
+        }
+
+        try {
+            $package = Package::query()
+                ->whereRaw('LOWER(package_name) = ?', [mb_strtolower(trim($label))])
+                ->first();
+
+            if ($package === null || ! is_numeric($package->price) || (float) $package->price <= 0) {
+                return null;
+            }
+
+            $quantity = null;
+
+            if (Schema::hasColumn('packages', 'backlink_quantity') && is_numeric($package->backlink_quantity ?? null)) {
+                $quantity = (int) $package->backlink_quantity;
+            }
+
+            return [
+                'price' => (float) $package->price,
+                'quantity' => $quantity > 0 ? $quantity : null,
+            ];
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
      * Website chart for a paid package. The first recognized package name wins.
      *
      * @param  iterable<int, mixed>  $names
@@ -130,10 +360,28 @@ class PublicPackages
     public static function paidSites(iterable $names): ?array
     {
         foreach ($names as $name) {
-            $match = self::matchPackageName((string) $name);
+            $itemName = is_object($name) ? (string) ($name->item_name ?? '') : (string) $name;
+            $match = self::matchPackageName($itemName);
 
             if ($match === null) {
                 continue;
+            }
+
+            if (self::serviceKey($match['slug']) !== null && is_object($name)) {
+                $count = (int) ($name->backlinks ?? 0);
+
+                if ($count < 1) {
+                    $count = max(1, (int) ($name->quantity ?? 1));
+                }
+
+                return [
+                    'url' => route('packages.websites', [
+                        'slug' => $match['slug'],
+                        'backlinks' => $count,
+                        'order' => $name->order_id,
+                    ]),
+                    'label' => $match['label'],
+                ];
             }
 
             $query = [];
