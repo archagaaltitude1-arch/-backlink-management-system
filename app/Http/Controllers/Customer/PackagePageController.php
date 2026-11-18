@@ -7,9 +7,11 @@ use App\Models\Package;
 use App\Services\Customer\NicheListingService;
 use App\Support\PublicPackages;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class PackagePageController extends Controller
@@ -29,11 +31,28 @@ class PackagePageController extends Controller
 
         $priced = $this->withStoredPrice([$package])[0];
         $priced['story'] = PublicPackages::story($slug);
+        $selectedBacklinks = null;
+
+        if (PublicPackages::serviceKey($slug) !== null) {
+            $line = $this->cartPackage($slug);
+            $selectedBacklinks = (int) ($line['backlinks'] ?? 0);
+
+            if ($selectedBacklinks > 0 && is_array($priced['story'])) {
+                $priced['story']['count'] = (string) $selectedBacklinks;
+                $priced['story']['badge'] = $selectedBacklinks.' backlinks';
+
+                if (is_numeric($line['price'] ?? null)) {
+                    $priced['price'] = (float) $line['price'];
+                    $priced['price_prefix'] = '';
+                }
+            }
+        }
 
         return view('customer.packages.show', [
             'package' => $priced,
             'packages' => $this->withStoredPrice(PublicPackages::items()),
             'guestPostPrices' => PublicPackages::guestPostPrices(),
+            'selectedBacklinks' => $selectedBacklinks > 0 ? $selectedBacklinks : null,
         ]);
     }
 
@@ -48,8 +67,22 @@ class PackagePageController extends Controller
         $priced = $this->withStoredPrice([$package])[0];
         $priced['story'] = $story;
         $catalog = $listings->catalogRows();
-        $quantity = min(10, max(1, (int) $request->query('quantity', 1)));
-        $limit = PublicPackages::websiteLimit($story, $quantity);
+        $requestedBacklinks = (int) $request->query('backlinks', 0);
+        $orderId = (int) $request->query('order', 0);
+
+        if (PublicPackages::serviceKey($slug) !== null && $requestedBacklinks < 1) {
+            $requestedBacklinks = $this->cartBacklinks($slug);
+        }
+
+        if (PublicPackages::serviceKey($slug) !== null && $requestedBacklinks > 0) {
+            $story['count'] = (string) $requestedBacklinks;
+            $priced['story'] = $story;
+            $quantity = 1;
+            $limit = $requestedBacklinks;
+        } else {
+            $quantity = min(10, max(1, (int) $request->query('quantity', 1)));
+            $limit = PublicPackages::websiteLimit($story, $quantity);
+        }
         $choice = PublicPackages::choiceLabel($priced, $story);
         $websiteWord = $limit === 1 ? 'website' : 'websites';
         $lead = $limit === null
@@ -61,6 +94,8 @@ class PackagePageController extends Controller
             'choice' => $choice,
             'limit' => $limit,
             'quantity' => $quantity,
+            'backlinks' => $requestedBacklinks > 0 ? $requestedBacklinks : null,
+            'orderId' => $orderId > 0 ? $orderId : null,
             'orderType' => trim((string) $request->query('order_type', '')),
             'rows' => collect($catalog['rows'])
                 ->sortByDesc(fn (array $row) => $row['dr'] ?? -1)
@@ -70,6 +105,111 @@ class PackagePageController extends Controller
             'categories' => $this->categories($listings),
             'lead' => $lead,
         ]);
+    }
+
+    public function assign(Request $request, string $slug, NicheListingService $listings): RedirectResponse
+    {
+        $package = PublicPackages::find($slug);
+        abort_if($package === null || PublicPackages::serviceKey($slug) === null, 404);
+        abort_unless($request->user() !== null, 403);
+
+        $data = $request->validate([
+            'order' => ['required', 'integer'],
+            'backlinks' => ['required', 'integer', 'min:1', 'max:500'],
+            'websites' => ['required', 'array'],
+            'websites.*' => ['string', 'max:255'],
+        ]);
+
+        $count = (int) $data['backlinks'];
+
+        if (! PublicPackages::backlinksAllowed($slug, $count)) {
+            throw ValidationException::withMessages([
+                'backlinks' => 'That quantity is not available for this package.',
+            ]);
+        }
+
+        $order = $request->user()->orders()->whereKey($data['order'])->firstOrFail();
+        abort_unless($order->payment_status === 'paid', 403);
+
+        $item = $order->items()->where('item_name', $package['label'])->firstOrFail();
+        $expected = (int) ($item->backlinks ?: $count);
+        $back = route('packages.websites', [
+            'slug' => $slug,
+            'backlinks' => $expected,
+            'order' => $order->id,
+        ]);
+
+        if ($count !== $expected) {
+            return redirect()->to($back)->with('shopping_error', 'Choose exactly '.$expected.' websites for this order.');
+        }
+
+        $known = [];
+
+        foreach ($listings->catalogRows()['rows'] as $row) {
+            $domain = trim((string) ($row['domain'] ?? ''));
+
+            if ($domain !== '') {
+                $known[mb_strtolower($domain)] = $domain;
+            }
+        }
+
+        $chosen = [];
+
+        foreach ($data['websites'] as $website) {
+            $key = mb_strtolower(trim((string) $website));
+
+            if ($key === '' || isset($chosen[$key])) {
+                continue;
+            }
+
+            if (! isset($known[$key])) {
+                return redirect()->to($back)->with('shopping_error', 'That website is not on the list.');
+            }
+
+            $chosen[$key] = $known[$key];
+        }
+
+        $websites = array_values($chosen);
+
+        if (count($websites) !== $expected) {
+            return redirect()->to($back)->with('shopping_error', 'Choose exactly '.$expected.' websites for this order.');
+        }
+
+        $item->update([
+            'backlinks' => $expected,
+            'selected_websites' => $websites,
+        ]);
+
+        return redirect()
+            ->route('orders.show', $order)
+            ->with('success', 'Your '.$expected.' websites are saved for this order.');
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function cartPackage(string $slug): ?array
+    {
+        $items = session('shopping_cart', []);
+
+        if (! is_array($items)) {
+            return null;
+        }
+
+        foreach ($items as $item) {
+            if (is_array($item) && ($item['package_slug'] ?? '') === $slug) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
+
+    private function cartBacklinks(string $slug): int
+    {
+        $item = $this->cartPackage($slug);
+
+        return $item === null ? 0 : (int) ($item['backlinks'] ?? 0);
     }
 
     /**

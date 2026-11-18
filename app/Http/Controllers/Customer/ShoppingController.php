@@ -5,11 +5,15 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\Coupon;
-use App\Models\CouponUsage;
 use App\Models\Order;
 use App\Models\Package;
+use App\Models\User;
+use App\Rules\MaxKeywords;
 use App\Services\Customer\NicheListingService;
 use App\Services\Customer\PublishOfferService;
+use App\Support\CheckoutItemRules;
+use App\Support\CouponCart;
+use App\Support\CustomerDiscounts;
 use App\Support\PublicPackages;
 use App\Support\PublicSites;
 use Illuminate\Contracts\View\View;
@@ -39,7 +43,8 @@ class ShoppingController extends Controller
         }
 
         $subtotal = (float) $priced->sum(fn (array $item) => (float) $item['price'] * (int) $item['quantity']);
-        $discount = $this->discountFor($subtotal);
+        $quote = $this->pricedQuote();
+        $discount = $quote['offer_discount'];
 
         return view('customer.shopping.index', [
             'items' => $items,
@@ -51,9 +56,11 @@ class ShoppingController extends Controller
             'sites' => PublicSites::items(),
             'quantity' => (int) $items->sum('quantity'),
             'subtotal' => $subtotal,
+            'packageDiscount' => $quote['package_discount'],
+            'offerLabel' => $quote['offer_label'],
             'discount' => $discount,
-            'total' => max(0, $subtotal - $discount),
-            'coupon' => session('shopping_coupon'),
+            'total' => $quote['total'],
+            'coupon' => $quote['coupon_code'] ?? session('shopping_coupon'),
             'unpriced' => $items->count() - $priced->count(),
             'checkoutHref' => route('shopping.checkout'),
         ]);
@@ -69,11 +76,13 @@ class ShoppingController extends Controller
             'package_slug' => ['nullable', 'string', 'max:80'],
             'package_id' => ['nullable', 'integer'],
             'quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'backlinks' => ['nullable', 'integer', 'min:1', 'max:500'],
             'order_type' => ['nullable', 'string', 'max:60'],
             'content_topic' => ['nullable', 'string', 'max:80'],
             'project' => ['nullable', 'string', 'max:80'],
             'websites' => ['nullable', 'array', 'max:250'],
             'websites.*' => ['string', 'max:255'],
+            'website_selection' => ['nullable', 'boolean'],
         ]);
 
         if (filled($data['package_slug'] ?? null)) {
@@ -116,6 +125,14 @@ class ShoppingController extends Controller
 
         if ($item === null || $story === null) {
             return redirect()->route('packages.index')->with('shopping_error', 'That package is not available.');
+        }
+
+        if (PublicPackages::serviceKey($slug) !== null && isset($data['backlinks'])) {
+            if (! empty($data['website_selection'])) {
+                return $this->storeTieredWebsites($data, $item, $story, $listings);
+            }
+
+            return $this->storeTieredPackage($data, $item, $story);
         }
 
         $postedQuantity = min(10, max(1, (int) ($data['quantity'] ?? 1)));
@@ -191,6 +208,128 @@ class ShoppingController extends Controller
         return back()
             ->with('open_cart', true)
             ->with('shopping_status', $item['label'].' was added to your cart.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  array<string, mixed>  $item
+     * @param  array<string, mixed>  $story
+     */
+    private function storeTieredPackage(array $data, array $item, array $story): RedirectResponse
+    {
+        $slug = (string) $data['package_slug'];
+        $count = (int) $data['backlinks'];
+        $band = PublicPackages::bandForSlug($slug);
+
+        if (! PublicPackages::backlinksAllowed($slug, $count)) {
+            throw ValidationException::withMessages([
+                'backlinks' => $band === null
+                    ? 'Choose a valid package quantity.'
+                    : 'Choose between '.$band['min'].' and '.$band['max'].' backlinks for this package.',
+            ]);
+        }
+
+        $quote = PublicPackages::quote($slug, $count);
+        $order = $this->selectedPackageOrder($slug, $story, (string) ($data['order_type'] ?? ''));
+        $line = $this->lineKey($slug, 'package', 'tier');
+        $items = $this->sessionItems();
+        $items[$line] = [
+            'line' => $line,
+            'kind' => 'package',
+            'domain' => $slug,
+            'display_name' => (string) $item['label'],
+            'site' => $slug,
+            'website_id' => null,
+            'package_id' => null,
+            'package_slug' => $slug,
+            'niche' => 'Packages',
+            'project' => 'Default',
+            'order_type' => $order['value'],
+            'order_label' => $order['label'],
+            'order_help' => $order['help'],
+            'product_key' => 'package',
+            'addon' => false,
+            'content_topic' => 'General',
+            'price' => $quote['final'],
+            'price_prefix' => '',
+            'quantity' => 1,
+            'backlinks' => $quote['quantity'],
+            'package_discount' => $quote['discount_amount'],
+            'websites' => [],
+            'link_validity' => $story['delivery'] ?? '',
+            'link_type' => 'Included',
+            'article_length' => $quote['quantity'].' backlinks',
+            'stat_labels' => ['Backlinks', 'Delivery', 'Report', 'Package size'],
+            'rules' => $story['gets'] ?? [],
+            'base_price' => $quote['final'],
+        ];
+        session(['shopping_cart' => $items]);
+
+        return redirect()
+            ->route('packages.show', $slug)
+            ->with('shopping_status', $item['label'].' is ready. Choose '.$quote['quantity'].' websites next.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  array<string, mixed>  $item
+     * @param  array<string, mixed>  $story
+     */
+    private function storeTieredWebsites(array $data, array $item, array $story, NicheListingService $listings): RedirectResponse
+    {
+        $slug = (string) $data['package_slug'];
+        $count = (int) $data['backlinks'];
+        $back = route('packages.websites', ['slug' => $slug, 'backlinks' => $count]);
+
+        if (! PublicPackages::backlinksAllowed($slug, $count)) {
+            return redirect()->to($back)->with('shopping_error', 'That quantity is not available for this package.');
+        }
+
+        $known = [];
+
+        foreach ($listings->catalogRows()['rows'] as $row) {
+            $domain = trim((string) ($row['domain'] ?? ''));
+
+            if ($domain !== '') {
+                $known[mb_strtolower($domain)] = $domain;
+            }
+        }
+
+        $chosen = [];
+
+        foreach (is_array($data['websites'] ?? null) ? $data['websites'] : [] as $website) {
+            $key = mb_strtolower(trim((string) $website));
+
+            if ($key === '' || isset($chosen[$key])) {
+                continue;
+            }
+
+            if (! isset($known[$key])) {
+                return redirect()->to($back)->with('shopping_error', 'That website is not on the list.');
+            }
+
+            $chosen[$key] = $known[$key];
+        }
+
+        $websites = array_values($chosen);
+
+        if (count($websites) !== $count) {
+            return redirect()->to($back)->with('shopping_error', 'Choose exactly '.$count.' websites for this package.');
+        }
+
+        $this->storeTieredPackage($data, $item, $story);
+        $items = $this->sessionItems();
+        $line = $this->lineKey($slug, 'package', 'tier');
+
+        if (isset($items[$line]) && is_array($items[$line])) {
+            $items[$line]['websites'] = $websites;
+            $items[$line]['backlinks'] = $count;
+            session(['shopping_cart' => $items]);
+        }
+
+        return redirect()
+            ->route('shopping.checkout')
+            ->with('shopping_status', $count.' websites saved for '.$item['label'].'.');
     }
 
     /**
@@ -368,7 +507,7 @@ class ShoppingController extends Controller
 
     public function clear(): RedirectResponse
     {
-        session()->forget(['shopping_cart', 'shopping_coupon']);
+        session()->forget(['shopping_cart', 'shopping_coupon', 'shopping_coupon_skipped']);
 
         return redirect()->route('shopping.index')->with('shopping_status', 'Your cart is empty.');
     }
@@ -381,23 +520,19 @@ class ShoppingController extends Controller
             return redirect()->route('shopping.index')->with('shopping_error', 'Coupons are not available right now.');
         }
 
-        $code = Str::upper(trim($data['coupon_code']));
-        $coupon = Coupon::query()->where('code', $code)->first();
+        $coupon = Coupon::findByCode($data['coupon_code']);
         $subtotal = $this->sessionSubtotal();
-        $user = $request->user();
+        $message = $coupon?->rejectionFor($request->user(), $subtotal, CouponCart::fromShoppingItems($this->sessionItems()))
+            ?? ($coupon === null ? 'Invalid coupon code.' : null);
 
-        $valid = $coupon !== null && ($user !== null
-            ? $coupon->isAvailableTo($user, $subtotal)
-            : ($coupon->is_active && ! $coupon->expires_at?->isPast()
-                && $coupon->customer_id === null
-                && $subtotal >= (float) $coupon->minimum_order_amount));
-
-        if (! $valid) {
+        if ($message !== null) {
             return back()
                 ->withInput()
-                ->with('shopping_error', 'This coupon is not valid for this cart.');
+                ->with('shopping_error', $message)
+                ->withErrors(['coupon_code' => $message]);
         }
 
+        session()->forget('shopping_coupon_skipped');
         session(['shopping_coupon' => $coupon->code]);
 
         return back()->with('shopping_status', 'Coupon '.$coupon->code.' applied.');
@@ -406,6 +541,7 @@ class ShoppingController extends Controller
     public function removeCoupon(): RedirectResponse
     {
         session()->forget('shopping_coupon');
+        session(['shopping_coupon_skipped' => true]);
 
         return back()->with('shopping_status', 'Coupon removed.');
     }
@@ -429,16 +565,19 @@ class ShoppingController extends Controller
                 : redirect()->route('shopping.index')->with('shopping_error', 'Sign in to finish your order.');
         }
 
-        $subtotal = $this->sessionSubtotal();
-        $discount = $this->discountFor($subtotal);
+        $quote = $this->pricedQuote($request->user());
 
         return view('customer.shopping.checkout', [
             'items' => $items,
             'quantity' => (int) $items->sum(fn (array $item) => (int) ($item['quantity'] ?? 1)),
-            'subtotal' => $subtotal,
-            'discount' => $discount,
-            'total' => max(0, $subtotal - $discount),
-            'coupon' => session('shopping_coupon'),
+            'subtotal' => $quote['subtotal'],
+            'packageDiscount' => $quote['package_discount'],
+            'offerLabel' => $quote['offer_label'],
+            'discount' => $quote['offer_discount'],
+            'total' => $quote['total'],
+            'coupon' => $quote['coupon_code'],
+            'couponOffer' => null,
+            'orderRewards' => app(CustomerDiscounts::class)->orderRewards($request->user()),
             'loginHref' => Route::has('auth.login') ? route('auth.login') : url('/login'),
         ]);
     }
@@ -467,10 +606,7 @@ class ShoppingController extends Controller
         $data = $request->validate([
             'items' => ['required', 'array', 'min:1'],
             'items.*.line' => ['required', 'string', 'max:64'],
-            'items.*.target_url' => ['required', 'url', 'max:2048'],
-            'items.*.anchor_text' => ['required', 'string', 'max:255'],
-            'items.*.article_topic' => ['required', 'string', 'max:255'],
-            'items.*.requirements' => ['nullable', 'string', 'max:5000'],
+            ...CheckoutItemRules::forItems(),
             'coupon_code' => ['nullable', 'string', 'max:40'],
         ]);
 
@@ -490,31 +626,44 @@ class ShoppingController extends Controller
             session(['shopping_coupon' => $code]);
         }
 
-        $subtotal = $this->sessionSubtotal();
-        $discount = $this->discountFor($subtotal);
         $couponCode = session('shopping_coupon');
 
         try {
-            $order = DB::transaction(function () use ($request, $sessionItems, $detailsByLine, $subtotal, $discount, $couponCode) {
-                $coupon = null;
+            $order = DB::transaction(function () use ($request, $sessionItems, $detailsByLine, $couponCode) {
+                $context = CouponCart::fromShoppingItems($sessionItems->all());
+                $subtotal = $this->sessionSubtotal();
 
                 if (is_string($couponCode) && $couponCode !== '' && Schema::hasTable('coupons')) {
-                    $coupon = Coupon::query()->where('code', $couponCode)->lockForUpdate()->first();
+                    $found = Coupon::findByCode($couponCode);
+                    $coupon = $found === null ? null : Coupon::query()->whereKey($found->id)->lockForUpdate()->first();
+                    $message = $coupon === null
+                        ? 'Invalid coupon code.'
+                        : $coupon->rejectionFor($request->user(), $subtotal, $context);
 
-                    if ($coupon === null || ! $coupon->isAvailableTo($request->user(), $subtotal)) {
+                    if ($message !== null) {
                         throw ValidationException::withMessages([
-                            'coupon_code' => 'This coupon is no longer available.',
+                            'coupon_code' => $message,
                         ]);
                     }
                 }
+
+                $quote = app(CustomerDiscounts::class)->quote(
+                    $request->user(),
+                    $subtotal,
+                    $this->sessionPackageDiscount(),
+                    $context,
+                    is_string($couponCode) ? $couponCode : null,
+                );
 
                 $order = Order::query()->create([
                     'order_number' => $this->uniqueOrderNumber(),
                     'customer_id' => $request->user()->id,
                     'session_id' => $request->session()->getId(),
-                    'total_amount' => max(0, $subtotal - $discount),
-                    'discount_amount' => $discount,
-                    'coupon_code' => $coupon?->code,
+                    'total_amount' => $quote['total'],
+                    'discount_amount' => $quote['offer_discount'],
+                    'package_discount_amount' => $quote['package_discount'],
+                    'coupon_code' => $quote['coupon_code'],
+                    'offer_type' => $quote['offer_type'],
                 ]);
 
                 foreach ($sessionItems as $item) {
@@ -534,16 +683,10 @@ class ShoppingController extends Controller
                         'target_url' => $details['target_url'],
                         'anchor_text' => $details['anchor_text'],
                         'article_topic' => $details['article_topic'],
+                        'keywords' => MaxKeywords::normalize($details['keywords'] ?? null),
                         'requirements' => $details['requirements'] ?? null,
-                    ]);
-                }
-
-                if ($coupon !== null && Schema::hasTable('coupon_usages')) {
-                    CouponUsage::query()->create([
-                        'coupon_id' => $coupon->id,
-                        'customer_id' => $request->user()->id,
-                        'order_id' => $order->id,
-                        'discount_amount' => $discount,
+                        'backlinks' => isset($item['backlinks']) ? (int) $item['backlinks'] : null,
+                        'selected_websites' => is_array($item['websites'] ?? null) && $item['websites'] !== [] ? array_values($item['websites']) : null,
                     ]);
                 }
 
@@ -556,8 +699,8 @@ class ShoppingController extends Controller
                     if ($cart !== null) {
                         $cart->update([
                             'status' => 'converted',
-                            'coupon_code' => $coupon?->code,
-                            'coupon_discount' => $discount,
+                            'coupon_code' => $quote['coupon_code'],
+                            'coupon_discount' => $quote['offer_discount'],
                         ]);
                     }
                 }
@@ -572,7 +715,7 @@ class ShoppingController extends Controller
                 ->with('shopping_error', 'We could not create your order. Please try again.');
         }
 
-        session()->forget(['shopping_cart', 'shopping_coupon']);
+        session()->forget(['shopping_cart', 'shopping_coupon', 'shopping_coupon_skipped']);
 
         if (Route::has('orders.payment')) {
             return redirect()->route('orders.payment', $order)
@@ -827,27 +970,31 @@ class ShoppingController extends Controller
             ->sum(fn ($item) => (float) $item['price'] * (int) ($item['quantity'] ?? 1));
     }
 
-    private function discountFor(float $subtotal): float
+    /**
+     * @return array{original: float, package_discount: float, subtotal: float, offer_type: ?string, offer_label: string, coupon_code: ?string, offer_discount: float, total: float}
+     */
+    private function pricedQuote(?User $customer = null): array
     {
         $code = session('shopping_coupon');
+        $quote = app(CustomerDiscounts::class)->quote(
+            $customer ?? request()->user(),
+            $this->sessionSubtotal(),
+            $this->sessionPackageDiscount(),
+            CouponCart::fromShoppingItems($this->sessionItems()),
+            is_string($code) ? $code : null,
+        );
 
-        if (! is_string($code) || $code === '' || ! Schema::hasTable('coupons')) {
-            return 0.0;
-        }
-
-        $coupon = Coupon::query()->where('code', $code)->first();
-
-        if ($coupon === null) {
+        if (is_string($code) && $code !== '' && $quote['coupon_code'] === null) {
             session()->forget('shopping_coupon');
-
-            return 0.0;
         }
 
-        $discount = $coupon->discount_type === 'percentage'
-            ? $subtotal * ((float) $coupon->discount_value / 100)
-            : (float) $coupon->discount_value;
+        return $quote;
+    }
 
-        return min($subtotal, round($discount, 2));
+    private function sessionPackageDiscount(): float
+    {
+        return (float) collect($this->sessionItems())
+            ->sum(fn ($item): float => (float) ($item['package_discount'] ?? 0) * (int) ($item['quantity'] ?? 1));
     }
 
     /**

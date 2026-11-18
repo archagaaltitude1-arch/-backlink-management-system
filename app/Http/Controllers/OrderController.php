@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Coupon;
-use App\Models\CouponUsage;
 use App\Models\Order;
 use App\Models\Website;
+use App\Rules\MaxKeywords;
+use App\Support\CheckoutItemRules;
+use App\Support\CouponCart;
+use App\Support\CustomerDiscounts;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,23 +31,24 @@ class OrderController extends Controller
     public function cart(Request $request): View|JsonResponse
     {
         $cart = $this->cartFor($request);
-        $subtotal = $this->cartSubtotal($cart);
+        $quote = $this->discountQuote($request, $cart);
 
         if ($request->expectsJson()) {
             return response()->json(['data' => [
                 'items' => $cart->items,
-                'coupon_code' => $cart->coupon_code,
-                'subtotal' => $subtotal,
-                'discount' => (float) $cart->coupon_discount,
-                'total' => max(0, $subtotal - (float) $cart->coupon_discount),
+                'coupon_code' => $quote['coupon_code'],
+                'subtotal' => $quote['subtotal'],
+                'discount' => $quote['offer_discount'],
+                'total' => $quote['total'],
             ]]);
         }
 
         return view('orders.cart', [
             'cart' => $cart,
             'catalog' => self::DEMO_CATALOG,
-            'subtotal' => $subtotal,
-            'total' => max(0, $subtotal - (float) $cart->coupon_discount),
+            'subtotal' => $quote['subtotal'],
+            'offer' => $quote,
+            'total' => $quote['total'],
         ]);
     }
 
@@ -113,25 +117,26 @@ class OrderController extends Controller
     {
         $data = $request->validate(['coupon_code' => ['required', 'string', 'max:40']]);
         $cart = $this->cartFor($request);
-        $coupon = Coupon::query()->where('code', Str::upper(trim($data['coupon_code'])))->first();
+        $coupon = Coupon::findByCode($data['coupon_code']);
         $subtotal = $this->cartSubtotal($cart);
+        $message = $coupon === null
+            ? 'Invalid coupon code.'
+            : $coupon->rejectionFor($request->user(), $subtotal, CouponCart::fromNamedItems($cart->items));
 
-        if (! $coupon || ! $coupon->isAvailableTo($request->user(), $subtotal)) {
+        if ($message !== null) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'This coupon is not valid for this purchase.'], 422);
+                return response()->json(['message' => $message], 422);
             }
 
-            return back()->withErrors(['coupon_code' => 'This coupon is not valid for this purchase.']);
+            return back()->withErrors(['coupon_code' => $message]);
         }
 
-        $discount = $coupon->discount_type === 'percentage'
-            ? $subtotal * ((float) $coupon->discount_value / 100)
-            : (float) $coupon->discount_value;
+        $discount = $coupon->discountAmount($subtotal);
 
-        $cart->update(['coupon_code' => $coupon->code, 'coupon_discount' => min($subtotal, $discount)]);
+        $cart->update(['coupon_code' => $coupon->code, 'coupon_discount' => $discount]);
 
         if ($request->expectsJson()) {
-            return response()->json(['data' => ['coupon_code' => $coupon->code, 'discount' => min($subtotal, $discount)]]);
+            return response()->json(['data' => ['coupon_code' => $coupon->code, 'discount' => $discount]]);
         }
 
         return back()->with('success', 'Coupon applied.');
@@ -159,23 +164,20 @@ class OrderController extends Controller
             return redirect()->route('orders.cart')->with('error', 'Add an item before checking out.');
         }
 
-        $subtotal = $this->cartSubtotal($cart);
+        $quote = $this->discountQuote($request, $cart);
 
         if ($request->expectsJson()) {
-            return response()->json(['data' => ['items' => $cart->items, 'subtotal' => $subtotal, 'discount' => (float) $cart->coupon_discount, 'total' => max(0, $subtotal - (float) $cart->coupon_discount)]]);
+            return response()->json(['data' => ['items' => $cart->items, 'subtotal' => $quote['subtotal'], 'discount' => $quote['offer_discount'], 'total' => $quote['total']]]);
         }
 
-        return view('orders.checkout', ['cart' => $cart, 'total' => max(0, $subtotal - (float) $cart->coupon_discount)]);
+        return view('orders.checkout', ['cart' => $cart, 'offer' => $quote, 'total' => $quote['total']]);
     }
 
     public function placeOrder(Request $request): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
             'items' => ['required', 'array', 'min:1'],
-            'items.*.target_url' => ['required', 'url', 'max:2048'],
-            'items.*.anchor_text' => ['required', 'string', 'max:255'],
-            'items.*.article_topic' => ['required', 'string', 'max:255'],
-            'items.*.requirements' => ['nullable', 'string', 'max:5000'],
+            ...CheckoutItemRules::forItems(),
         ]);
         $cart = $this->cartFor($request);
         if ($cart->items->isEmpty()) {
@@ -184,23 +186,30 @@ class OrderController extends Controller
 
         $order = DB::transaction(function () use ($request, $cart, $data) {
             $subtotal = $this->cartSubtotal($cart);
-            $coupon = $cart->coupon_code ? Coupon::query()->where('code', $cart->coupon_code)->lockForUpdate()->first() : null;
+            $context = CouponCart::fromNamedItems($cart->items);
 
-            if ($cart->coupon_code && (! $coupon || ! $coupon->isAvailableTo($request->user(), $subtotal))) {
-                throw ValidationException::withMessages(['coupon_code' => 'This coupon is no longer available.']);
+            if ($cart->coupon_code) {
+                $found = Coupon::findByCode($cart->coupon_code);
+                $coupon = $found === null ? null : Coupon::query()->whereKey($found->id)->lockForUpdate()->first();
+                $message = $coupon === null
+                    ? 'Invalid coupon code.'
+                    : $coupon->rejectionFor($request->user(), $subtotal, $context);
+
+                if ($message !== null) {
+                    throw ValidationException::withMessages(['coupon_code' => $message]);
+                }
             }
 
-            $discount = $coupon
-                ? ($coupon->discount_type === 'percentage' ? $subtotal * ((float) $coupon->discount_value / 100) : (float) $coupon->discount_value)
-                : 0;
-            $discount = min($subtotal, $discount);
+            $quote = app(CustomerDiscounts::class)->quote($request->user(), $subtotal, 0, $context, $cart->coupon_code);
             $order = Order::create([
                 'order_number' => $this->uniqueOrderNumber(),
                 'customer_id' => $request->user()->id,
                 'session_id' => $request->session()->getId(),
-                'total_amount' => $subtotal - $discount,
-                'discount_amount' => $discount,
-                'coupon_code' => $coupon?->code,
+                'total_amount' => $quote['total'],
+                'discount_amount' => $quote['offer_discount'],
+                'package_discount_amount' => $quote['package_discount'],
+                'coupon_code' => $quote['coupon_code'],
+                'offer_type' => $quote['offer_type'],
             ]);
             foreach ($cart->items as $index => $cartItem) {
                 $details = $data['items'][$index];
@@ -209,15 +218,9 @@ class OrderController extends Controller
                     'item_name' => $cartItem->item_name, 'unit_price' => $cartItem->unit_price, 'quantity' => $cartItem->quantity,
                     'credit_cost' => $cartItem->credit_cost * $cartItem->quantity,
                     'target_url' => $details['target_url'], 'anchor_text' => $details['anchor_text'],
-                    'article_topic' => $details['article_topic'], 'requirements' => $details['requirements'] ?? null,
-                ]);
-            }
-            if ($coupon) {
-                CouponUsage::create([
-                    'coupon_id' => $coupon->id,
-                    'customer_id' => $request->user()->id,
-                    'order_id' => $order->id,
-                    'discount_amount' => $discount,
+                    'article_topic' => $details['article_topic'],
+                    'keywords' => MaxKeywords::normalize($details['keywords'] ?? null),
+                    'requirements' => $details['requirements'] ?? null,
                 ]);
             }
             $cart->update(['status' => 'converted']);
@@ -252,6 +255,34 @@ class OrderController extends Controller
         }
 
         return view('orders.order-detail', ['order' => $order->load('items', 'invoice', 'rewardCoupon')]);
+    }
+
+    public function thanks(Request $request, Order $order): View|RedirectResponse
+    {
+        abort_unless($order->customer_id === $request->user()->id, 404);
+
+        if ($order->payment_status !== 'paid' && $request->query('stripe') !== 'returned') {
+            return redirect()->route('orders.payment', $order);
+        }
+
+        return view('orders.thanks', [
+            'order' => $order->load(['items', 'invoice', 'rewardCoupon.usages']),
+            'shopMore' => app(CustomerDiscounts::class)->shopMoreMessage($request->user()),
+        ]);
+    }
+
+    /**
+     * @return array{original: float, package_discount: float, subtotal: float, offer_type: ?string, offer_label: string, coupon_code: ?string, offer_discount: float, total: float}
+     */
+    private function discountQuote(Request $request, Cart $cart): array
+    {
+        return app(CustomerDiscounts::class)->quote(
+            $request->user(),
+            $this->cartSubtotal($cart),
+            0,
+            CouponCart::fromNamedItems($cart->items),
+            $cart->coupon_code,
+        );
     }
 
     private function cartFor(Request $request): Cart

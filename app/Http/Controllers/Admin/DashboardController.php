@@ -45,9 +45,17 @@ class DashboardController extends Controller
                 ->latest('submitted_at')
                 ->limit(8)
                 ->get(),
+            'awaitingApprovalOrders' => Order::query()
+                ->with('customer:id,name')
+                ->where('payment_status', 'paid')
+                ->where('order_status', 'awaiting_approval')
+                ->latest()
+                ->limit(8)
+                ->get(),
             'unassignedItems' => OrderItem::query()
                 ->with(['order.customer:id,name', 'assignment.staff:id,name'])
                 ->whereDoesntHave('assignment')
+                ->whereHas('order', fn ($query) => $query->where('payment_status', 'paid')->whereIn('order_status', ['processing', 'completed']))
                 ->latest()
                 ->limit(8)
                 ->get(),

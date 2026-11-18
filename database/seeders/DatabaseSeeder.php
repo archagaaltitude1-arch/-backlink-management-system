@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             SampleCatalogueSeeder::class,
             DemoCustomerWorkflowSeeder::class,
             FulfillmentWorkflowSeeder::class,
+            CouponDemoSeeder::class,
         ]);
     }
 }

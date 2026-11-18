@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderAssignment;
 use App\Models\OrderItem;
 use App\Models\User;
+use App\Support\CouponCart;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -75,7 +77,10 @@ class OrderController extends Controller
             'orderStatuses' => $this->orderStatuses,
             'assignmentFilters' => $this->assignmentFilters,
             'orderCount' => Order::query()->count(),
-            'needsStaffCount' => OrderItem::query()->whereDoesntHave('assignment')->count(),
+            'needsStaffCount' => OrderItem::query()
+                ->whereDoesntHave('assignment')
+                ->whereHas('order', fn ($query) => $query->where('payment_status', 'paid')->whereIn('order_status', ['processing', 'completed']))
+                ->count(),
             'withStaffCount' => OrderAssignment::query()->whereIn('status', ['assigned', 'in_progress'])->count(),
             'awaitingApprovalCount' => OrderAssignment::query()->where('status', 'published')->count(),
         ]);
@@ -88,7 +93,34 @@ class OrderController extends Controller
         return view('admin.orders.show', [
             'order' => $order,
             'staff' => $this->staffMembers(),
+            'coupons' => Coupon::query()
+                ->where('is_active', true)
+                ->where(fn ($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+                ->orderBy('code')
+                ->get(),
         ]);
+    }
+
+    public function sendCoupon(Request $request, Order $order): RedirectResponse
+    {
+        if ($order->payment_status === 'paid' || $order->customer === null) {
+            return back()->with('error', 'A coupon can be sent only before this order is paid.');
+        }
+
+        $data = $request->validate([
+            'coupon_id' => ['required', 'integer', 'exists:coupons,id'],
+        ]);
+        $coupon = Coupon::query()->findOrFail($data['coupon_id']);
+        $subtotal = (float) $order->total_amount + (float) $order->discount_amount;
+        $message = $coupon->rejectionFor($order->customer, $subtotal, CouponCart::fromNamedItems($order->items));
+
+        if ($message !== null) {
+            return back()->withErrors(['coupon_id' => $message]);
+        }
+
+        $coupon->deliverTo($order->customer);
+
+        return back()->with('success', 'Coupon '.$coupon->code.' will appear in a popup on '.$order->customer->name.'\'s checkout page.');
     }
 
     public function approve(Order $order): RedirectResponse

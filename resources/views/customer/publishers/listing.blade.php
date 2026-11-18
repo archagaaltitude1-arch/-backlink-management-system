@@ -191,8 +191,8 @@
             </div>
             @if ($selectable)
                 <div class="pub-select-bar">
-                    <p id="selection-count" aria-live="polite">@if ($selectionLimit) 0 of {{ $selectionLimit }} websites selected @else 0 websites selected @endif</p>
-                    <button class="pub-create" type="submit" data-selection-submit @if ($selectionForm !== '') form="{{ $selectionForm }}" @endif>Add to cart</button>
+                    <p id="selection-count" aria-live="polite">@if ($selectionLimit) 0/{{ $selectionLimit }} @else 0 websites selected @endif</p>
+                    <button class="pub-create" type="submit" data-selection-submit @if ($selectionForm !== '') form="{{ $selectionForm }}" @endif>{{ $selectionButton ?? (! empty($orderId ?? null) ? 'Confirm websites' : 'Add to cart') }}</button>
                 </div>
             @endif
         @endif

@@ -20,6 +20,7 @@ Route::get('/services', [ServicePageController::class, 'index'])->name('services
 Route::get('/services/{slug}', [ServicePageController::class, 'show'])->name('services.show');
 Route::get('/packages', [PackagePageController::class, 'index'])->name('packages.index');
 Route::get('/packages/{slug}/websites', [PackagePageController::class, 'websites'])->where('slug', '[a-z0-9\-]+')->name('packages.websites');
+Route::post('/packages/{slug}/websites', [PackagePageController::class, 'assign'])->where('slug', '[a-z0-9\-]+')->name('packages.websites.assign');
 Route::get('/packages/{slug}', [PackagePageController::class, 'show'])->where('slug', '[a-z0-9\-]+')->name('packages.show');
 Route::get('/tools', [ToolController::class, 'index'])->name('tools.index');
 Route::get('/tools/{slug}', [ToolController::class, 'show'])->where('slug', '[a-z0-9\-]+')->name('tools.show');

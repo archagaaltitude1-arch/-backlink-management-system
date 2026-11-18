@@ -9,7 +9,6 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Notifications\OrderPlacedNotification;
-use App\Support\PublicPackages;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -20,7 +19,11 @@ class StripeCheckout
 {
     public static function usesDemo(): bool
     {
-        return app()->environment('local', 'testing') && config('services.stripe.demo');
+        if (! app()->environment('local', 'testing')) {
+            return false;
+        }
+
+        return (bool) config('services.stripe.demo') || ! self::isConfigured();
     }
 
     public static function isConfigured(): bool
@@ -50,9 +53,7 @@ class StripeCheckout
                 return $pending;
             }
 
-            $order?->reservePaymentCoupon($customer);
-            $sites = $order ? PublicPackages::paidSites($order->items()->pluck('item_name')) : null;
-            $returnUrl = $sites['url'] ?? ($order ? route('orders.show', $order) : route('customer.wallet'));
+            $returnUrl = $order ? route('orders.thanks', $order) : route('customer.wallet');
             $returnUrl .= (str_contains($returnUrl, '?') ? '&' : '?').'stripe=returned';
 
             return $customer->payments()->create($target + [
@@ -159,6 +160,9 @@ class StripeCheckout
             if ($payment->order_id !== null) {
                 $order = Order::query()->lockForUpdate()->findOrFail($payment->order_id);
                 if ($order->payment_status !== 'paid') {
+                    if ($order->coupon_code) {
+                        $order->reservePaymentCoupon($payment->customer);
+                    }
                     $order->confirmPayment();
 
                     return $payment;

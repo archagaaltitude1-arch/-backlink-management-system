@@ -3,5 +3,60 @@
 @section('title', 'Checkout')
 
 @section('content')
-    <div class="mx-auto max-w-5xl space-y-6"><div><h1 class="mt-2 text-3xl font-semibold">Checkout</h1><p class="mt-2 text-sm text-navy/70">Add the publishing details for each item in your cart.</p></div>@if ($errors->any())<div class="rounded-xl bg-red-50 p-4 text-sm text-red-800">Please check the fields and try again.</div>@endif<form method="POST" action="{{ route('orders.store') }}" class="space-y-6">@csrf @foreach ($cart->items as $index => $item)<section class="panel p-6"><div class="flex flex-wrap items-baseline justify-between gap-2"><h2 class="text-lg font-semibold">{{ $item->item_name }}</h2><span class="text-sm text-navy/60">{{ $item->quantity }} × ${{ number_format($item->unit_price, 2) }}</span></div><div class="mt-5 grid gap-4 md:grid-cols-2"><div><label class="text-sm font-medium" for="target_url_{{ $index }}">Target URL</label><input id="target_url_{{ $index }}" name="items[{{ $index }}][target_url]" type="url" value="{{ old("items.$index.target_url") }}" required placeholder="https://your-site.com/page" class="mt-1 w-full rounded-lg border border-navy/15 px-3 py-2 text-sm">@error("items.$index.target_url")<p class="mt-1 text-sm text-red-800">{{ $message }}</p>@enderror</div><div><label class="text-sm font-medium" for="anchor_text_{{ $index }}">Anchor text</label><input id="anchor_text_{{ $index }}" name="items[{{ $index }}][anchor_text]" value="{{ old("items.$index.anchor_text") }}" required class="mt-1 w-full rounded-lg border border-navy/15 px-3 py-2 text-sm">@error("items.$index.anchor_text")<p class="mt-1 text-sm text-red-800">{{ $message }}</p>@enderror</div><div><label class="text-sm font-medium" for="article_topic_{{ $index }}">Article topic</label><input id="article_topic_{{ $index }}" name="items[{{ $index }}][article_topic]" value="{{ old("items.$index.article_topic") }}" required class="mt-1 w-full rounded-lg border border-navy/15 px-3 py-2 text-sm">@error("items.$index.article_topic")<p class="mt-1 text-sm text-red-800">{{ $message }}</p>@enderror</div><div><label class="text-sm font-medium" for="requirements_{{ $index }}">Additional requirements</label><textarea id="requirements_{{ $index }}" name="items[{{ $index }}][requirements]" rows="2" class="mt-1 w-full rounded-lg border border-navy/15 px-3 py-2 text-sm">{{ old("items.$index.requirements") }}</textarea>@error("items.$index.requirements")<p class="mt-1 text-sm text-red-800">{{ $message }}</p>@enderror</div></div></section>@endforeach<div class="panel flex flex-wrap items-center justify-between gap-4 p-6"><div><p class="text-sm text-navy/60">Order total</p><p class="text-2xl font-semibold">${{ number_format($total, 2) }}</p></div><button class="btn-primary" type="submit">Create order</button></div></form></div>
+    <div class="mx-auto max-w-5xl space-y-6">
+        <div>
+            <h1 class="mt-2 text-3xl font-semibold">Checkout</h1>
+            <p class="mt-2 text-sm text-navy/70">Add the publishing details for each item in your cart.</p>
+        </div>
+        @if ($errors->any())
+            <div class="rounded-xl bg-red-50 p-4 text-sm text-red-800">Please check the fields and try again.</div>
+        @endif
+        <form method="POST" action="{{ route('orders.store') }}" class="space-y-6">
+            @csrf
+            @foreach ($cart->items as $index => $item)
+                <section class="panel p-6">
+                    <div class="flex flex-wrap items-baseline justify-between gap-2">
+                        <h2 class="text-lg font-semibold">{{ $item->item_name }}</h2>
+                        <span class="text-sm text-navy/60">{{ $item->quantity }} × ${{ number_format($item->unit_price, 2) }}</span>
+                    </div>
+                    <div class="mt-5 grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label class="text-sm font-medium" for="target_url_{{ $index }}">Target URL</label>
+                            <input id="target_url_{{ $index }}" name="items[{{ $index }}][target_url]" type="url" value="{{ old("items.$index.target_url") }}" required placeholder="https://your-site.com/page" class="mt-1 w-full rounded-lg border border-navy/15 px-3 py-2 text-sm">
+                            @error("items.$index.target_url")<p class="mt-1 text-sm text-red-800">{{ $message }}</p>@enderror
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium" for="anchor_text_{{ $index }}">Anchor text <span class="text-navy/50">(15–20 characters)</span></label>
+                            <input id="anchor_text_{{ $index }}" name="items[{{ $index }}][anchor_text]" value="{{ old("items.$index.anchor_text") }}" required minlength="15" maxlength="20" class="mt-1 w-full rounded-lg border border-navy/15 px-3 py-2 text-sm">
+                            @error("items.$index.anchor_text")<p class="mt-1 text-sm text-red-800">{{ $message }}</p>@enderror
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium" for="article_topic_{{ $index }}">Article topic</label>
+                            <input id="article_topic_{{ $index }}" name="items[{{ $index }}][article_topic]" value="{{ old("items.$index.article_topic") }}" required class="mt-1 w-full rounded-lg border border-navy/15 px-3 py-2 text-sm">
+                            @error("items.$index.article_topic")<p class="mt-1 text-sm text-red-800">{{ $message }}</p>@enderror
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-sm font-medium" for="keywords_{{ $index }}">Keywords <span class="text-navy/50">(<span data-keyword-count>0 / 5</span>)</span></label>
+                            <input id="keywords_{{ $index }}" name="items[{{ $index }}][keywords]" value="{{ old("items.$index.keywords") }}" maxlength="500" placeholder="keyword one, keyword two" data-max-keywords="5" autocomplete="off" class="mt-1 w-full rounded-lg border border-navy/15 px-3 py-2 text-sm">
+                            <p class="mt-1 text-xs text-navy/55">Separate with commas. You can’t type more than 5 keywords.</p>
+                            @error("items.$index.keywords")<p class="mt-1 text-sm text-red-800">{{ $message }}</p>@enderror
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-sm font-medium" for="requirements_{{ $index }}">Additional requirements</label>
+                            <textarea id="requirements_{{ $index }}" name="items[{{ $index }}][requirements]" rows="2" class="mt-1 w-full rounded-lg border border-navy/15 px-3 py-2 text-sm">{{ old("items.$index.requirements") }}</textarea>
+                            @error("items.$index.requirements")<p class="mt-1 text-sm text-red-800">{{ $message }}</p>@enderror
+                        </div>
+                    </div>
+                </section>
+            @endforeach
+            <div class="panel flex flex-wrap items-center justify-between gap-4 p-6">
+                <div>
+                    <p class="text-sm text-navy/60">Order total</p>
+                    <p class="text-2xl font-semibold">${{ number_format($total, 2) }}</p>
+                </div>
+                <button class="btn-primary" type="submit">Create order</button>
+            </div>
+        </form>
+    </div>
+    <x-limit-keywords-script />
 @endsection
