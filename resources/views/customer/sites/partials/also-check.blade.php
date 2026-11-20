@@ -16,7 +16,7 @@
         .site-also-label {
             margin: 0;
             color: #152029;
-            font-family: Montserrat, sans-serif;
+            font-family: var(--font-sans), sans-serif;
             font-size: 16px;
             font-weight: 800;
         }

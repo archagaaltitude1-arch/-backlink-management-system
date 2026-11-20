@@ -12,6 +12,18 @@ class PackageTierSelectionTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_packages_page_offers_a_live_package_selection(): void
+    {
+        $this->get(route('packages.index'))
+            ->assertOk()
+            ->assertSee('id="select"', false)
+            ->assertSee('data-package-service="text-link"', false)
+            ->assertSee('data-package-service="contextual-link"', false)
+            ->assertSee('data-package-service="guest-post"', false)
+            ->assertSee('data-tier-tab="starter"', false)
+            ->assertSee('Continue to Checkout', false);
+    }
+
     public function test_service_pages_use_package_tabs_instead_of_separate_cards(): void
     {
         foreach (['guest-post', 'contextual-link', 'text-link'] as $service) {

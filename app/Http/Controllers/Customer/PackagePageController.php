@@ -19,9 +19,33 @@ class PackagePageController extends Controller
     public function index(): View
     {
         return view('customer.packages.index', [
-            'packages' => $this->withStoredPrice(PublicPackages::items()),
             'guestPostPrices' => PublicPackages::guestPostPrices(),
+            'packageSelections' => $this->packageSelections(),
         ]);
+    }
+
+    /**
+     * @return list<array{slug: string, name: string, tabs: list<array<string, mixed>>}>
+     */
+    private function packageSelections(): array
+    {
+        $names = [];
+
+        foreach (config('backlink_services.menu', []) as $item) {
+            $names[(string) ($item['slug'] ?? '')] = (string) ($item['name'] ?? '');
+        }
+
+        $selections = [];
+
+        foreach (['text-link', 'contextual-link', 'guest-post'] as $slug) {
+            $selections[] = [
+                'slug' => $slug,
+                'name' => ($names[$slug] ?? '') !== '' ? $names[$slug] : $slug,
+                'tabs' => PublicPackages::tabs($slug),
+            ];
+        }
+
+        return $selections;
     }
 
     public function show(string $slug): View
@@ -98,6 +122,11 @@ class PackagePageController extends Controller
             'orderId' => $orderId > 0 ? $orderId : null,
             'orderType' => trim((string) $request->query('order_type', '')),
             'rows' => collect($catalog['rows'])
+                ->map(function (array $row): array {
+                    $row['metrics_source'] = filled($row['backlinks_refreshed_at'] ?? null) ? 'dataforseo' : 'sample';
+
+                    return $row;
+                })
                 ->sortByDesc(fn (array $row) => $row['dr'] ?? -1)
                 ->values()
                 ->all(),

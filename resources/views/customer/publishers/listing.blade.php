@@ -45,7 +45,7 @@
     .pub-crumb a { color: inherit; text-decoration: none; }
     .pub-crumb a:hover { color: #C0340D; }
     .pub-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px; }
-    .pub-head h1 { margin: 0; max-width: 820px; font-family: Montserrat, sans-serif; font-size: 34px; font-weight: 800; line-height: 1.15; }
+    .pub-head h1 { margin: 0; max-width: 820px; font-family: var(--font-sans), sans-serif; font-size: 34px; font-weight: 800; line-height: 1.15; }
     .pub-recent, .pub-create, .pub-apply { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 8px; padding: 0 16px; font-size: 13px; font-weight: 800; letter-spacing: 0.03em; text-decoration: none; text-transform: uppercase; }
     .pub-recent { border: 1px solid #FF4917; background: #fff; color: #FF4917; }
     .pub-recent:hover, .pub-apply:hover { background: #FFF1EC; color: #C0340D; }
@@ -55,7 +55,7 @@
     .pub-note { margin: 12px 0 0; color: #C0340D; font-size: 14px; font-weight: 700; }
     .pub-status { margin: 0 0 16px; border-radius: 12px; background: #FFF1EC; padding: 12px 14px; color: #C0340D; font-size: 14px; font-weight: 700; line-height: 1.5; }
     .pub-check { margin-top: 22px; }
-    .pub-check h2, .pub-project h2 { margin: 0; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 800; }
+    .pub-check h2, .pub-project h2 { margin: 0; font-family: var(--font-sans), sans-serif; font-size: 16px; font-weight: 800; }
     .pub-options { display: grid; gap: 8px 24px; margin: 12px 0 0; padding: 0; list-style: none; }
     .pub-options a { color: #C0340D; font-weight: 700; text-decoration: none; }
     .pub-options a:hover { text-decoration: underline; }
@@ -73,7 +73,7 @@
     .pub-empty { margin: 0; padding: 18px; color: #4A5560; }
     .pub-embed-head { margin: 8px 0 4px; text-align: center; }
     .pub-kicker { margin: 0 0 12px; color: #C0340D; font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
-    .pub-embed-head h2 { margin: 0; font-family: Montserrat, sans-serif; font-size: clamp(28px, 3vw, 40px); font-weight: 800; line-height: 1.12; }
+    .pub-embed-head h2 { margin: 0; font-family: var(--font-sans), sans-serif; font-size: clamp(28px, 3vw, 40px); font-weight: 800; line-height: 1.12; }
     .pub-embed-head p:last-child { max-width: 46rem; margin: 16px auto 0; color: #4A5560; font-size: 17px; line-height: 1.65; }
     .pub-select-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; border: 1px solid #E3E5E8; border-radius: 16px; background: #fff; padding: 16px; }
     .pub-select-bar p { margin: 0; font-weight: 800; }

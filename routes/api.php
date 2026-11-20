@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\Customer\PageController;
 use App\Http\Controllers\Seo\StaffApiController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/stripe/webhook', [StripeWebhookController::class, '__invoke'])->name('stripe.webhook');
+
+Route::get('/home', [PageController::class, 'homeJson'])->name('api.home');
 
 /*
 |--------------------------------------------------------------------------

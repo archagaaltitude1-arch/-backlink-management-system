@@ -33,13 +33,7 @@ use App\Http\Controllers\WebsiteController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect()->to(auth()->user()->dashboardUrl());
-    }
-
-    return app(PageController::class)->home();
-});
+Route::get('/', [PageController::class, 'home']);
 
 Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('auth.register');

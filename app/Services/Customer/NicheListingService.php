@@ -404,6 +404,7 @@ class NicheListingService
             'referring_domains' => is_numeric($website->referring_domains ?? null) ? (int) $website->referring_domains : null,
             'backlinks' => $this->intColumn($website, 'backlinks'),
             'backlinks_refreshed_at' => $website->backlinks_refreshed_at,
+            'metrics_source' => filled($website->backlinks_refreshed_at ?? null) ? 'dataforseo' : null,
             'price' => is_numeric($website->price ?? null) ? (float) $website->price : null,
             'sports_allowed' => $this->boolColumn($website, 'sports_allowed'),
             'pharmacy_allowed' => $this->boolColumn($website, 'pharmacy_allowed'),
@@ -459,7 +460,9 @@ class NicheListingService
             $filled = true;
         }
 
-        if (! is_numeric($row['traffic'] ?? null) || (int) $row['traffic'] <= 0) {
+        $live = filled($row['backlinks_refreshed_at'] ?? null);
+
+        if (! $live && (! is_numeric($row['traffic'] ?? null) || (int) $row['traffic'] <= 0)) {
             $row['traffic'] = 2800 + ($seed % 160000);
             $filled = true;
         }
@@ -501,7 +504,7 @@ class NicheListingService
             $filled = true;
         }
 
-        if (! is_numeric($row['spam'] ?? null)) {
+        if (! $live && ! is_numeric($row['spam'] ?? null)) {
             $row['spam'] = 1 + ($seed % 8);
             $filled = true;
         }

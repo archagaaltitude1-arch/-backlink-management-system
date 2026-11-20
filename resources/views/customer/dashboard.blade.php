@@ -8,7 +8,7 @@
 
         @if (! empty($firstOrder))
             <section class="panel p-4 sm:p-5">
-                <p class="text-xs font-semibold tracking-wider text-brand uppercase">New customer offer</p>
+                <p class="eyebrow text-brand">New customer offer</p>
                 <h2 class="mt-2 text-lg font-semibold">{{ $firstOrder->summary() }} on your first order</h2>
                 <p class="mt-1 text-sm text-navy/65">It is applied automatically at checkout. You can use it once, after payment is confirmed.</p>
                 <a class="mt-3 inline-flex text-sm font-semibold text-brand-dark hover:underline" href="{{ route('customer.coupons') }}">View coupons</a>

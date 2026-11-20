@@ -36,6 +36,7 @@ return [
     'dataforseo' => [
         'login' => env('DATAFORSEO_LOGIN'),
         'password' => env('DATAFORSEO_PASSWORD'),
+        'verify' => filter_var(env('DATAFORSEO_VERIFY_SSL', true), FILTER_VALIDATE_BOOLEAN),
     ],
 
     'postmark' => [

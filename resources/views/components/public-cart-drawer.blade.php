@@ -80,7 +80,7 @@
     }
     .cart-drawer-head h2 {
         margin: 0;
-        font-family: Montserrat, sans-serif;
+        font-family: var(--font-sans), sans-serif;
         font-size: 22px;
         font-weight: 800;
     }

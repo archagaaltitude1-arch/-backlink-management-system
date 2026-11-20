@@ -96,6 +96,7 @@ class SampleCatalogueSeeder extends Seeder
             'Automotive' => 'Vehicles, repairs, and the automotive industry.',
             'Sports' => 'Teams, fitness, and sporting events.',
             'Food' => 'Recipes, restaurants, and food products.',
+            'Agriculture & Farming' => 'Farming, crops, livestock, and agricultural business.',
             'Legal' => 'Law firms, compliance, and legal services.',
         ];
 

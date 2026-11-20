@@ -5,14 +5,14 @@
 @section('content')
     <div class="mx-auto max-w-xl space-y-6">
         <div>
-            <p class="text-xs font-semibold tracking-wider text-brand uppercase">Customer access</p>
+            <p class="eyebrow text-brand">Customer access</p>
             <h1 class="mt-2 text-3xl font-semibold">Sign in</h1>
         </div>
         @if ($errors->any())
             <p class="rounded-xl bg-red-50 p-4 text-sm text-red-800" role="alert">{{ $errors->first() }}</p>
         @endif
         <section class="panel space-y-5 p-6">
-            <button id="google-sign-in" type="button" class="btn w-full border border-navy/15 bg-white hover:bg-canvas">
+            <button id="google-sign-in" type="button" class="btn-outline w-full">
                 Continue with Google
             </button>
             <p id="google-sign-in-error" class="text-sm text-red-800" role="alert" hidden></p>

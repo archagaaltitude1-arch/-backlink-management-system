@@ -42,6 +42,34 @@ class CustomerAccountTest extends TestCase
             ->assertSee('Real, Traffic-Driven Websites', false);
     }
 
+    public function test_spa_sign_in_reports_a_rejected_password(): void
+    {
+        $this->withHeaders([
+            'X-Backlink-Spa' => '1',
+            'Accept' => 'text/html, application/json',
+        ])->post('/login', [
+            'email' => 'missing@example.test',
+            'password' => 'wrong-password',
+        ])->assertOk()
+            ->assertJsonPath('errors.email.0', 'The provided credentials do not match our records.');
+    }
+
+    public function test_spa_sign_up_reports_a_short_password(): void
+    {
+        $response = $this->withHeaders([
+            'X-Backlink-Spa' => '1',
+            'Accept' => 'text/html, application/json',
+        ])->post('/register', [
+            'name' => 'Taylor Customer',
+            'email' => 'taylor@example.test',
+            'password' => 'short',
+            'password_confirmation' => 'short',
+        ]);
+
+        $response->assertOk();
+        $this->assertNotEmpty($response->json('errors.password'));
+    }
+
     public function test_guest_login_page_hides_customer_navigation(): void
     {
         $this->get(route('auth.login'))

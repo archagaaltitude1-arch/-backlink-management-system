@@ -13,6 +13,7 @@ use App\Services\Customer\NicheListingService;
 use App\Services\Customer\PublishOfferService;
 use App\Support\CheckoutItemRules;
 use App\Support\CouponCart;
+use App\Support\CouponReservation;
 use App\Support\CustomerDiscounts;
 use App\Support\PublicPackages;
 use App\Support\PublicSites;
@@ -109,8 +110,8 @@ class ShoppingController extends Controller
         $items[$line] = $this->build($line, $details, $type, $topic, $project, $quantity);
         session(['shopping_cart' => $items]);
 
-        return back()
-            ->with('open_cart', true)
+        return redirect()
+            ->route('shopping.checkout')
             ->with('shopping_status', 'Publish Guest Post on '.$details['display_name'].' was added to your cart.');
     }
 
@@ -566,6 +567,9 @@ class ShoppingController extends Controller
         }
 
         $quote = $this->pricedQuote($request->user());
+        $choices = $this->couponChoices($request->user(), (float) $quote['subtotal']);
+        $applied = $quote['coupon_code'];
+        $hasOpenChoice = $choices->contains(fn (Coupon $coupon): bool => $coupon->code !== $applied);
 
         return view('customer.shopping.checkout', [
             'items' => $items,
@@ -575,9 +579,16 @@ class ShoppingController extends Controller
             'offerLabel' => $quote['offer_label'],
             'discount' => $quote['offer_discount'],
             'total' => $quote['total'],
-            'coupon' => $quote['coupon_code'],
-            'couponOffer' => null,
+            'coupon' => $applied,
+            'couponOffer' => $hasOpenChoice || $applied !== null
+                ? null
+                : app(CouponReservation::class)->offer(
+                    $request->user(),
+                    (float) $quote['subtotal'],
+                    CouponCart::fromShoppingItems($this->sessionItems()),
+                ),
             'orderRewards' => app(CustomerDiscounts::class)->orderRewards($request->user()),
+            'couponChoices' => $choices,
             'loginHref' => Route::has('auth.login') ? route('auth.login') : url('/login'),
         ]);
     }
@@ -961,6 +972,35 @@ class ShoppingController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Coupons the customer can apply on this cart, plus any reward they saved for later.
+     *
+     * @return Collection<int, Coupon>
+     */
+    private function couponChoices(User $customer, float $subtotal): Collection
+    {
+        $saved = app(CustomerDiscounts::class)->orderRewards($customer)
+            ->filter(fn (Coupon $coupon): bool => $coupon->saved_for_later_at !== null);
+
+        if (! Schema::hasTable('coupons')) {
+            return $saved->values();
+        }
+
+        $context = CouponCart::fromShoppingItems($this->sessionItems());
+        $applicable = Coupon::query()
+            ->where('customer_id', $customer->id)
+            ->where('is_active', true)
+            ->where(function ($query): void {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->whereDoesntHave('usages')
+            ->latest()
+            ->get()
+            ->filter(fn (Coupon $coupon): bool => $coupon->rejectionFor($customer, $subtotal, $context) === null);
+
+        return $saved->concat($applicable)->unique('id')->values();
     }
 
     private function sessionSubtotal(): float

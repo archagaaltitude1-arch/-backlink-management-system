@@ -41,7 +41,7 @@
                     $tick = (int) round($max * $ratio);
                 @endphp
                 <line x1="{{ $left }}" y1="{{ $y }}" x2="{{ $width - $right }}" y2="{{ $y }}" stroke="#E3E5E8" stroke-width="1" />
-                <text x="{{ $left - 8 }}" y="{{ $y + 4 }}" text-anchor="end" fill="#4A5560" font-size="12" font-family="Ubuntu, sans-serif">{{ \App\Support\DemoNicheData::compact($tick) }}</text>
+                <text x="{{ $left - 8 }}" y="{{ $y + 4 }}" text-anchor="end" fill="#4A5560" font-size="12" font-family="Manrope, sans-serif">{{ \App\Support\DemoNicheData::compact($tick) }}</text>
             @endfor
             @if ($area !== '')
                 <polygon points="{{ $area }}" fill="#FF4917" fill-opacity="0.1" stroke="none" />
@@ -52,9 +52,9 @@
                     <title>{{ $coord['point']['label'] }}: {{ \App\Support\DemoNicheData::compact($coord['point']['value']) }}</title>
                     @if ($loop->last)
                         <circle cx="{{ $coord['x'] }}" cy="{{ $coord['y'] }}" r="4" fill="#FF4917" />
-                        <text x="{{ $coord['x'] }}" y="{{ max(14, $coord['y'] - 10) }}" text-anchor="middle" fill="#152029" font-size="12" font-weight="700" font-family="Ubuntu, sans-serif">{{ \App\Support\DemoNicheData::compact($coord['point']['value']) }}</text>
+                        <text x="{{ $coord['x'] }}" y="{{ max(14, $coord['y'] - 10) }}" text-anchor="middle" fill="#152029" font-size="12" font-weight="700" font-family="Manrope, sans-serif">{{ \App\Support\DemoNicheData::compact($coord['point']['value']) }}</text>
                     @endif
-                    <text x="{{ $coord['x'] }}" y="{{ $height - 12 }}" text-anchor="middle" fill="#4A5560" font-size="12" font-family="Ubuntu, sans-serif">{{ $coord['point']['short'] }}</text>
+                    <text x="{{ $coord['x'] }}" y="{{ $height - 12 }}" text-anchor="middle" fill="#4A5560" font-size="12" font-family="Manrope, sans-serif">{{ $coord['point']['short'] }}</text>
                 </g>
             @endforeach
         </svg>

@@ -19,15 +19,14 @@
             color: #152029;
         }
         .say-head {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            display: grid;
+            align-items: end;
             gap: 24px;
-            padding: 72px clamp(24px, 4vw, 56px) 0;
-            text-align: center;
+            padding: 72px clamp(24px, 4vw, 48px) 0;
+            text-align: left;
         }
         .say-kicker {
-            margin: 0 0 10px;
+            margin: 0 0 12px;
             color: #C0340D;
             font-size: 12px;
             font-weight: 800;
@@ -35,19 +34,23 @@
             text-transform: uppercase;
         }
         .say-title {
-            margin: 0 auto;
-            max-width: 18em;
-            font-size: clamp(32px, 4vw, 44px);
-            line-height: 1.08;
-            font-weight: 800;
-            letter-spacing: -0.02em;
+            margin: 0;
+            max-width: 12em;
+            font-size: clamp(36px, 4vw, 48px);
+            line-height: 1.15;
+            font-weight: 400;
         }
         .say-lead {
-            margin: 14px auto 0;
-            max-width: 46ch;
+            margin: 0;
+            max-width: 36ch;
             color: #4A5560;
-            font-size: 16px;
-            line-height: 1.65;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+        .say-aside { justify-self: start; }
+        @media (min-width: 900px) {
+            .say-head { grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.7fr); }
+            .say-aside { justify-self: end; }
         }
         .say-controls {
             display: flex;
@@ -80,73 +83,66 @@
         .say-stage {
             position: relative;
             overflow: hidden;
-            margin: 0 clamp(24px, 4vw, 56px);
-            padding: 28px 0 72px;
+            margin: 0;
+            padding: 28px clamp(24px, 4vw, 48px) 72px;
             container-type: inline-size;
         }
         .say-track {
             display: flex;
-            gap: 20px;
+            gap: 16px;
+            align-items: stretch;
             width: max-content;
             transition: transform 0.45s ease;
         }
         .say-card {
             display: flex;
             width: 100cqi;
-            min-height: 280px;
             flex: none;
             flex-direction: column;
-            align-items: center;
             margin: 0;
-            text-align: center;
-            border: 1px solid #E3E5E8;
-            border-radius: 20px;
-            background: #fff;
-            padding: 28px 24px 22px;
-            box-shadow: 0 10px 28px rgba(21, 32, 41, 0.05);
+            overflow: hidden;
+            border: 1px solid #152029;
+            border-radius: 16px;
+            background: #152029;
+            box-shadow: 0 10px 28px rgba(21, 32, 41, 0.12);
         }
-        .say-mark {
+        .say-photo {
             display: block;
-            margin: 0 0 8px;
-            color: #FF4917;
-            font-family: Georgia, "Times New Roman", serif;
-            font-size: 42px;
-            line-height: 0.8;
+            width: 100%;
+            height: 208px;
+            flex: none;
+            object-fit: cover;
+            object-position: center 18%;
+        }
+        .say-panel {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            background: #152029;
+            color: #fff;
+            padding: 20px;
         }
         .say-bubble {
             margin: 0;
-            color: #152029;
-            font-size: 16px;
-            line-height: 1.65;
+            color: #fff;
+            font-size: 15px;
+            line-height: 1.7;
         }
-        .say-person {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            margin-top: auto;
-            padding-top: 22px;
-            text-align: center;
-        }
-        .say-person img {
-            width: 44px;
-            height: 44px;
-            flex: none;
-            border-radius: 999px;
-            object-fit: cover;
-        }
-        .say-name { margin: 0; font-size: 15px; font-weight: 800; }
+        .say-line { height: 1px; margin: auto 0 16px; background: rgba(255, 255, 255, 0.15); }
+        .say-name { margin: 0; color: #fff; font-size: 15px; font-weight: 800; }
         .say-role {
-            margin: 2px 0 0;
-            color: #4A5560;
-            font-size: 13px;
-            font-weight: 600;
+            margin: 4px 0 0;
+            color: #D5DCE3;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
         }
-        @media (min-width: 900px) {
-            .say-card { width: calc((100cqi - 60px) / 4); }
+        @container (min-width: 1100px) {
+            .say-card { width: calc((100cqi - 48px) / 4); }
         }
-        @media (min-width: 640px) and (max-width: 899px) {
-            .say-card { width: calc((100cqi - 20px) / 2); }
+        @container (min-width: 640px) and (max-width: 1099px) {
+            .say-card { width: calc((100cqi - 16px) / 2); }
         }
         @media (max-width: 800px) {
             .say-head {
@@ -165,9 +161,10 @@
         <div>
             <p class="say-kicker">Testimonials</p>
             <h2 id="reviews-heading" class="say-title font-display">What our customers are saying</h2>
-            <p class="say-lead">Campaign notes from teams who order placements through BacklinkPro.</p>
         </div>
-        <div class="say-controls">
+        <div class="say-aside">
+            <p class="say-lead">Campaign notes from teams who order placements through BacklinkPro.</p>
+            <div class="say-controls" style="margin-top: 16px;">
             <p class="say-status" data-review-status>1 / {{ count($reviews) }}</p>
             <div class="say-nav">
                 <button type="button" class="say-btn" data-review-prev aria-label="Previous review">
@@ -179,20 +176,17 @@
             </div>
         </div>
     </div>
+    </div>
     <div class="say-stage" data-review-stage>
         <div class="say-track" data-review-track>
             @foreach ($reviews as $review)
                 <figure class="say-card" data-review-card>
-                    <blockquote class="say-bubble">
-                        <span class="say-mark" aria-hidden="true">“</span>
-                        {{ $review['quote'] }}
-                    </blockquote>
-                    <figcaption class="say-person">
-                        <img src="{{ asset('images/reviews/'.$review['photo']) }}" alt="" width="44" height="44">
-                        <div>
-                            <p class="say-name">{{ $review['name'] }}</p>
-                            <p class="say-role">{{ $review['role'] }}</p>
-                        </div>
+                    <img class="say-photo" src="{{ asset('images/reviews/'.$review['photo']) }}" alt="">
+                    <figcaption class="say-panel">
+                        <blockquote class="say-bubble">{{ $review['quote'] }}</blockquote>
+                        <div class="say-line"></div>
+                        <p class="say-name">{{ $review['name'] }}</p>
+                        <p class="say-role">{{ $review['role'] }}</p>
                     </figcaption>
                 </figure>
             @endforeach
