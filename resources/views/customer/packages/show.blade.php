@@ -20,28 +20,29 @@
         .pk-crumb a { color: inherit; text-decoration: none; }
         .pk-crumb a:hover { color: #C0340D; }
         .pk-grid { display: grid; gap: 20px; }
-        .pk-hero { position: relative; overflow: hidden; min-height: 420px; border-radius: 16px; background: linear-gradient(155deg, #1D4ED8 0%, #153A8A 48%, #152029 100%); color: #fff; padding: 36px 28px; }
-        .pk-hero h2 { position: relative; z-index: 1; margin: 48px 0 0; max-width: 460px; font-family: Montserrat, sans-serif; font-size: clamp(34px, 4vw, 52px); font-weight: 800; line-height: 0.98; text-transform: uppercase; }
-        .pk-badge { position: absolute; top: 0; right: 0; z-index: 1; width: 168px; height: 168px; background: #FF4917; clip-path: polygon(100% 0, 0 0, 100% 100%); }
-        .pk-badge span { position: absolute; top: 28px; right: 12px; max-width: 92px; font-family: Montserrat, sans-serif; font-size: 22px; font-weight: 800; line-height: 1.05; text-align: right; }
+        .pk-hero { position: relative; overflow: hidden; min-height: 420px; border: 1px solid rgba(198, 161, 91, 0.45); border-radius: 16px; background: linear-gradient(160deg, #152029 0%, #0c0c0e 62%, #2a2114 100%); color: #fff; padding: 36px 28px; }
+        .pk-hero h2 { position: relative; z-index: 1; margin: 48px 0 0; max-width: 460px; font-family: var(--font-sans), sans-serif; font-size: clamp(34px, 4vw, 52px); font-weight: 800; line-height: 0.98; text-transform: uppercase; }
+        .pk-gold { position: absolute; top: 0; right: 0; z-index: 1; width: 180px; height: 180px; background: #C6A15B; clip-path: polygon(100% 0, 0 0, 100% 100%); }
+        .pk-badge { position: absolute; top: 0; right: 0; z-index: 2; width: 164px; height: 164px; background: #FF4917; clip-path: polygon(100% 0, 0 0, 100% 100%); }
+        .pk-badge span { position: absolute; top: 28px; right: 12px; max-width: 92px; font-family: var(--font-sans), sans-serif; font-size: 22px; font-weight: 800; line-height: 1.05; text-align: right; }
         .pk-marks { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 8px; max-width: 440px; margin-top: 28px; }
-        .pk-mark { display: inline-flex; align-items: center; min-height: 36px; border: 1px solid rgba(255,255,255,.45); border-radius: 8px; padding: 4px 10px; background: rgba(255,255,255,.08); font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+        .pk-mark { display: inline-flex; align-items: center; min-height: 36px; border: 1px solid rgba(198, 161, 91, 0.55); border-radius: 8px; padding: 4px 10px; background: rgba(255,255,255,.08); font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
         .pk-price-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px; }
         .pk-price-row .pk-price { margin: 0; }
         .pk-cat { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; border: 1px solid #E3E5E8; border-radius: 8px; padding: 4px 10px; color: #4A5560; font-size: 14px; font-weight: 700; }
         .pk-hero ul { position: relative; z-index: 1; margin: 28px 0 0; padding: 0; list-style: none; max-width: 420px; }
         .pk-hero li { position: relative; margin-top: 10px; padding-left: 16px; font-size: 16px; line-height: 1.4; }
-        .pk-hero li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 6px; height: 6px; border-radius: 50%; background: #fff; }
+        .pk-hero li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 6px; height: 6px; border-radius: 50%; background: #C6A15B; }
         .pk-panel { background: #fff; border: 1px solid #E3E5E8; border-radius: 16px; padding: 22px; }
-        .pk-panel h1 { margin: 0; font-family: Montserrat, sans-serif; font-size: 32px; font-weight: 800; line-height: 1.15; }
-        .pk-price { margin: 16px 0 0; font-family: Montserrat, sans-serif; font-size: 34px; font-weight: 800; }
+        .pk-panel h1 { margin: 0; font-family: var(--font-sans), sans-serif; font-size: 32px; font-weight: 800; line-height: 1.15; }
+        .pk-price { margin: 16px 0 0; font-family: var(--font-sans), sans-serif; font-size: 34px; font-weight: 800; }
         .pk-lead, .pk-copy p { color: #152029; font-size: 15px; line-height: 1.65; }
         .pk-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
         .pk-chip { display: inline-flex; align-items: center; min-height: 40px; border: 1px solid #E3E5E8; border-radius: 8px; padding: 6px 10px; font-size: 14px; font-weight: 700; }
         .pk-sample { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; margin-top: 16px; padding: 8px 18px; border: 1px solid #FF4917; border-radius: 8px; background: #fff; color: #FF4917; font-size: 14px; font-weight: 800; letter-spacing: 0.02em; text-decoration: none; }
         .pk-sample:hover { background: #FFF1EC; color: #C0340D; }
         .pk-copy { margin-top: 22px; }
-        .pk-copy h2 { margin: 22px 0 8px; font-family: Montserrat, sans-serif; font-size: 20px; font-weight: 800; }
+        .pk-copy h2 { margin: 22px 0 8px; font-family: var(--font-sans), sans-serif; font-size: 20px; font-weight: 800; }
         .pk-copy ul, .pk-copy ol { margin: 0; padding-left: 18px; }
         .pk-copy li + li { margin-top: 6px; }
         .pk-rules { margin-top: 18px; border-radius: 12px; background: #EEF5FC; padding: 16px; }
@@ -51,7 +52,7 @@
         .pk-choice { display: flex; gap: 10px; align-items: flex-start; margin-top: 8px; min-height: 44px; }
         .pk-summary { margin-top: 16px; padding-top: 12px; border-top: 1px solid #E3E5E8; }
         .pk-row { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; }
-        .pk-sub { margin-top: 12px; padding-top: 12px; border-top: 1px solid #E3E5E8; font-family: Montserrat, sans-serif; font-weight: 800; }
+        .pk-sub { margin-top: 12px; padding-top: 12px; border-top: 1px solid #E3E5E8; font-family: var(--font-sans), sans-serif; font-weight: 800; }
         .pk-sub strong { font-size: 22px; }
         .pk-note { margin: 14px 0; color: #4A5560; font-size: 14px; line-height: 1.55; }
         .pk-cart { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; border: 0; border-radius: 8px; background: #D63A10; color: #fff; font-size: 16px; font-weight: 800; text-decoration: none; }
@@ -85,6 +86,7 @@
 
             <div class="pk-grid">
                 <aside class="pk-hero" aria-label="{{ $title }}">
+                    <div class="pk-gold" aria-hidden="true"></div>
                     <div class="pk-badge"><span>{{ $story['badge'] ?? ($story['count'] ?? $package['size']) }}</span></div>
                     <h2>{{ $story['hero'] ?? ($package['name'].' Backlink Package') }}</h2>
                     <ul>

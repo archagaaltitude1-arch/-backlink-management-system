@@ -16,8 +16,9 @@ class PackageWebsiteSelectionTest extends TestCase
 
         $this->get(route('packages.index'))
             ->assertOk()
-            ->assertSee('Choose Backlinks', false)
-            ->assertSee($selection, false);
+            ->assertDontSee('Choose Backlinks', false)
+            ->assertDontSee('Starter Backlink Package', false)
+            ->assertDontSee($selection, false);
 
         $this->get(route('packages.show', 'display-starter'))
             ->assertOk()

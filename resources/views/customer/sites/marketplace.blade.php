@@ -12,7 +12,7 @@
         .site-front-crumb a:hover { color: #C0340D; }
         .site-front h1 {
             margin: 0;
-            font-family: Montserrat, sans-serif;
+            font-family: var(--font-sans), sans-serif;
             font-size: clamp(28px, 4vw, 40px);
             font-weight: 800;
             line-height: 1.15;
@@ -27,7 +27,7 @@
         .site-front h2 {
             margin: 28px 0 0;
             max-width: 820px;
-            font-family: Montserrat, sans-serif;
+            font-family: var(--font-sans), sans-serif;
             font-size: 22px;
             font-weight: 800;
             line-height: 1.3;

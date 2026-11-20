@@ -36,80 +36,33 @@
             : [];
     @endphp
 
-    <section class="home-hero" aria-labelledby="home-heading">
+    <section class="home-hero relative flex min-h-[calc(100dvh-4.5rem)] items-center overflow-hidden bg-[#152029]" aria-labelledby="home-heading">
         <style>
-            .home-hero {
-                position: relative;
-                overflow: hidden;
-                background-color: #F2F2F2;
-                background-image:
-                    radial-gradient(ellipse 70% 60% at 88% 12%, rgba(255, 73, 23, 0.22), transparent 58%),
-                    radial-gradient(ellipse 55% 50% at 8% 92%, rgba(21, 32, 41, 0.10), transparent 55%),
-                    linear-gradient(145deg, #F7F8FA 0%, #F2F2F2 48%, #EAECEF 100%),
-                    url("{{ asset('images/home-hero-bg.svg') }}");
-                background-repeat: no-repeat;
-                background-size: cover, cover, cover, cover;
-                background-position: center;
-            }
-            .home-hero::before {
-                content: "";
-                position: absolute;
-                inset: 0;
-                background-image:
-                    linear-gradient(rgba(21, 32, 41, 0.035) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(21, 32, 41, 0.035) 1px, transparent 1px);
-                background-size: 48px 48px;
-                mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 92%);
-                pointer-events: none;
-            }
-            .home-hero::after {
-                content: "";
-                position: absolute;
-                right: -6%;
-                top: -18%;
-                width: min(420px, 55vw);
-                height: min(420px, 55vw);
-                border-radius: 50%;
-                background: #FF4917;
-                opacity: 0.16;
-                animation: home-hero-orb 9s ease-in-out infinite;
-                pointer-events: none;
-            }
-            .home-hero > .home-hero-inner { position: relative; z-index: 1; width: 100%; }
-            @media (min-width: 768px) {
-                .home-hero-copy {
-                    width: auto;
-                    max-width: 720px;
-                    flex: 1 1 auto;
-                    min-width: 0;
-                }
-                .home-hero-card {
-                    width: min(42vw, 560px);
-                    max-width: none;
-                    flex: 0 0 auto;
-                    margin-left: auto;
-                }
-            }
-            @keyframes home-hero-orb {
-                0%, 100% { transform: translate(0, 0) scale(1); }
-                50% { transform: translate(-22px, 28px) scale(1.06); }
-            }
-            @media (prefers-reduced-motion: reduce) {
-                .home-hero::after { animation: none; }
-            }
+            .home-hero-copy { width: 100%; max-width: 56rem; }
         </style>
-        <div class="home-hero-inner mx-auto flex flex-col items-center gap-10 px-6 py-14 md:flex-row md:items-center md:justify-between md:gap-12 lg:py-[88px]">
-            <div class="home-hero-copy min-w-0 w-full md:flex-1">
-                <p class="inline-flex rounded-full border border-[#E3E5E8] bg-white/90 px-4 py-2 text-sm font-bold text-[#C0340D] backdrop-blur-sm">Link Building Agency · White-Hat Only</p>
-                <h1 id="home-heading" class="mt-5 font-display text-[36px] leading-[1.08] font-extrabold text-balance text-navy lg:text-[56px]">Earn Higher Rankings with Backlinks from <span class="text-[#FF4917]">Real, Traffic-Driven Websites</span></h1>
-                <p class="mt-5 text-[17px] leading-8 text-[#4A5560] sm:text-[19px]">Pick from {{ $publishers }} checked publisher websites and grow your search visibility, visitors and sales with text links, contextual links, guest posts and niche edits. Every one is verified before you get your report.</p>
-                <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <video
+            class="pointer-events-none absolute inset-0 h-full w-full object-cover"
+            src="{{ asset('videos/hero-dark.mp4') }}"
+            autoplay
+            muted
+            loop
+            playsinline
+            aria-hidden="true"
+            onloadedmetadata="if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) this.pause()"
+        ></video>
+        <div class="pointer-events-none absolute inset-0 bg-[#152029]/55"></div>
+        <div class="home-hero-inner relative z-10 mx-auto flex w-full flex-col items-center px-6 py-14 text-center">
+            <div class="home-hero-copy mx-auto flex flex-col items-center">
+                <p class="eyebrow inline-flex rounded-full border border-[#E3E5E8] bg-white/90 px-4 py-2 text-[#C0340D] backdrop-blur-sm">Link Building Agency · White-Hat Only</p>
+                <h1 id="home-heading" class="mt-5 w-[min(1120px,calc(100vw-2.5rem))] font-display text-[42px] leading-[1.08] text-white lg:text-[68px]">Earn Higher Rankings<br class="hidden lg:block"> with Backlinks from <span class="text-[#FF4917]">Real, Traffic-Driven</span> <br class="hidden lg:block"><span class="text-[#FF4917]">Websites</span></h1>
+                <p class="mt-5 max-w-3xl text-[17px] leading-8 text-white/80 sm:text-[19px]">Pick from {{ $publishers }} checked publisher websites and grow your search visibility, visitors and sales with text links, contextual links, guest posts and niche edits. Every one is verified before you get your report.</p>
+                <div class="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
                     <x-ui.button variant="primary" :href="$startHref">Start Building Links</x-ui.button>
                     <x-ui.button variant="outline" :href="$publisherListHref">See the publisher list</x-ui.button>
                 </div>
-                <ul class="mt-6 grid gap-x-4 gap-y-2 sm:grid-cols-2">
+                <ul class="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2">
                     @foreach ([$publishers.' Checked Publishers', 'White-Hat Placements Only', 'Delivered in 3–14 Days', 'Every Link Verified'] as $trust)
-                        <li class="flex min-h-11 items-center gap-2 text-[15px] font-bold text-navy">
+                        <li class="flex min-h-11 items-center gap-2 text-[15px] font-bold text-white">
                             <span class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#FFF1EC] text-[#D63A10]">
                                 <x-ui.icon name="check" class="h-3.5 w-3.5" />
                             </span>
@@ -118,343 +71,159 @@
                     @endforeach
                 </ul>
             </div>
-
-            <div class="home-hero-card mx-auto w-full min-w-0 shrink-0 md:mx-0 md:ml-auto md:w-[46%]" aria-hidden="true">
-                <div class="rounded-[28px] bg-navy p-4 shadow-[0_18px_40px_rgba(21,32,41,0.18)] sm:p-6">
-                    <div class="mb-4 flex items-center justify-between px-1 text-[12px] font-bold tracking-[0.08em] text-[#B8C2CC] uppercase">
-                        <span>Publisher snapshot</span>
-                        <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-[#7DCEA0]"></span> Live</span>
-                    </div>
-                    <article class="rounded-[20px] border border-[#E3E5E8] bg-white p-4 text-navy sm:p-5">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <p class="text-xs font-bold tracking-wide text-[#4A5560] uppercase">Website</p>
-                                <p class="mt-1 truncate font-display text-lg font-extrabold sm:text-xl">sample-site.example</p>
-                            </div>
-                            <span class="shrink-0 rounded-full bg-[#1F7A45] px-2.5 py-1 text-xs font-bold text-white">Dofollow</span>
-                        </div>
-                        <div class="mt-4 grid grid-cols-3 gap-2">
-                            @foreach (['DR' => '72', 'DA' => '64', 'Traffic' => '80K'] as $metric => $value)
-                        <div class="rounded-xl bg-[#F2F2F2] px-2 py-3 text-center">
-                                    <p class="text-[11px] font-bold tracking-wide text-[#4A5560] uppercase">{{ $metric }}</p>
-                                    <p class="mt-1 font-display text-lg font-extrabold sm:text-xl">{{ $value }}</p>
-                        </div>
-                            @endforeach
-                        </div>
-                        <div class="mt-4">
-                            <div class="mb-1.5 flex items-center justify-between text-xs font-bold text-[#4A5560]">
-                                <span>Authority</span>
-                                <span class="text-[#C0340D]">72%</span>
-                    </div>
-                            <div class="h-2 overflow-hidden rounded-full bg-[#F2F2F2]">
-                        <div class="h-full w-[72%] rounded-full bg-[#FF4917]"></div>
-                    </div>
-                        </div>
-                    </article>
-                    <div class="mt-3 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
-                        <p class="flex min-h-11 items-center gap-2 rounded-[16px] bg-white px-3 py-3 text-sm font-bold text-navy">
-                            <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#E7F6EE] text-[#1F7A45]">
-                                <x-ui.icon name="check" class="h-4 w-4" />
-                            </span>
-                            Backlink verified
-                        </p>
-                        <p class="flex min-h-11 items-center justify-center rounded-[16px] bg-[#FF4917] px-3 py-3 text-center text-sm font-bold text-white">Spam score 2%</p>
-                    </div>
-                </div>
-            </div>
         </div>
     </section>
 
-    <section class="why-pro" aria-labelledby="why-heading">
+    <section class="why-pro px-5 py-16 lg:py-20" aria-labelledby="why-heading">
         <style>
-            .why-pro { background: #F6F7F9; }
-            .why-head {
-                max-width: 760px;
-                margin: 0 auto;
-                text-align: center;
+            .why-pro {
+                background-color: #f7f8fa;
+                background-image:
+                    radial-gradient(ellipse 70% 55% at 0% 0%, rgba(255, 73, 23, 0.08), transparent 58%),
+                    linear-gradient(rgba(21, 32, 41, 0.045) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(21, 32, 41, 0.045) 1px, transparent 1px);
+                background-size: auto, 56px 56px, 56px 56px;
             }
-            .why-kicker {
-                margin: 0 0 10px;
-                color: #C0340D;
-                font-size: 13px;
-                font-weight: 700;
-                letter-spacing: .08em;
-                text-transform: uppercase;
+            .service-pick { border: 1px solid #E3E5E8; background: #fff; color: #152029; }
+            .service-pick[aria-selected="true"] { border-color: #ff4917; background: #ff4917; color: #fff; box-shadow: 0 8px 24px rgba(255, 73, 23, .28); }
+            .why-dots span {
+                background: #ff4917;
+                animation: why-dot-run 0.9s steps(1, end) infinite;
             }
-            .why-title {
-                margin: 0;
-                color: #152029;
-                font-size: 40px;
-                line-height: 1.12;
-                font-weight: 800;
+            .why-dots span:last-child { animation-delay: -0.45s; }
+            .service-dots > span:nth-child(-n + 3) { background: #ff4917; animation: service-dot-run 1.2s steps(1, end) infinite; }
+            .service-dots > span:nth-child(2) { animation-delay: 0.4s; }
+            .service-dots > span:nth-child(3) { animation-delay: 0.8s; }
+            @keyframes service-dot-run {
+                0%, 33% { opacity: 1; }
+                34%, 100% { opacity: 0.28; }
             }
-            .why-copy { max-width: 62ch; margin: 16px auto 0; color: #4A5560; font-size: 16px; line-height: 1.65; }
-            .why-stats {
-                display: grid;
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-                gap: 12px;
-                margin-top: 36px;
+            @keyframes why-dot-run {
+                0%, 49% { opacity: 1; }
+                50%, 100% { opacity: 0.28; }
             }
-            .why-stat {
-                border-radius: 14px;
-                background: #fff;
-                padding: 16px 18px;
-                text-align: center;
-            }
-            .why-stat dt { margin: 0; color: #152029; font-size: 26px; line-height: 1; font-weight: 800; }
-            .why-stat dd { margin: 8px 0 0; color: #4A5560; font-size: 14px; font-weight: 700; }
-            .why-grid {
-                display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 18px;
-                margin-top: 18px;
-            }
-            .why-card {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                border-radius: 16px;
-                background: #fff;
-                padding: 22px;
-                box-shadow: 0 10px 28px rgba(21, 32, 41, .045);
-                text-align: center;
-            }
-            .why-card-top { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
-            .why-icon {
-                display: grid;
-                width: 44px;
-                height: 44px;
-                flex: none;
-                place-items: center;
-                border-radius: 12px;
-                background: var(--wash);
-                color: var(--ink);
-            }
-            .why-card h3 { margin: 0; color: #152029; font-size: 16px; line-height: 1.3; font-weight: 800; }
-            .why-label { margin: 2px 0 0; color: #8B939C; font-size: 13px; }
-            .why-label a { color: inherit; font-weight: 600; }
-            .why-label a:hover { color: var(--ink); }
-            .why-label a:focus-visible { outline: 2px solid #D63A10; outline-offset: 2px; }
-            .why-rule { width: 100%; height: 1px; margin: 16px 0; background: #EEF0F3; }
-            .why-card .why-text { margin: 0; color: #4A5560; font-size: 14.5px; line-height: 1.65; }
-            @media (max-width: 980px) {
-                .why-title { font-size: 32px; }
-                .why-grid { grid-template-columns: 1fr; }
-                .why-stats { grid-template-columns: 1fr 1fr; }
-            }
-            @media (min-width: 640px) and (max-width: 980px) {
-                .why-grid { grid-template-columns: 1fr 1fr; }
+            @media (prefers-reduced-motion: reduce) {
+                .why-dots span, .service-dots > span { animation: none; }
+                .why-dots span:last-child { opacity: 0.35; }
             }
         </style>
-        <div class="mx-auto px-6 py-14 lg:py-[88px]">
-            <div class="why-head">
+        <div class="mx-auto w-full max-w-7xl">
+            <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(16rem,0.7fr)] lg:gap-16">
                 <div>
-                    <p class="why-kicker">Why BacklinkPro</p>
-                    <h2 id="why-heading" class="why-title font-display">One Partner for Text Links, Contextual Links, Guest Posts &amp; Niche Edits</h2>
+                    <p class="eyebrow text-[#8B939C]">[[ Why BacklinkPro ]]</p>
+                    <h2 id="why-heading" class="mt-4 max-w-xl text-4xl text-[#152029] lg:text-[44px]">One Partner for Text Links, Contextual Links, Guest Posts &amp; Niche Edits</h2>
                 </div>
-                <div>
-                    <p class="why-copy">Why brands and agencies rely on BacklinkPro for safe, lasting link building.</p>
-                </div>
-                </div>
-
-            <dl class="why-stats">
+                <p class="max-w-sm text-[15px] leading-7 text-[#4A5560] lg:pt-12">Why brands and agencies rely on BacklinkPro for safe, lasting link building.</p>
+            </div>
+            <dl class="mt-10 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
                 @foreach ([
                     [$publishers, 'Checked Publishers'],
                     ['[N]+', 'Campaigns Completed'],
                     ['3–14 Days', 'Delivery Window'],
                     ['[YEAR]', 'Serving Clients Since'],
                 ] as [$figure, $label])
-                    <div class="why-stat">
-                        <dt class="font-display">{{ $figure }}</dt>
-                        <dd>{{ $label }}</dd>
-                </div>
+                    <div>
+                        <dt class="text-2xl font-extrabold text-[#152029]">{{ $figure }}</dt>
+                        <dd class="mt-1 text-sm font-semibold text-[#4A5560]">{{ $label }}</dd>
+                    </div>
                 @endforeach
             </dl>
-
-            @php
-                $reasonTones = [
-                    'shield' => ['wash' => '#E8F1FF', 'ink' => '#3B82F6', 'label' => 'Checked websites'],
-                    'search' => ['wash' => '#FDE8F4', 'ink' => '#DB2777', 'label' => 'Marketplace'],
-                    'chart' => ['wash' => '#E7F8F2', 'ink' => '#0F766E', 'label' => 'Order updates'],
-                    'layers' => ['wash' => '#FFF1E8', 'ink' => '#EA580C', 'label' => 'Credits and packages'],
-                    'file' => ['wash' => '#EAF2FF', 'ink' => '#2563EB', 'label' => 'White-label reports'],
-                    'users' => ['wash' => '#F3E8FF', 'ink' => '#7C3AED', 'label' => 'SEO team'],
-                ];
-            @endphp
-            <div class="why-grid">
-                @foreach ($reasons as $reason)
-                    @php $tone = $reasonTones[$reason['icon']] ?? ['wash' => '#FFF1EC', 'ink' => '#FF4917', 'label' => 'BacklinkPro']; @endphp
-                    <article class="why-card">
-                        <div class="why-card-top">
-                            <span class="why-icon" style="--wash: {{ $tone['wash'] }}; --ink: {{ $tone['ink'] }};">
-                                <x-ui.icon :name="$reason['icon']" />
+            <div class="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                @foreach (array_slice($reasons, 0, 4) as $reason)
+                    <article class="flex h-full flex-col rounded-xl border border-[#E6E8EB] bg-white p-5 shadow-[0_10px_28px_rgba(21,32,41,0.04)]">
+                        <div class="flex items-start justify-between gap-3">
+                            <span class="grid h-11 w-11 place-items-center rounded-full bg-[#152029] text-white">
+                                <x-ui.icon :name="$reason['icon']" class="h-5 w-5" />
                             </span>
-                            <div>
-                                <h3 class="font-display">{{ $reason['title'] }}</h3>
-                                <p class="why-label">
-                                    @if ($reason['link'])
-                                        <a href="{{ $reason['href'] }}">{{ $reason['link'] }}</a>
-                                @else
-                                        {{ $tone['label'] }}
-                                @endif
-                                </p>
-                            </div>
+                            <span class="text-sm font-semibold tracking-wide text-[#C5CBD1]">{{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
                         </div>
-                        <div class="why-rule"></div>
-                        <p class="why-text">{{ $reason['text'] }}</p>
+                        <h3 class="mt-6 text-[17px] text-[#152029]">{{ $reason['title'] }}</h3>
+                        <p class="mt-2 text-sm leading-6 text-[#4A5560]">{{ $reason['text'] }}</p>
                     </article>
                 @endforeach
+            </div>
+            <div class="why-dots mt-6 flex justify-center gap-1.5" aria-hidden="true">
+                <span class="h-1.5 w-1.5 rounded-full"></span>
+                <span class="h-1.5 w-1.5 rounded-full"></span>
             </div>
         </div>
     </section>
 
-    <section class="relative overflow-hidden bg-[#EEF2F6]" aria-labelledby="services-heading">
-        <style>
-            .svc-modern {
-                position: relative;
-                display: flex;
-                height: 100%;
-                flex-direction: column;
-                overflow: hidden;
-                border: 1px solid rgba(21, 32, 41, 0.08);
-                border-radius: 24px;
-                background:
-                    linear-gradient(180deg, #FFFFFF 0%, #FBFCFD 100%);
-                box-shadow: 0 18px 40px -28px rgba(21, 32, 41, 0.45);
-                transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
-            }
-            .svc-modern::before {
-                content: "";
-                position: absolute;
-                inset: 0 0 auto;
-                height: 3px;
-                background: linear-gradient(90deg, #FF6A3D, #D63A10);
-                opacity: .9;
-            }
-            .svc-modern:hover {
-                transform: translateY(-4px);
-                border-color: rgba(214, 58, 16, 0.22);
-                box-shadow: 0 28px 48px -24px rgba(21, 32, 41, 0.35);
-            }
-            .svc-modern.is-featured {
-                border-color: rgba(214, 58, 16, 0.28);
-                background:
-                    radial-gradient(ellipse 80% 50% at 100% 0%, rgba(255, 73, 23, 0.08), transparent 55%),
-                    linear-gradient(180deg, #FFFFFF 0%, #FFF8F5 100%);
-                box-shadow: 0 24px 44px -22px rgba(214, 58, 16, 0.28);
-            }
-            .svc-option {
-                display: flex;
-                align-items: center;
-                min-height: 42px;
-                padding: 8px 12px;
-                border: 1px solid #E3E8EE;
-                border-radius: 12px;
-                background: #F7F9FB;
-                color: #152029;
-                font-size: 13.5px;
-                font-weight: 700;
-                line-height: 1.35;
-                transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
-            }
-            .svc-option:hover {
-                border-color: #FF4917;
-                background: #FFF1EC;
-                color: #C0340D;
-                transform: translateY(-1px);
-            }
-            .svc-cta {
-                display: inline-flex;
-                width: 100%;
-                min-height: 48px;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
-                border-radius: 14px;
-                background: #152029;
-                color: #fff;
-                font-size: 14px;
-                font-weight: 700;
-                transition: background-color .15s ease, transform .15s ease, box-shadow .15s ease;
-            }
-            .svc-cta svg { transition: transform .15s ease; }
-            .svc-cta:hover {
-                background: #FF4917;
-                box-shadow: 0 14px 28px -16px rgba(255, 73, 23, 0.7);
-                transform: translateY(-1px);
-            }
-            .svc-cta:hover svg { transform: translateX(3px); }
-            .svc-option:focus-visible,
-            .svc-cta:focus-visible {
-                outline: 2px solid #D63A10;
-                outline-offset: 2px;
-            }
-            @media (prefers-reduced-motion: reduce) {
-                .svc-modern,
-                .svc-modern:hover,
-                .svc-option,
-                .svc-cta,
-                .svc-cta svg { transition: none; transform: none; }
-            }
-        </style>
-        <div class="pointer-events-none absolute inset-0" aria-hidden="true">
-            <div class="absolute -top-24 right-[-10%] h-72 w-72 rounded-full bg-[#FF4917]/10 blur-3xl"></div>
-            <div class="absolute bottom-[-20%] left-[-8%] h-80 w-80 rounded-full bg-[#152029]/06 blur-3xl"></div>
-        </div>
-        <div class="relative mx-auto px-6 py-14 lg:py-[88px]">
-            <div class="mx-auto max-w-3xl text-center">
-                <p class="text-sm font-bold tracking-[0.08em] text-[#C0340D] uppercase">Our services</p>
-                <h2 id="services-heading" class="mt-3 font-display text-[30px] leading-tight font-extrabold tracking-[-0.02em] text-navy lg:text-[40px]">
-                    Link building services built around real results
-                </h2>
-                <p class="mt-4 text-[17px] leading-8 text-[#4A5560]">Order text links, contextual links, guest posts and niche edits on checked publisher websites—with clear metrics, fast delivery, and reports made for agencies and in-house teams.</p>
+    <section class="bg-[#0c0c0e] px-6 py-16 lg:px-12 lg:py-24" aria-labelledby="services-heading" data-services>
+        @php
+            $orderedCards = collect($serviceCards)->sortByDesc(fn ($card) => ! empty($card['featured']))->values();
+            $activeCard = $orderedCards->first();
+            $servicePhotos = [
+                'contextual-link' => ['file' => 'service-contextual.jpg', 'alt' => 'Open book with one glowing line under a warm lamp'],
+                'text-link' => ['file' => 'service-text-link.jpg', 'alt' => 'Two laptops joined by a thread of orange light'],
+                'guest-post' => ['file' => 'service-guest-post.jpg', 'alt' => 'Fountain pen on blank paper under a desk lamp'],
+                'niche-edit' => ['file' => 'service-niche-edit.jpg', 'alt' => 'Laptop page with an orange block inserted into the article'],
+            ];
+        @endphp
+        <div class="mx-auto grid w-full items-center gap-12 lg:grid-cols-2 lg:gap-16">
+            <div>
+                <p class="eyebrow text-[#FF4917]">Our services</p>
+                <h2 id="services-heading" class="mt-3 max-w-xl text-4xl text-white lg:text-5xl">Link building services built around real results</h2>
+                <p class="mt-5 max-w-md text-[17px] leading-7 text-[#A7ADB4]">Order text links, contextual links, guest posts and niche edits on checked publisher websites—with clear metrics, fast delivery, and reports made for agencies and in-house teams.</p>
+                @unless ($servicesPublished)
+                    <p class="mt-4 max-w-md text-sm leading-6 text-[#A7ADB4]" role="status">Service prices are not published yet. A starting price appears once that service is active.</p>
+                @endunless
+                <div class="mt-8 grid grid-cols-2 justify-items-start gap-3 xl:flex xl:flex-wrap" role="tablist" aria-label="Services">
+                    @foreach ($orderedCards as $card)
+                        <button type="button" class="service-pick min-h-11 shrink-0 whitespace-nowrap rounded-full px-5 text-[15px] font-bold" role="tab" data-service-pick="{{ $card['slug'] }}" aria-selected="{{ $activeCard && $card['slug'] === $activeCard['slug'] ? 'true' : 'false' }}">{{ $card['title'] }}</button>
+                    @endforeach
+                </div>
             </div>
+            <div class="overflow-hidden rounded-[28px] border border-[#E6E8EB] bg-white shadow-[0_18px_40px_rgba(21,32,41,0.08)]">
+                <div class="service-dots flex items-center gap-2 bg-[#f3f4f6] px-4 py-3">
+                    <span class="h-2.5 w-2.5 rounded-full"></span>
+                    <span class="h-2.5 w-2.5 rounded-full"></span>
+                    <span class="h-2.5 w-2.5 rounded-full"></span>
+                    <p class="min-w-0 flex-1 truncate text-center">
+                        <span class="inline-block max-w-full truncate rounded-full border border-[#e5e7eb] bg-white px-4 py-1 text-xs font-semibold text-[#6b7280]" data-service-path>services / {{ $activeCard['slug'] ?? 'service' }}</span>
+                    </p>
+                </div>
 
-            @unless ($servicesPublished)
-                <p class="mx-auto mt-6 max-w-3xl rounded-2xl border border-dashed border-[#C5CBD1] bg-white/80 px-5 py-4 text-center text-base leading-7 text-[#4A5560] backdrop-blur-sm" role="status">Service prices are not published yet. The four services below describe what we offer. A starting price appears on a card once that service is active.</p>
-            @endunless
-
-            <div class="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-                @foreach ($serviceCards as $card)
-                    <article @class(['svc-modern p-5 sm:p-6', 'is-featured' => $card['featured']])>
-                        <div class="flex items-start justify-between gap-3">
-                            <span class="grid h-12 w-12 place-items-center rounded-2xl bg-[#FFF1EC] text-[#FF4917] shadow-[inset_0_0_0_1px_rgba(255,73,23,0.12)]" aria-hidden="true">
-                                <x-ui.icon :name="$card['icon']" />
-                            </span>
-                            @if ($card['featured'])
-                                <span class="rounded-full bg-[#FF4917] px-2.5 py-1 text-[11px] font-bold tracking-wide text-white uppercase">Most popular</span>
+                @foreach ($orderedCards as $card)
+                    <div class="grid items-center gap-6 p-6 sm:p-8 md:grid-cols-[minmax(0,1.1fr)_minmax(160px,0.9fr)]" data-service-panel="{{ $card['slug'] }}" @if (! $activeCard || $card['slug'] !== $activeCard['slug']) hidden @endif>
+                        <div>
+                            <p class="text-xs font-extrabold tracking-[0.16em] text-[#FF4917] uppercase">{{ ! empty($card['featured']) ? 'Most popular' : 'Service' }}</p>
+                            <h3 class="mt-3 text-3xl text-[#152029] lg:text-4xl">{{ $card['title'] }}</h3>
+                            @if (! empty($card['price']))
+                                <p class="mt-3 text-lg font-extrabold text-[#C0340D]">{{ $card['price'] }}</p>
                             @endif
+                            <p class="mt-3 text-[15px] leading-7 text-[#4A5560]">{{ $card['description'] }}</p>
+                            <p class="mt-2 text-sm text-[#152029]"><span class="font-bold">Best for:</span> {{ $card['best_for'] }}</p>
+                            <ul class="mt-5 flex flex-wrap gap-2">
+                                @foreach (array_slice($card['options'] ?? [], 0, 3) as $option)
+                                    <li><a href="{{ $option['href'] }}" class="inline-flex min-h-9 items-center rounded-full border border-[#E5E7EB] bg-[#F7F8FA] px-3 text-sm font-semibold text-[#152029] hover:border-[#FF4917] hover:text-[#FF4917]">{{ $option['label'] }}</a></li>
+                                @endforeach
+                            </ul>
+                            <x-ui.button variant="primary" :href="$card['cta_href'] ?? url('/services/'.$card['slug'])" class="mt-6">{{ $card['button'] }}</x-ui.button>
                         </div>
-
-                        <div class="mt-5">
-                            <h3 class="font-display text-[22px] leading-tight font-extrabold tracking-[-0.02em] text-navy">{{ $card['title'] }}</h3>
-                            @if ($card['price'])
-                                <p class="mt-2 text-[15px] font-bold text-[#C0340D]">{{ $card['price'] }}</p>
-                            @endif
-                        </div>
-
-                        <p class="mt-3 text-[15px] leading-6 text-[#4A5560]">{{ $card['description'] }}</p>
-                        <p class="mt-3 text-[14px] leading-6 text-navy/70"><span class="font-bold text-navy">Best for:</span> {{ $card['best_for'] }}</p>
-
-                        <p class="mt-5 text-[11px] font-bold tracking-[0.14em] text-navy/45 uppercase">Popular options</p>
-                        <ul class="mt-2 space-y-2">
-                            @foreach ($card['options'] as $option)
-                                <li>
-                                    <a href="{{ $option['href'] }}" class="svc-option">{{ $option['label'] }}</a>
-                                </li>
-                            @endforeach
-                        </ul>
-
-                        <div class="mt-auto pt-5">
-                            <a href="{{ $card['cta_href'] ?? url('/services/'.$card['slug']) }}" class="svc-cta">
-                                {{ $card['button'] }}
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            </a>
-                        </div>
-                    </article>
+                        <img src="{{ asset('images/services/'.($servicePhotos[$card['slug']]['file'] ?? 'service-contextual.jpg')) }}" alt="{{ $servicePhotos[$card['slug']]['alt'] ?? $card['title'] }}" class="h-56 w-full rounded-2xl object-cover md:h-full md:min-h-64">
+                    </div>
                 @endforeach
             </div>
         </div>
+        <script>
+            document.querySelectorAll('[data-service-pick]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const root = button.closest('[data-services]');
+                    const slug = button.getAttribute('data-service-pick');
+                    root.querySelectorAll('[data-service-pick]').forEach((item) => {
+                        item.setAttribute('aria-selected', item === button ? 'true' : 'false');
+                    });
+                    root.querySelectorAll('[data-service-panel]').forEach((panel) => {
+                        panel.hidden = panel.getAttribute('data-service-panel') !== slug;
+                    });
+                    const path = root.querySelector('[data-service-path]');
+                    if (path) {
+                        path.textContent = 'services / ' + slug;
+                    }
+                });
+            });
+        </script>
     </section>
 
     <section class="bg-white" aria-labelledby="control-heading">
@@ -482,7 +251,7 @@
                 margin-top: 48px;
                 text-align: center;
             }
-            .control-item { display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; }
+            .control-item { display: flex; flex-direction: column; gap: 10px; align-items: center; border: 1px solid #FFD5C8; border-radius: 16px; background: #FFF7F4; padding: 24px 20px; text-align: center; }
             .control-icon { flex: 0 0 auto; margin-top: 2px; color: var(--ink); }
             .control-item h3 { margin: 0; color: #152029; font-size: 18px; line-height: 1.3; font-weight: 800; }
             .control-item p { margin: 4px 0 0; color: #4A5560; font-size: 15px; line-height: 1.55; }
@@ -735,18 +504,22 @@
     </section>
 
 
-    <section class="bg-[#F2F2F2]" aria-labelledby="home-niches-heading">
-        <div class="mx-auto px-6 py-14 lg:py-[88px]">
-            <x-ui.section-heading
-                eyebrow="Niches"
-                title="Browse Publisher Websites by Niche"
-                subtitle="Open a niche to see the publisher websites that accept guest posts, contextual links, niche edits and text links."
-                heading-id="home-niches-heading"
-                align="center"
-            />
-            <div class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <section class="bg-[#152029] px-6 py-16 lg:px-12 lg:py-24" aria-labelledby="home-niches-heading">
+        <div class="overflow-hidden rounded-3xl border border-[#E3E5E8] bg-white">
+            <div class="grid items-end gap-4 border-b border-[#E6E8EB] px-6 py-8 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,0.55fr)] lg:px-10">
+                <div>
+                    <p class="eyebrow text-[#C0340D]">Niches</p>
+                    <h2 id="home-niches-heading" class="mt-3 max-w-xl text-4xl text-[#152029] lg:text-[44px]">Browse Publisher Websites by Niche</h2>
+                </div>
+                <p class="max-w-sm text-[15px] leading-7 text-[#4A5560] lg:justify-self-end">Open a niche to see the publisher websites that accept guest posts, contextual links, niche edits and text links.</p>
+            </div>
+            <div class="-mr-px -mb-px grid bg-white sm:grid-cols-2 lg:grid-cols-4">
                 @foreach ($nicheTiles as $niche)
-                    <a href="{{ route('niches.show', $niche['slug']) }}" class="flex min-h-11 items-center justify-center rounded-[20px] border border-[#E3E5E8] bg-white px-5 py-4 text-center font-bold text-navy hover:border-[#D63A10] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">{{ $niche['name'] }}</a>
+                    <a href="{{ route('niches.show', $niche['slug']) }}" class="group flex min-h-16 items-center gap-3 border-r border-b border-[#E6E8EB] bg-white px-6 py-4 transition hover:bg-[#FFF7F4] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#D63A10]">
+                        <span class="w-6 shrink-0 font-sans text-[13px] font-bold text-[#8B939C] tabular-nums group-hover:text-[#FF4917]">{{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+                        <span class="min-w-0 truncate font-sans text-[15px] font-bold text-[#152029]">{{ $niche['name'] }}</span>
+                        <span aria-hidden="true" class="ml-auto text-[#C5CBD1] transition group-hover:translate-x-0.5 group-hover:text-[#FF4917]">→</span>
+                    </a>
                 @endforeach
             </div>
         </div>
@@ -757,23 +530,25 @@
             .home-cta { background: #F2F2F2; }
             .home-cta-wrap { max-width: none; margin: 0 auto; padding: 28px 24px 72px; }
             .home-cta-card {
+                position: relative;
                 display: grid;
                 grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
                 overflow: hidden;
                 border-radius: 28px;
-                background: #fff;
+                background: #152029;
                 box-shadow: 0 18px 40px rgba(21, 32, 41, .08);
             }
-            .home-cta-copy { position: relative; padding: 48px 40px 44px; text-align: center; }
-            .home-cta-copy::before {
+            .home-cta-card::before {
                 content: "";
                 position: absolute;
                 top: 0;
                 left: 0;
+                z-index: 1;
                 width: 100%;
                 height: 6px;
                 background: linear-gradient(90deg, #D63A10 0%, #FF4917 55%, #FFB199 100%);
             }
+            .home-cta-copy { position: relative; display: flex; flex-direction: column; justify-content: center; border-radius: 28px 0 0 28px; background: #fff; padding: 48px 40px 44px; text-align: center; }
             .home-cta-kicker { margin: 0; color: #C0340D; font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
             .home-cta h2 { margin: 12px auto 0; max-width: 16em; color: #152029; font-size: 36px; line-height: 1.12; font-weight: 800; }
             .home-cta-text { max-width: 46ch; margin: 14px auto 0; color: #4A5560; font-size: 17px; line-height: 1.65; }
@@ -794,7 +569,7 @@
             .home-cta-secondary { border: 1.5px solid #152029; background: #fff; color: #152029; }
             .home-cta-secondary:hover { background: #152029; color: #fff; }
             .home-cta-primary:focus-visible, .home-cta-secondary:focus-visible { outline: 2px solid #D63A10; outline-offset: 3px; }
-            .home-cta-side { background: #152029; padding: 40px 32px; color: #fff; text-align: center; }
+            .home-cta-side { display: flex; flex-direction: column; justify-content: center; border-radius: 0 28px 28px 0; background: #152029; padding: 48px 32px; color: #fff; text-align: center; }
             .home-cta-side h3 { margin: 0; color: #fff; font-size: 18px; font-weight: 800; }
             .home-cta-steps { margin: 22px 0 0; padding: 0; list-style: none; }
             .home-cta-steps li { display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; }
@@ -819,7 +594,8 @@
             @media (min-width: 900px) { .home-cta h2 { font-size: 44px; } }
             @media (max-width: 860px) {
                 .home-cta-card { grid-template-columns: 1fr; }
-                .home-cta-copy, .home-cta-side { padding: 32px 22px; }
+                .home-cta-copy { border-radius: 28px 28px 0 0; padding: 32px 22px; }
+                .home-cta-side { border-radius: 0 0 28px 28px; padding: 32px 22px; }
                 .home-cta h2 { font-size: 30px; }
             }
         </style>

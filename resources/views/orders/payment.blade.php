@@ -7,23 +7,6 @@
         $demo = \App\Http\StripeCheckout::usesDemo();
         $stripe = \App\Http\StripeCheckout::isConfigured();
     @endphp
-    @if ($couponOffer)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-navy/45 p-4" data-coupon-popup role="dialog" aria-modal="true" aria-labelledby="coupon-popup-title">
-            <div class="w-full max-w-md rounded-2xl border border-navy/10 bg-white p-6">
-                <h2 id="coupon-popup-title" class="font-display text-2xl font-semibold">Your coupon code</h2>
-                <p class="mt-2 text-sm leading-6 text-navy/70">{{ $couponOffer->discountSummary() }} for this order. Apply this code before you pay.</p>
-                <p class="mt-4 rounded-xl bg-canvas px-4 py-3 text-center font-display text-2xl font-semibold tracking-wide">{{ $couponOffer->code }}</p>
-                <div class="mt-4 flex gap-2">
-                    <form method="POST" action="{{ route('orders.payment.coupon', $order) }}" class="flex-1">
-                        @csrf
-                        <input type="hidden" name="coupon_code" value="{{ $couponOffer->code }}">
-                        <button class="btn-primary w-full" type="submit">Apply</button>
-                    </form>
-                    <button class="btn-navy flex-1" type="button" onclick="this.closest('[data-coupon-popup]').remove()">Close</button>
-                </div>
-            </div>
-        </div>
-    @endif
     <div class="mx-auto max-w-3xl space-y-6">
         <h1 class="text-3xl font-semibold">Complete payment</h1>
         @if (session('success'))

@@ -3,17 +3,16 @@
 namespace App\Console\Commands;
 
 use App\Models\Website;
+use App\Services\DataForSeo\BacklinkSummary;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Support\Facades\Http;
 
 #[Signature('publishers:refresh-backlinks {domain : Existing publisher domain}')]
-#[Description('Refresh backlink counts for one publisher using a billable DataForSEO request')]
+#[Description('Refresh domain rating, traffic, spam score, and backlink counts for one publisher using billable DataForSEO requests')]
 class RefreshPublisherBacklinks extends Command
 {
-    public function handle(): int
+    public function handle(BacklinkSummary $summary): int
     {
         $website = Website::query()->where('domain', mb_strtolower(trim($this->argument('domain'))))->first();
         $login = config('services.dataforseo.login');
@@ -25,31 +24,32 @@ class RefreshPublisherBacklinks extends Command
             return self::FAILURE;
         }
 
-        try {
-            $response = Http::withBasicAuth($login, $password)->withoutRedirecting()
-                ->connectTimeout(3)->timeout(15)
-                ->post('https://api.dataforseo.com/v3/backlinks/summary/live', [
-                    ['target' => $website->domain],
-                ]);
-        } catch (ConnectionException) {
+        $counts = $summary->fetch($website->domain);
+
+        if ($counts['error'] === 'connection') {
             $this->error('Could not reach DataForSEO.');
 
             return self::FAILURE;
         }
 
-        $result = $response->json('tasks.0.result.0');
-        $backlinks = data_get($result, 'backlinks');
-        $referringDomains = data_get($result, 'referring_domains');
-
-        if (! $response->successful() || $response->json('tasks.0.status_code') !== 20000
-            || ! is_int($backlinks) || $backlinks < 0 || ! is_int($referringDomains) || $referringDomains < 0) {
+        if (! $counts['ok']) {
             $this->error('DataForSEO did not return valid backlink counts.');
 
             return self::FAILURE;
         }
 
-        $website->backlinks = $backlinks;
-        $website->referring_domains = $referringDomains;
+        $website->backlinks = $counts['backlinks'];
+        $website->referring_domains = $counts['referring_domains'];
+        $website->domain_rating = $counts['domain_rating'];
+
+        if ($counts['spam_score'] !== null) {
+            $website->spam_score = $counts['spam_score'];
+        }
+
+        if ($counts['monthly_traffic'] !== null) {
+            $website->monthly_traffic = $counts['monthly_traffic'];
+        }
+
         $website->backlinks_refreshed_at = now();
         $website->save();
 

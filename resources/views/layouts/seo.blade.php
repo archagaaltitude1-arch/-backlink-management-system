@@ -15,7 +15,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @stack('head')
     </head>
-    <body class="bg-canvas font-sans text-navy antialiased">
+    <body class="portal-staff bg-canvas font-sans text-navy antialiased">
         <div class="flex min-h-screen">
             <div id="sidebar-backdrop" class="fixed inset-x-0 top-16 bottom-0 z-30 hidden bg-navy/50 lg:hidden"></div>
             @include('components.seo-sidebar')

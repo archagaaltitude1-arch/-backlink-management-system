@@ -79,7 +79,7 @@ class MergeIntegrationTest extends TestCase
         $adminRole = Role::query()->firstOrCreate(['role_name' => 'Admin']);
         $admin = User::factory()->create(['role_id' => $adminRole->id]);
         $this->actingAs($admin)->get(route('auth.login'))->assertRedirect(route('admin.dashboard'));
-        $this->get('/')->assertRedirect(route('admin.dashboard'));
+        $this->get('/')->assertOk()->assertSee('Real, Traffic-Driven Websites', false);
     }
 
     public function test_admin_website_changes_are_visible_and_purchasable_in_customer_marketplace(): void

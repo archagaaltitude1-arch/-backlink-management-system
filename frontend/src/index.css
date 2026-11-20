@@ -1,0 +1,234 @@
+@import "tailwindcss";
+
+@theme {
+    --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+    --font-display: "Manrope", ui-sans-serif, system-ui, sans-serif;
+    --color-brand: #ff4917;
+    --color-brand-dark: #d63a10;
+    --color-navy: #152029;
+    --color-canvas: #f7f8fa;
+    --radius-lg: 0.75rem;
+}
+
+@layer base {
+    html,
+    body {
+        margin: 0;
+        background: #fff;
+        color: #152029;
+        font-family: var(--font-sans);
+        font-weight: 400;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        font-family: var(--font-sans);
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+    }
+
+    h1 {
+        font-weight: 700;
+        letter-spacing: -0.03em;
+    }
+
+    h2,
+    h3,
+    h4 {
+        font-weight: 600;
+    }
+}
+
+@layer components {
+    .field {
+        @apply min-h-12 w-full rounded-lg border border-[#E3E5E8] bg-canvas px-3 text-[15px] font-medium text-navy outline-none focus:border-brand focus:shadow-[0_0_0_3px_rgba(255,73,23,0.12)];
+    }
+
+    .btn-primary {
+        @apply inline-flex min-h-11 items-center justify-center rounded-full bg-brand px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-brand-dark hover:shadow-[0_10px_24px_rgba(21,32,41,0.14)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+    }
+
+    .btn-navy {
+        @apply inline-flex min-h-11 items-center justify-center rounded-lg bg-navy px-4 text-sm font-semibold text-white hover:bg-[#243844] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy;
+    }
+
+    .btn-outline {
+        @apply inline-flex min-h-11 items-center justify-center rounded-full border border-[#E3E5E8] bg-white px-4 text-sm font-semibold text-navy transition hover:-translate-y-0.5 hover:bg-[#F2F2F2] hover:shadow-[0_10px_24px_rgba(21,32,41,0.14)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+    }
+
+    .panel {
+        @apply rounded-lg border border-[#E3E5E8] bg-white;
+    }
+
+    .badge {
+        @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold;
+    }
+
+    .eyebrow {
+        @apply font-sans text-xs font-medium tracking-[0.08em] uppercase;
+    }
+}
+
+h1,
+h2,
+h3,
+h4 {
+    font-family: "Manrope", ui-sans-serif, system-ui, sans-serif;
+    font-synthesis: none;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+}
+
+h1,
+h2.uppercase {
+    font-weight: 700;
+    letter-spacing: -0.03em;
+}
+
+h2,
+h3,
+h4 {
+    font-weight: 600;
+}
+
+:is(button, .btn-primary, .btn-navy, .btn-outline) {
+    font-family: "Manrope", ui-sans-serif, system-ui, sans-serif;
+    font-weight: 600;
+}
+
+header :is(a, button),
+nav :is(a, button) {
+    font-family: "Manrope", ui-sans-serif, system-ui, sans-serif;
+    font-weight: 500;
+}
+
+@keyframes mega-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes price-live {
+    from {
+        opacity: 0.35;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.price-live {
+    animation: price-live 220ms ease;
+}
+
+.faq-mark {
+    color: rgba(255, 73, 23, 0.28);
+}
+
+.order-card {
+    background: #152029;
+}
+
+.order-card-copy {
+    background: #fff;
+    border-radius: 28px 28px 0 0;
+}
+
+.order-card-side {
+    background: #152029;
+    border-radius: 0 0 28px 28px;
+}
+
+@media (min-width: 1024px) {
+    .order-card-copy {
+        border-radius: 28px 0 0 28px;
+    }
+
+    .order-card-side {
+        border-radius: 0 28px 28px 0;
+    }
+}
+
+.why-pro {
+    background-color: #f7f8fa;
+    background-image:
+        radial-gradient(ellipse 70% 55% at 0% 0%, rgba(255, 73, 23, 0.08), transparent 58%),
+        linear-gradient(rgba(21, 32, 41, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(21, 32, 41, 0.045) 1px, transparent 1px);
+    background-size: auto, 56px 56px, 56px 56px;
+}
+
+.why-dots span {
+    background: #ff4917;
+    animation: why-dot-run 0.9s steps(1, end) infinite;
+}
+
+.why-dots span:last-child {
+    animation-delay: -0.45s;
+}
+
+.service-dots > span:nth-child(-n + 3) {
+    background: #ff4917;
+    animation: service-dot-run 1.2s steps(1, end) infinite;
+}
+
+.service-dots > span:nth-child(2) {
+    animation-delay: 0.4s;
+}
+
+.service-dots > span:nth-child(3) {
+    animation-delay: 0.8s;
+}
+
+@keyframes service-dot-run {
+    0%, 33% { opacity: 1; }
+    34%, 100% { opacity: 0.28; }
+}
+
+@keyframes why-dot-run {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0.28; }
+}
+
+footer h2,
+.eyebrow,
+.uppercase.tracking-widest,
+.uppercase.tracking-wider,
+.uppercase.tracking-\[0\.16em\],
+.uppercase.tracking-\[0\.1em\],
+.uppercase.tracking-\[0\.08em\] {
+    font-family: "Manrope", ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn-primary:hover,
+    .btn-outline:hover {
+        transform: none;
+    }
+
+    .why-dots span,
+    .service-dots > span {
+        animation: none;
+    }
+
+    .why-dots span:last-child {
+        opacity: 0.35;
+    }
+}

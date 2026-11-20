@@ -46,8 +46,8 @@
         .wd-card, .wd-block { padding: 24px; }
         .wd-order { padding: 20px; }
         .wd-id { display: flex; gap: 14px; align-items: flex-start; }
-        .wd-avatar { display: grid; place-items: center; width: 52px; height: 52px; flex: none; border-radius: 12px; background: #152029; color: #fff; font-family: Montserrat, sans-serif; font-size: 22px; font-weight: 800; }
-        .wd-h1 { margin: 0; font-family: Montserrat, sans-serif; font-size: 32px; line-height: 1.15; font-weight: 800; word-break: break-word; }
+        .wd-avatar { display: grid; place-items: center; width: 52px; height: 52px; flex: none; border-radius: 12px; background: #152029; color: #fff; font-family: var(--font-sans), sans-serif; font-size: 22px; font-weight: 800; }
+        .wd-h1 { margin: 0; font-family: var(--font-sans), sans-serif; font-size: 32px; line-height: 1.15; font-weight: 800; word-break: break-word; }
         .wd-visit { color: #C0340D; font-weight: 700; }
         .wd-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
         .wd-badge { display: inline-flex; align-items: center; min-height: 32px; padding: 0 10px; border-radius: 999px; font-size: 13px; font-weight: 700; }
@@ -57,7 +57,7 @@
         .wd-pills { display: flex; flex-wrap: wrap; gap: 8px; }
         .wd-pill { display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border: 1px solid #E3E5E8; border-radius: 999px; background: #fff; color: #152029; font-size: 14px; font-weight: 700; }
         .wd-pill-primary { border-color: transparent; background: #FFF1EC; color: #C0340D; }
-        .wd-price { margin: 0; font-family: Montserrat, sans-serif; font-size: 36px; line-height: 1; font-weight: 800; }
+        .wd-price { margin: 0; font-family: var(--font-sans), sans-serif; font-size: 36px; line-height: 1; font-weight: 800; }
         .wd-credits { margin: 8px 0 0; color: #4A5560; font-size: 15px; }
         .wd-services { display: grid; gap: 4px; margin: 16px 0 0; padding: 0; border: 0; }
         .wd-choice { display: flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 700; }
@@ -71,16 +71,16 @@
         .wd-btn-outline { border: 1.5px solid #152029; background: #fff; color: #152029; }
         .wd-btn:focus-visible, .wd-pill:focus-visible, .wd-visit:focus-visible, .wd-crumb a:focus-visible, .wd-inline:focus-visible { outline: 2px solid #D63A10; outline-offset: 2px; }
         .wd-fine { margin: 12px 0 0; color: #4A5560; font-size: 14px; line-height: 1.6; }
-        .wd-h2 { margin: 0 0 12px; font-family: Montserrat, sans-serif; font-size: 28px; line-height: 1.2; font-weight: 800; }
+        .wd-h2 { margin: 0 0 12px; font-family: var(--font-sans), sans-serif; font-size: 28px; line-height: 1.2; font-weight: 800; }
         .wd-about p { margin: 0 0 14px; color: #4A5560; font-size: 17px; line-height: 1.7; }
         .wd-about p:last-child { margin-bottom: 0; }
         .wd-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
         .wd-metric { border: 1px solid #E3E5E8; border-radius: 16px; background: #fff; padding: 14px; }
         .wd-metric dt { margin: 0; color: #4A5560; font-size: 13px; font-weight: 700; }
-        .wd-metric dd { margin: 6px 0 0; font-family: Montserrat, sans-serif; font-size: 28px; line-height: 1; font-weight: 800; }
+        .wd-metric dd { margin: 6px 0 0; font-family: var(--font-sans), sans-serif; font-size: 28px; line-height: 1; font-weight: 800; }
         .wd-metric p { margin: 8px 0 0; color: #4A5560; font-size: 12px; line-height: 1.4; }
         .wd-split { display: grid; gap: 16px; }
-        .wd-big { margin: 0; font-family: Montserrat, sans-serif; font-size: 40px; line-height: 1; font-weight: 800; }
+        .wd-big { margin: 0; font-family: var(--font-sans), sans-serif; font-size: 40px; line-height: 1; font-weight: 800; }
         .wd-up { color: #1F7A45; font-weight: 700; }
         .wd-down { color: #B42318; font-weight: 700; }
         .wd-chart { position: relative; max-width: 100%; }
@@ -294,7 +294,7 @@
                         <p class="wd-fine"><a class="wd-inline" href="{{ route('niches.show', $profile['primary_slug']) }}">See all {{ $profile['primary'] }} websites →</a></p>
                     @endif
                     <div class="wd-guide">
-                        <p style="margin:0 0 8px;font-family:Montserrat,sans-serif;font-weight:800">Publisher guidelines</p>
+                        <p style="margin:0 0 8px;font-family:var(--font-display),serif;font-weight:400">Publisher guidelines</p>
                         <ul>
                             <li>Original content, minimum [WORD COUNT] words</li>
                             <li>Topic must suit the site's categories</li>

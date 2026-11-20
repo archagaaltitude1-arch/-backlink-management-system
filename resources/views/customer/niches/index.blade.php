@@ -14,11 +14,11 @@
             </nav>
             <h1 class="mt-4 font-display text-[30px] leading-tight font-extrabold text-navy lg:text-[44px]">Publisher Websites by Niche</h1>
             <p class="mt-4 max-w-[760px] text-[17px] leading-8 text-[#4A5560]">Choose a niche to see the publisher websites that accept guest posts, contextual links, niche edits and text links.</p>
-            <div class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="mt-8 grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 @forelse ($niches as $niche)
-                    <a href="{{ route('niches.show', $niche['slug']) }}" class="flex min-h-11 items-center justify-between gap-3 rounded-[20px] border border-[#E3E5E8] bg-white px-5 py-4 font-bold text-navy hover:border-[#D63A10] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
+                    <a href="{{ route('niches.show', $niche['slug']) }}" class="flex h-full min-h-14 items-center justify-between gap-4 rounded-[20px] border border-[#E3E5E8] bg-white px-5 py-4 font-bold text-navy hover:border-[#D63A10] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
                         <span>{{ $niche['name'] }}</span>
-                        <span class="rounded-full bg-[#FFF1EC] px-2.5 py-1 text-xs font-bold text-[#C0340D]">{{ $niche['total'] }}</span>
+                        <span class="min-w-8 shrink-0 rounded-full bg-[#FFF1EC] px-2.5 py-1 text-right text-xs font-bold text-[#C0340D] tabular-nums">{{ $niche['total'] }}</span>
                     </a>
                 @empty
                     <p class="text-[#4A5560]">No niches are listed yet.</p>

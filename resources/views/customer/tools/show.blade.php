@@ -70,7 +70,7 @@
                             <label for="anchors" class="text-[15px] font-bold text-navy">Anchors, one per line</label>
                             <textarea id="anchors" name="anchors" rows="6" class="mt-2 w-full rounded-xl border border-[#E3E5E8] px-4 py-3 text-[15px] text-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">{{ $anchors }}</textarea>
                         </div>
-                        <button type="submit" class="inline-flex min-h-11 w-fit items-center justify-center rounded-xl bg-[#D63A10] px-6 text-[15px] font-bold text-white hover:bg-[#FF4917] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Analyze anchors</button>
+                        <button type="submit" class="btn-primary w-fit">Analyze anchors</button>
                     </form>
                 @elseif ($tool['kind'] === 'competitor')
                     <form method="GET" action="{{ route('tools.show', $tool['slug']) }}" class="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
@@ -82,7 +82,7 @@
                             <label for="compare" class="text-[15px] font-bold text-navy">Second website</label>
                             <input id="compare" name="compare" type="text" value="{{ $compare }}" maxlength="253" autocomplete="off" placeholder="another-domain.example" class="mt-2 h-12 w-full rounded-xl border border-[#E3E5E8] px-4 text-[15px] text-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
                         </div>
-                        <button type="submit" class="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#D63A10] px-6 text-[15px] font-bold text-white hover:bg-[#FF4917] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Compare</button>
+                        <button type="submit" class="btn-primary">Compare</button>
                     </form>
                 @else
                     <form method="GET" action="{{ route('tools.show', $tool['slug']) }}" class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
@@ -90,7 +90,7 @@
                             <label for="domain" class="text-[15px] font-bold text-navy">Publisher domain</label>
                             <input id="domain" name="domain" type="text" value="{{ $domain }}" maxlength="253" autocomplete="off" placeholder="publisher-domain.example" class="mt-2 h-12 w-full rounded-xl border border-[#E3E5E8] px-4 text-[15px] text-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
                         </div>
-                        <button type="submit" class="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#D63A10] px-6 text-[15px] font-bold text-white hover:bg-[#FF4917] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Check website</button>
+                        <button type="submit" class="btn-primary">Check website</button>
                     </form>
                 @endif
 

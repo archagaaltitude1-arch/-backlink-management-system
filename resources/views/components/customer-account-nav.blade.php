@@ -20,14 +20,14 @@
         <span aria-hidden="true">›</span>
         <span>My account</span>
     </nav>
+    @if (request()->routeIs('customer.dashboard'))
+        <h1 class="mt-5 text-3xl font-bold text-black">My account</h1>
+    @else
+        <p class="mt-5 font-display text-3xl font-bold text-black">My account</p>
+    @endif
     <div class="panel my-5 overflow-hidden">
         <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-navy px-4 py-3 text-white sm:px-5">
             <div class="min-w-0">
-                @if (request()->routeIs('customer.dashboard'))
-                    <h1 class="text-lg font-bold">My account</h1>
-                @else
-                    <p class="font-display text-lg font-bold">My account</p>
-                @endif
                 <p class="break-words text-sm text-white/75">{{ auth()->user()->name }}</p>
             </div>
             <form method="POST" action="{{ route('auth.logout') }}">

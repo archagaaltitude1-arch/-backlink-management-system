@@ -16,7 +16,7 @@
 
 <div {{ $attributes->class(['max-w-3xl' => $align !== 'center', 'mx-auto max-w-3xl text-center' => $align === 'center']) }}>
     @if ($eyebrow)
-        <p class="text-sm font-bold tracking-[0.08em] text-[#C0340D] uppercase">{{ $eyebrow }}</p>
+        <p class="eyebrow text-[#C0340D]">{{ $eyebrow }}</p>
     @endif
     <{{ $tag }} @if ($headingId) id="{{ $headingId }}" @endif @class([$headingClass, 'mt-3' => filled($eyebrow)])>{{ $title }}</{{ $tag }}>
     @if ($subtitle)
