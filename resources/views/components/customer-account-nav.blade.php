@@ -21,9 +21,9 @@
         <span>My account</span>
     </nav>
     @if (request()->routeIs('customer.dashboard'))
-        <h1 class="mt-5 text-3xl font-bold tracking-tight text-black">My account</h1>
+        <h1 class="mt-5 text-3xl font-bold text-black">My account</h1>
     @else
-        <p class="mt-5 font-display text-3xl font-bold tracking-tight text-black">My account</p>
+        <p class="mt-5 font-display text-3xl font-bold text-black">My account</p>
     @endif
 
     <nav aria-label="My account" class="mt-4 grid grid-cols-2 gap-x-2 gap-y-1 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-5 lg:mt-8">

@@ -22,6 +22,12 @@
         'contextual-link' => 'article',
         'text-link' => 'type',
     ];
+    $serviceTones = [
+        'guest-post' => 'brand',
+        'niche-edit' => 'teal',
+        'contextual-link' => 'blue',
+        'text-link' => 'slate',
+    ];
     $serviceMenu = [];
 
     foreach (config('backlink_services.menu', []) as $item) {
@@ -29,6 +35,7 @@
             'name' => $item['name'],
             'menu' => $item['line'],
             'icon' => $serviceIcons[$item['slug']] ?? 'link',
+            'tone' => $serviceTones[$item['slug']] ?? 'brand',
             'url' => url('/services/'.$item['slug']),
         ];
     }
@@ -58,6 +65,59 @@
         ['label' => 'Food', 'query' => 'Food'],
         ['label' => 'Agriculture & Farming', 'query' => 'Agriculture & Farming'],
         ['label' => 'Legal', 'query' => 'Legal'],
+    ];
+    $nicheMarks = [
+        'Technology' => ['cpu', 'blue'],
+        'Software and IT' => ['code', 'violet'],
+        'Business' => ['briefcase', 'navy'],
+        'Finance' => ['coins', 'green'],
+        'Health' => ['health', 'rose'],
+        'Education' => ['book', 'amber'],
+        'Travel' => ['plane', 'sky'],
+        'Fashion and Beauty' => ['spark', 'rose'],
+        'Lifestyle' => ['sun', 'amber'],
+        'Real Estate' => ['home', 'teal'],
+        'E-commerce' => ['bag', 'violet'],
+        'Automotive' => ['car', 'slate'],
+        'Sports' => ['trophy', 'green'],
+        'Food' => ['utensils', 'brand'],
+        'Agriculture & Farming' => ['sprout', 'green'],
+        'Legal' => ['scale', 'navy'],
+    ];
+
+    foreach ($nicheMenu as $index => $niche) {
+        [$nicheMenu[$index]['icon'], $nicheMenu[$index]['tone']] = $nicheMarks[$niche['label']] ?? ['layers', 'navy'];
+    }
+
+    $packageMarks = [
+        'Text backlink package' => ['type', 'slate'],
+        'Contextual backlink package' => ['article', 'blue'],
+        'Guest post package' => ['pen', 'brand'],
+    ];
+    $tierMarks = [
+        'Starter' => ['seed', 'slate'],
+        'Pro' => ['star', 'brand'],
+        'Professional' => ['badge', 'teal'],
+        'Enterprise' => ['building', 'navy'],
+    ];
+    $siteMarks = [
+        'premium-guest-posting-sites' => ['crown', 'amber'],
+        'link-insertions-niche-edits' => ['edit', 'teal'],
+        'guest-posting-organic-traffic' => ['chart', 'green'],
+        'top-traffic-by-country' => ['globe', 'sky'],
+        'sidebar-footer-blogroll' => ['layout', 'violet'],
+        'favorite-websites' => ['heart', 'rose'],
+        'organic-keywords-guest-posts' => ['hash', 'blue'],
+    ];
+    $toolMarks = [
+        'website-authority-checker' => ['shield', 'navy'],
+        'backlink-checker' => ['link', 'brand'],
+        'domain-rating-checker' => ['gauge', 'amber'],
+        'domain-authority-checker' => ['award', 'blue'],
+        'traffic-checker' => ['chart', 'green'],
+        'spam-score-checker' => ['alert', 'rose'],
+        'anchor-text-analyzer' => ['anchor', 'violet'],
+        'competitor-backlink-analyzer' => ['users', 'teal'],
     ];
 
     $wishlistCount = 0;
@@ -104,13 +164,13 @@
                     <path d="M14 11a5 5 0 0 0-7.1-.1L5.5 12.3a5 5 0 0 0 7.1 7.1l1.2-1.2" />
                 </svg>
             </span>
-            <span class="font-display text-[20px] leading-none font-extrabold text-navy">BacklinkPro</span>
+            <span class="font-sans text-[20px] leading-none font-extrabold text-navy">BacklinkPro</span>
         </a>
 
         <nav class="hidden items-center gap-1 lg:flex" aria-label="Primary">
             @foreach ($links as $link)
                 @if ($link['label'] === 'Services')
-                    <div class="relative" id="services-menu">
+                    <div id="services-menu">
                         <button
                             type="button"
                             id="services-toggle"
@@ -122,27 +182,29 @@
                             Services
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
                         </button>
-                        <div id="services-panel" class="absolute left-0 top-full z-50 hidden pt-2" style="width:540px" hidden>
-                            <div class="rounded-[20px] border border-[#E3E5E8] bg-white p-3 shadow-lg">
-                            <div class="grid grid-cols-2 gap-1">
-                                @foreach ($serviceMenu as $item)
-                                    <a href="{{ $item['url'] }}" class="flex min-h-11 items-start gap-3 rounded-xl p-3 hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
-                                        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#FFF1EC] text-[#D63A10]">
-                                            <x-ui.icon :name="$item['icon']" />
-                                        </span>
-                                        <span class="min-w-0">
-                                            <span class="block text-[15px] font-bold text-navy">{{ $item['name'] }}</span>
-                                            <span class="mt-0.5 block text-[13px] leading-5 text-[#4A5560]">{{ $item['menu'] }}</span>
-                                        </span>
-                                    </a>
-                                @endforeach
-                            </div>
-                            <a href="{{ url('/services') }}" class="mt-1 flex min-h-11 items-center border-t border-[#E3E5E8] px-3 text-[15px] font-bold text-[#C0340D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Compare all services →</a>
+                        <div id="services-panel" class="absolute inset-x-0 top-full z-50 hidden border-t-2 border-[#FF4917] bg-white shadow-[0_24px_48px_rgba(21,32,41,0.14)]" hidden>
+                            <div class="mx-auto grid max-w-[1180px] items-stretch gap-8 px-6 py-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+                                <div class="flex h-full flex-col rounded-2xl bg-[#FFF7F4] p-5">
+                                    <p class="eyebrow text-[#C0340D]">Services</p>
+                                    <p class="mt-3 font-sans text-[15px] leading-6 text-[#4A5560]">Four ways to place a backlink.</p>
+                                    <a href="{{ url('/services') }}" class="mt-auto inline-flex pt-6 font-sans text-[14px] font-bold text-[#C0340D] hover:text-[#152029] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Compare all services →</a>
+                                </div>
+                                <div class="grid grid-cols-2 gap-1">
+                                    @foreach ($serviceMenu as $item)
+                                        <a href="{{ $item['url'] }}" class="group flex items-start gap-3 rounded-xl px-3 py-3 hover:bg-[#FFF7F4] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#D63A10]">
+                                            <x-ui.menu-mark :name="$item['icon']" :tone="$item['tone']" />
+                                            <span class="min-w-0">
+                                                <span class="block font-sans text-[14px] font-semibold leading-5 text-[#152029] group-hover:text-[#C0340D]">{{ $item['name'] }}</span>
+                                                <span class="mt-0.5 block font-sans text-[12px] leading-4 text-[#5C6770]">{{ $item['menu'] }}</span>
+                                            </span>
+                                        </a>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
                     </div>
                 @elseif ($link['label'] === 'Niches')
-                    <div class="relative" id="niches-menu">
+                    <div id="niches-menu">
                         <button
                             type="button"
                             id="niches-toggle"
@@ -154,18 +216,27 @@
                             Niches
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
                         </button>
-                        <div id="niches-panel" class="absolute left-0 top-full z-50 hidden pt-2" style="width:420px" hidden>
-                            <div class="rounded-[20px] border border-[#E3E5E8] bg-white p-3 shadow-lg">
-                                <div class="grid grid-cols-2 gap-1">
+                        <div id="niches-panel" class="absolute inset-x-0 top-full z-50 hidden border-t-2 border-[#FF4917] bg-white shadow-[0_24px_48px_rgba(21,32,41,0.14)]" hidden>
+                            <div class="mx-auto grid max-w-[1180px] items-stretch gap-8 px-6 py-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+                                <div class="flex h-full flex-col rounded-2xl bg-[#FFF7F4] p-5">
+                                    <p class="eyebrow text-[#C0340D]">Niches</p>
+                                    <p class="mt-3 font-sans text-[15px] leading-6 text-[#4A5560]">Browse publisher websites by topic.</p>
+                                    <a href="{{ route('niches.index') }}" class="mt-auto inline-flex pt-6 font-sans text-[14px] font-bold text-[#C0340D] hover:text-[#152029] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">View all niches →</a>
+                                </div>
+                                <div class="grid grid-cols-2 gap-1 xl:grid-cols-4">
                                     @foreach ($nicheMenu as $niche)
-                                        <a href="{{ route('niches.show', \Illuminate\Support\Str::slug($niche['query'])) }}" class="flex min-h-11 items-center rounded-xl px-3 text-[15px] font-bold text-navy hover:bg-[#FFF1EC] hover:text-[#C0340D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">{{ $niche['label'] }}</a>
+                                        @php $nicheHref = route('niches.show', \Illuminate\Support\Str::slug($niche['query'])); @endphp
+                                        <a href="{{ $nicheHref }}" @if (request()->url() === $nicheHref) aria-current="page" @endif class="group flex items-center gap-2.5 rounded-xl px-3 py-3 hover:bg-[#FFF7F4] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#D63A10] {{ request()->url() === $nicheHref ? 'bg-[#FFF7F4]' : '' }}">
+                                            <x-ui.menu-mark :name="$niche['icon']" :tone="$niche['tone']" />
+                                            <span class="min-w-0 truncate font-sans text-[14px] font-semibold {{ request()->url() === $nicheHref ? 'text-[#C0340D]' : 'text-[#152029] group-hover:text-[#C0340D]' }}">{{ $niche['label'] }}</span>
+                                        </a>
                                     @endforeach
                                 </div>
                             </div>
                         </div>
                     </div>
                 @elseif ($link['label'] === 'Packages')
-                    <div class="relative" id="packages-menu">
+                    <div id="packages-menu">
                         <button
                             type="button"
                             id="packages-toggle"
@@ -177,16 +248,27 @@
                             Packages
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
                         </button>
-                        <div id="packages-panel" class="absolute top-full z-50 hidden pt-2" style="left:0;width:min(760px,calc(100vw - 32px))" hidden>
-                            <div class="rounded-[20px] border border-[#E3E5E8] bg-white p-4 shadow-lg">
-                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        <div id="packages-panel" class="absolute inset-x-0 top-full z-50 hidden border-t-2 border-[#FF4917] bg-white shadow-[0_24px_48px_rgba(21,32,41,0.14)]" hidden>
+                            <div class="mx-auto grid max-w-[1180px] items-stretch gap-8 px-6 py-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+                                <a href="{{ route('packages.index') }}#select" class="flex h-full flex-col rounded-2xl bg-[#FFF7F4] p-5 hover:bg-[#FFE8E1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
+                                    <p class="eyebrow text-[#C0340D]">Packages</p>
+                                    <p class="mt-3 font-sans text-[15px] leading-6 text-[#4A5560]">Campaign sizes for each placement type.</p>
+                                    <span class="mt-auto inline-flex pt-6 font-sans text-[14px] font-bold text-[#C0340D]">View all packages →</span>
+                                </a>
+                                <div class="grid grid-cols-3 gap-6">
                                     @foreach ($packageMenu as $group)
                                         @foreach ($group['sections'] as $section)
+                                            @php [$sectionIcon, $sectionTone] = $packageMarks[$section['title']] ?? ['layers', 'navy']; @endphp
                                             <div>
-                                                <p class="px-3 text-[13px] font-extrabold leading-5 text-[#152029]">{{ $section['title'] }}</p>
+                                                <div class="flex items-center gap-2.5 px-3 pb-2">
+                                                    <x-ui.menu-mark :name="$sectionIcon" :tone="$sectionTone" />
+                                                    <p class="font-sans text-[13px] font-bold leading-4 text-[#152029]">{{ $section['title'] }}</p>
+                                                </div>
                                                 @foreach ($section['items'] as $item)
-                                                    <a href="{{ $item['href'] ?? route('packages.show', $item['slug']) }}" class="mt-1 flex min-h-11 items-center rounded-xl px-3 text-[14px] font-bold text-navy hover:bg-[#FFF1EC] hover:text-[#C0340D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
-                                                        {{ $item['label'] }}
+                                                    @php [$tierIcon, $tierTone] = $tierMarks[$item['label']] ?? ['seed', 'slate']; @endphp
+                                                    <a href="{{ $item['href'] ?? route('packages.show', $item['slug']) }}" class="group flex items-center gap-2.5 rounded-xl px-3 py-3 hover:bg-[#FFF7F4] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#D63A10]">
+                                                        <x-ui.menu-mark :name="$tierIcon" :tone="$tierTone" />
+                                                        <span class="font-sans text-[14px] font-semibold text-[#152029] group-hover:text-[#C0340D]">{{ $item['label'] }}</span>
                                                     </a>
                                                 @endforeach
                                             </div>
@@ -197,7 +279,7 @@
                         </div>
                     </div>
                 @elseif ($link['label'] === 'Sites')
-                    <div class="relative" id="sites-menu">
+                    <div id="sites-menu">
                         <button
                             type="button"
                             id="sites-toggle"
@@ -209,17 +291,27 @@
                             Sites
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
                         </button>
-                        <div id="sites-panel" class="absolute top-full z-50 hidden pt-2" style="left:0;width:min(520px,calc(100vw - 32px))" hidden>
-                            <div class="rounded-[20px] border border-[#E3E5E8] bg-white p-3 shadow-lg">
-                                <p class="px-3 text-[13px] font-extrabold uppercase tracking-wide text-[#C0340D]">Sites</p>
-                                @foreach ($siteMenu as $site)
-                                    <a href="{{ route('sites.show', $site['slug']) }}" class="mt-1 flex min-h-11 items-center rounded-xl px-3 py-2 text-[14px] leading-5 font-bold text-navy hover:bg-[#FFF1EC] hover:text-[#C0340D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">{{ $site['label'] }}</a>
-                                @endforeach
+                        <div id="sites-panel" class="absolute inset-x-0 top-full z-50 hidden border-t-2 border-[#FF4917] bg-white shadow-[0_24px_48px_rgba(21,32,41,0.14)]" hidden>
+                            <div class="mx-auto grid max-w-[1180px] items-stretch gap-8 px-6 py-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+                                <div class="flex h-full flex-col rounded-2xl bg-[#FFF7F4] p-5">
+                                    <p class="eyebrow text-[#C0340D]">Sites</p>
+                                    <p class="mt-3 font-sans text-[15px] leading-6 text-[#4A5560]">Publisher lists, filtered and ready to order.</p>
+                                    <a href="{{ route('sites.index') }}" class="mt-auto inline-flex pt-6 font-sans text-[14px] font-bold text-[#C0340D] hover:text-[#152029] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Browse all sites →</a>
+                                </div>
+                                <div class="grid grid-cols-2 gap-1">
+                                    @foreach ($siteMenu as $site)
+                                        @php [$siteIcon, $siteTone] = $siteMarks[$site['slug']] ?? ['globe', 'navy']; @endphp
+                                        <a href="{{ route('sites.show', $site['slug']) }}" class="group flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-[#FFF7F4] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#D63A10]">
+                                            <x-ui.menu-mark :name="$siteIcon" :tone="$siteTone" />
+                                            <span class="min-w-0 font-sans text-[14px] font-semibold leading-5 text-[#152029] group-hover:text-[#C0340D]">{{ $site['label'] }}</span>
+                                        </a>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
                     </div>
                 @elseif ($link['label'] === 'Tools')
-                    <div class="relative" id="tools-menu">
+                    <div id="tools-menu">
                         <button
                             type="button"
                             id="tools-toggle"
@@ -231,12 +323,25 @@
                             Tools
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
                         </button>
-                        <div id="tools-panel" class="absolute top-full z-50 hidden pt-2" style="left:0;width:min(340px,calc(100vw - 32px))" hidden>
-                            <div class="rounded-[20px] border border-[#E3E5E8] bg-white p-4 shadow-lg">
-                                <p class="px-3 text-[13px] font-extrabold uppercase tracking-wide text-[#C0340D]">SEO tools</p>
-                                @foreach ($toolMenu as $tool)
-                                    <a href="{{ route('tools.show', $tool['slug']) }}" class="mt-1 flex min-h-11 items-center rounded-xl px-3 text-[14px] font-bold text-navy hover:bg-[#FFF1EC] hover:text-[#C0340D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">{{ $tool['label'] }}</a>
-                                @endforeach
+                        <div id="tools-panel" class="absolute inset-x-0 top-full z-50 hidden border-t-2 border-[#FF4917] bg-white shadow-[0_24px_48px_rgba(21,32,41,0.14)]" hidden>
+                            <div class="mx-auto grid max-w-[1180px] items-stretch gap-8 px-6 py-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+                                <div class="flex h-full flex-col rounded-2xl bg-[#FFF7F4] p-5">
+                                    <p class="eyebrow text-[#C0340D]">SEO tools</p>
+                                    <p class="mt-3 font-sans text-[15px] leading-6 text-[#4A5560]">Check a publisher before you buy.</p>
+                                    <a href="{{ route('tools.index') }}" class="mt-auto inline-flex pt-6 font-sans text-[14px] font-bold text-[#C0340D] hover:text-[#152029] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Open all tools →</a>
+                                </div>
+                                <div class="grid grid-cols-2 gap-1">
+                                    @foreach ($toolMenu as $tool)
+                                        @php [$toolIcon, $toolTone] = $toolMarks[$tool['slug']] ?? ['search', 'navy']; @endphp
+                                        <a href="{{ route('tools.show', $tool['slug']) }}" class="group flex items-start gap-3 rounded-xl px-3 py-3 hover:bg-[#FFF7F4] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#D63A10]">
+                                            <x-ui.menu-mark :name="$toolIcon" :tone="$toolTone" />
+                                            <span class="min-w-0">
+                                                <span class="block font-sans text-[14px] font-semibold leading-5 text-[#152029] group-hover:text-[#C0340D]">{{ $tool['label'] }}</span>
+                                                <span class="mt-0.5 block font-sans text-[12px] leading-4 text-[#5C6770]">{{ $tool['summary'] }}</span>
+                                            </span>
+                                        </a>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -314,8 +419,8 @@
                 </div>
             @else
                 <div class="hidden items-center gap-2 lg:flex">
-                    <a href="{{ $loginHref }}" class="inline-flex min-h-11 items-center justify-center rounded-xl px-[22px] py-[14px] text-base font-bold text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Login</a>
-                    <a href="{{ $accountHref }}" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#D63A10] px-[22px] py-[14px] text-base font-bold text-white hover:bg-[#FF4917] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
+                    <a href="{{ $loginHref }}" class="btn-outline">Login</a>
+                    <a href="{{ $accountHref }}" class="btn-primary">
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
                             <circle cx="12" cy="8" r="3.25" />
                             <path d="M5.5 19.25a6.5 6.5 0 0 1 13 0" />
@@ -356,10 +461,11 @@
                     </button>
                     <div id="mobile-services-panel" class="{{ $servicesCurrent ? '' : 'hidden' }} flex flex-col gap-1 pl-2" @unless ($servicesCurrent) hidden @endunless>
                         @foreach ($serviceMenu as $item)
-                            <a href="{{ $item['url'] }}" class="flex min-h-11 items-center rounded-lg px-3 text-[15px] font-medium text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
+                            <a href="{{ $item['url'] }}" class="flex min-h-11 items-center gap-3 rounded-lg px-3 text-[15px] font-medium text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
+                                <x-ui.menu-mark :name="$item['icon']" :tone="$item['tone']" />
                                 <span>
-                                    <span class="block font-bold">{{ $item['name'] }}</span>
-                                    <span class="block text-[13px] leading-5 text-[#4A5560]">{{ $item['menu'] }}</span>
+                                    <span class="block font-sans text-[14px] font-semibold">{{ $item['name'] }}</span>
+                                    <span class="block font-sans text-[12px] leading-4 text-[#5C6770]">{{ $item['menu'] }}</span>
                                 </span>
                             </a>
                         @endforeach
@@ -378,7 +484,10 @@
                     </button>
                     <div id="mobile-niches-panel" class="{{ $nichesCurrent ? '' : 'hidden' }} grid grid-cols-1 gap-1 pl-2 sm:grid-cols-2" @unless ($nichesCurrent) hidden @endunless>
                         @foreach ($nicheMenu as $niche)
-                            <a href="{{ route('niches.show', \Illuminate\Support\Str::slug($niche['query'])) }}" class="flex min-h-11 items-center rounded-lg px-3 text-[15px] font-bold text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">{{ $niche['label'] }}</a>
+                            <a href="{{ route('niches.show', \Illuminate\Support\Str::slug($niche['query'])) }}" class="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-[15px] font-semibold text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
+                                <x-ui.menu-mark :name="$niche['icon']" :tone="$niche['tone']" />
+                                <span class="truncate">{{ $niche['label'] }}</span>
+                            </a>
                         @endforeach
                     </div>
                 @elseif ($link['label'] === 'Packages')
@@ -395,9 +504,12 @@
                     <div id="mobile-packages-panel" class="{{ $packagesCurrent ? '' : 'hidden' }} flex flex-col pl-2" @unless ($packagesCurrent) hidden @endunless>
                         @foreach ($packageMenu as $group)
                             @foreach ($group['sections'] as $section)
-                                <p class="px-3 pt-3 text-[13px] font-extrabold leading-5 text-[#152029]">{{ $section['title'] }}</p>
+                                @php [$sectionIcon, $sectionTone] = $packageMarks[$section['title']] ?? ['layers', 'navy']; @endphp
+                                <p class="flex items-center gap-2.5 px-3 pt-3 font-sans text-[13px] font-bold leading-5 text-[#152029]"><x-ui.menu-mark :name="$sectionIcon" :tone="$sectionTone" />{{ $section['title'] }}</p>
                                 @foreach ($section['items'] as $item)
-                                    <a href="{{ $item['href'] ?? route('packages.show', $item['slug']) }}" class="flex min-h-11 items-center rounded-lg px-3 text-[15px] font-bold text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
+                                    @php [$tierIcon, $tierTone] = $tierMarks[$item['label']] ?? ['seed', 'slate']; @endphp
+                                    <a href="{{ $item['href'] ?? route('packages.show', $item['slug']) }}" class="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-[15px] font-semibold text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
+                                        <x-ui.menu-mark :name="$tierIcon" :tone="$tierTone" />
                                         {{ $item['label'] }}
                                     </a>
                                 @endforeach
@@ -417,7 +529,11 @@
                     </button>
                     <div id="mobile-sites-panel" class="{{ $sitesCurrent ? '' : 'hidden' }} flex flex-col pl-2" @unless ($sitesCurrent) hidden @endunless>
                         @foreach ($siteMenu as $site)
-                            <a href="{{ route('sites.show', $site['slug']) }}" class="flex min-h-11 items-center rounded-lg px-3 py-2 text-[15px] leading-5 font-bold text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">{{ $site['label'] }}</a>
+                            @php [$siteIcon, $siteTone] = $siteMarks[$site['slug']] ?? ['globe', 'navy']; @endphp
+                            <a href="{{ route('sites.show', $site['slug']) }}" class="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-[15px] leading-5 font-semibold text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
+                                <x-ui.menu-mark :name="$siteIcon" :tone="$siteTone" />
+                                <span>{{ $site['label'] }}</span>
+                            </a>
                         @endforeach
                     </div>
                 @elseif ($link['label'] === 'Tools')
@@ -432,9 +548,15 @@
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
                     </button>
                     <div id="mobile-tools-panel" class="{{ $toolsCurrent ? '' : 'hidden' }} flex flex-col pl-2" @unless ($toolsCurrent) hidden @endunless>
-                        <p class="px-3 pt-1 text-[13px] font-extrabold uppercase tracking-wide text-[#C0340D]">SEO tools</p>
                         @foreach ($toolMenu as $tool)
-                            <a href="{{ route('tools.show', $tool['slug']) }}" class="flex min-h-11 items-center rounded-lg px-3 text-[15px] font-bold text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">{{ $tool['label'] }}</a>
+                            @php [$toolIcon, $toolTone] = $toolMarks[$tool['slug']] ?? ['search', 'navy']; @endphp
+                            <a href="{{ route('tools.show', $tool['slug']) }}" class="flex min-h-11 items-center gap-3 rounded-lg px-3 text-[15px] font-semibold text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
+                                <x-ui.menu-mark :name="$toolIcon" :tone="$toolTone" />
+                                <span>
+                                    <span class="block font-sans text-[14px] font-semibold">{{ $tool['label'] }}</span>
+                                    <span class="block font-sans text-[12px] leading-4 text-[#5C6770]">{{ $tool['summary'] }}</span>
+                                </span>
+                            </a>
                         @endforeach
                     </div>
                 @else
@@ -465,8 +587,8 @@
                         </form>
                     @endif
                 @else
-                    <a href="{{ $loginHref }}" class="inline-flex min-h-11 w-full items-center justify-center rounded-xl px-[22px] py-[14px] text-base font-bold text-navy hover:bg-[#F2F2F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Login</a>
-                    <a href="{{ $accountHref }}" class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#D63A10] px-[22px] py-[14px] text-base font-bold text-white hover:bg-[#FF4917] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">
+                    <a href="{{ $loginHref }}" class="btn-outline w-full">Login</a>
+                    <a href="{{ $accountHref }}" class="btn-primary w-full">
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
                             <circle cx="12" cy="8" r="3.25" />
                             <path d="M5.5 19.25a6.5 6.5 0 0 1 13 0" />
@@ -552,6 +674,11 @@
                 servicesPanel.classList.toggle('hidden', !open);
                 servicesPanel.hidden = !open;
                 servicesToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                var servicesIcon = servicesToggle.querySelector('svg');
+                if (servicesIcon) {
+                    servicesIcon.style.transition = 'transform 150ms';
+                    servicesIcon.style.transform = open ? 'rotate(180deg)' : '';
+                }
             }
 
             function setMobileServices(open) {
@@ -572,6 +699,11 @@
                 nichesPanel.classList.toggle('hidden', !open);
                 nichesPanel.hidden = !open;
                 nichesToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                var nichesIcon = nichesToggle.querySelector('svg');
+                if (nichesIcon) {
+                    nichesIcon.style.transition = 'transform 150ms';
+                    nichesIcon.style.transform = open ? 'rotate(180deg)' : '';
+                }
             }
 
             function setMobileNiches(open) {
@@ -584,20 +716,6 @@
                 mobileNichesToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
             }
 
-            function placePackages() {
-                if (!packagesMenu || !packagesPanel) {
-                    return;
-                }
-
-                packagesPanel.style.left = '0px';
-                var menuRect = packagesMenu.getBoundingClientRect();
-                var panelWidth = packagesPanel.getBoundingClientRect().width;
-                var desired = menuRect.left;
-                var maxLeft = window.innerWidth - panelWidth - 16;
-                var left = Math.min(Math.max(16, desired), Math.max(16, maxLeft));
-                packagesPanel.style.left = (left - menuRect.left) + 'px';
-            }
-
             function setPackages(open) {
                 if (!packagesToggle || !packagesPanel) {
                     return;
@@ -606,8 +724,10 @@
                 packagesPanel.classList.toggle('hidden', !open);
                 packagesPanel.hidden = !open;
                 packagesToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-                if (open) {
-                    placePackages();
+                var packagesIcon = packagesToggle.querySelector('svg');
+                if (packagesIcon) {
+                    packagesIcon.style.transition = 'transform 150ms';
+                    packagesIcon.style.transform = open ? 'rotate(180deg)' : '';
                 }
             }
 
@@ -621,20 +741,6 @@
                 mobilePackagesToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
             }
 
-            function placeTools() {
-                if (!toolsMenu || !toolsPanel) {
-                    return;
-                }
-
-                toolsPanel.style.left = '0px';
-                var menuRect = toolsMenu.getBoundingClientRect();
-                var panelWidth = toolsPanel.getBoundingClientRect().width;
-                var desired = menuRect.left;
-                var maxLeft = window.innerWidth - panelWidth - 16;
-                var left = Math.min(Math.max(16, desired), Math.max(16, maxLeft));
-                toolsPanel.style.left = (left - menuRect.left) + 'px';
-            }
-
             function setTools(open) {
                 if (!toolsToggle || !toolsPanel) {
                     return;
@@ -643,8 +749,10 @@
                 toolsPanel.classList.toggle('hidden', !open);
                 toolsPanel.hidden = !open;
                 toolsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-                if (open) {
-                    placeTools();
+                var toolsIcon = toolsToggle.querySelector('svg');
+                if (toolsIcon) {
+                    toolsIcon.style.transition = 'transform 150ms';
+                    toolsIcon.style.transform = open ? 'rotate(180deg)' : '';
                 }
             }
 
@@ -658,20 +766,6 @@
                 mobileToolsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
             }
 
-            function placeSites() {
-                if (!sitesMenu || !sitesPanel) {
-                    return;
-                }
-
-                sitesPanel.style.left = '0px';
-                var menuRect = sitesMenu.getBoundingClientRect();
-                var panelWidth = sitesPanel.getBoundingClientRect().width;
-                var desired = menuRect.left;
-                var maxLeft = window.innerWidth - panelWidth - 16;
-                var left = Math.min(Math.max(16, desired), Math.max(16, maxLeft));
-                sitesPanel.style.left = (left - menuRect.left) + 'px';
-            }
-
             function setSites(open) {
                 if (!sitesToggle || !sitesPanel) {
                     return;
@@ -680,8 +774,10 @@
                 sitesPanel.classList.toggle('hidden', !open);
                 sitesPanel.hidden = !open;
                 sitesToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-                if (open) {
-                    placeSites();
+                var sitesIcon = sitesToggle.querySelector('svg');
+                if (sitesIcon) {
+                    sitesIcon.style.transition = 'transform 150ms';
+                    sitesIcon.style.transform = open ? 'rotate(180deg)' : '';
                 }
             }
 
@@ -725,6 +821,14 @@
                 });
                 servicesMenu.addEventListener('mouseenter', function () {
                     clearTimeout(servicesCloseTimer);
+                    nichesPinned = false;
+                    setNiches(false);
+                    packagesPinned = false;
+                    setPackages(false);
+                    toolsPinned = false;
+                    setTools(false);
+                    sitesPinned = false;
+                    setSites(false);
                     setServices(true);
                 });
                 servicesMenu.addEventListener('mouseleave', function () {
@@ -772,6 +876,14 @@
                 });
                 nichesMenu.addEventListener('mouseenter', function () {
                     clearTimeout(nichesCloseTimer);
+                    servicesPinned = false;
+                    setServices(false);
+                    packagesPinned = false;
+                    setPackages(false);
+                    toolsPinned = false;
+                    setTools(false);
+                    sitesPinned = false;
+                    setSites(false);
                     setNiches(true);
                 });
                 nichesMenu.addEventListener('mouseleave', function () {
@@ -819,6 +931,14 @@
                 });
                 packagesMenu.addEventListener('mouseenter', function () {
                     clearTimeout(packagesCloseTimer);
+                    servicesPinned = false;
+                    setServices(false);
+                    nichesPinned = false;
+                    setNiches(false);
+                    toolsPinned = false;
+                    setTools(false);
+                    sitesPinned = false;
+                    setSites(false);
                     setPackages(true);
                 });
                 packagesMenu.addEventListener('mouseleave', function () {
@@ -866,6 +986,14 @@
                 });
                 toolsMenu.addEventListener('mouseenter', function () {
                     clearTimeout(toolsCloseTimer);
+                    servicesPinned = false;
+                    setServices(false);
+                    nichesPinned = false;
+                    setNiches(false);
+                    packagesPinned = false;
+                    setPackages(false);
+                    sitesPinned = false;
+                    setSites(false);
                     setTools(true);
                 });
                 toolsMenu.addEventListener('mouseleave', function () {
@@ -913,6 +1041,14 @@
                 });
                 sitesMenu.addEventListener('mouseenter', function () {
                     clearTimeout(sitesCloseTimer);
+                    servicesPinned = false;
+                    setServices(false);
+                    nichesPinned = false;
+                    setNiches(false);
+                    packagesPinned = false;
+                    setPackages(false);
+                    toolsPinned = false;
+                    setTools(false);
                     setSites(true);
                 });
                 sitesMenu.addEventListener('mouseleave', function () {

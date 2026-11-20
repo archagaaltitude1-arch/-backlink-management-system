@@ -74,6 +74,13 @@ class Article extends Model
         };
     }
 
+    public function viewUrl(): ?string
+    {
+        $url = trim((string) $this->published_url);
+
+        return $url !== '' ? $url : null;
+    }
+
     public function wordCount(): int
     {
         return str_word_count(strip_tags($this->body));

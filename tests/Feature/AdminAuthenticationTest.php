@@ -93,7 +93,8 @@ class AdminAuthenticationTest extends TestCase
 
         $this->actingAs($customer)
             ->get('/')
-            ->assertRedirect(route('customer.dashboard'));
+            ->assertOk()
+            ->assertSee('Real, Traffic-Driven Websites', false);
     }
 
     public function test_an_active_staff_member_is_sent_to_the_seo_dashboard(): void
@@ -115,7 +116,8 @@ class AdminAuthenticationTest extends TestCase
 
         $this->actingAs($staff)
             ->get('/')
-            ->assertRedirect(route('seo.dashboard'));
+            ->assertOk()
+            ->assertSee('Real, Traffic-Driven Websites', false);
     }
 
     public function test_staff_login_opens_the_seo_dashboard(): void

@@ -68,7 +68,7 @@
         .contact-title {
             margin: 0;
             max-width: 14ch;
-            font-family: Montserrat, sans-serif;
+            font-family: var(--font-sans), sans-serif;
             font-size: clamp(34px, 5vw, 56px);
             font-weight: 800;
             line-height: 1.05;
@@ -142,7 +142,7 @@
         .contact-form { padding: 28px 24px; }
         .contact-side h2, .contact-form h2 {
             margin: 0;
-            font-family: Montserrat, sans-serif;
+            font-family: var(--font-sans), sans-serif;
             font-size: 20px;
             font-weight: 800;
         }

@@ -5,36 +5,118 @@
 @source '../views/**/*.blade.php';
 
 @theme {
-    --font-sans: 'Ubuntu', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
-    --font-display: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Manrope', ui-sans-serif, system-ui, sans-serif;
     --color-brand: #ff4917;
     --color-brand-dark: #d63a10;
     --color-navy: #152029;
     --color-navy-soft: #1d2b36;
     --color-canvas: #f2f2f2;
+    --radius-lg: 0.75rem;
+}
+
+.portal-staff {
+    --font-sans: 'Ubuntu', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-display: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
+    html {
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
     h1,
     h2,
     h3,
     h4 {
         font-family: var(--font-display);
+        letter-spacing: 0;
     }
+}
+
+body:not(.portal-staff) {
+    --radius: 0.75rem;
+    font-family: var(--font-sans);
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body:not(.portal-staff) :is(h1, h2, h3, h4, .font-display) {
+    font-family: var(--font-sans);
+    font-synthesis: none;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+}
+
+body:not(.portal-staff) :is(h1, h2.uppercase) {
+    font-weight: 700;
+    letter-spacing: -0.03em;
+}
+
+body:not(.portal-staff) :is(h2, h3, h4) {
+    font-weight: 600;
+}
+
+body:not(.portal-staff) :is(header, nav) :is(a, button) {
+    font-weight: 500;
+}
+
+body:not(.portal-staff) :is(
+    button,
+    .btn,
+    .btn-primary,
+    .btn-inverse,
+    .btn-navy,
+    .btn-outline,
+    .wd-btn,
+    .bag-btn,
+    .pb-cart,
+    .pb-review-btn,
+    .pb-similar-btn,
+    .pk-cart,
+    .pk-sample,
+    .co-apply,
+    .co-go,
+    .nd-bulk,
+    .sp-btn,
+    .contact-submit,
+    .site-footer-cta,
+    .pub-recent,
+    .pub-create,
+    .pub-apply
+) {
+    font-weight: 600;
+}
+
+body:not(.portal-staff) :is(header, nav) :is(a, button) {
+    font-weight: 500;
+}
+
+body:not(.portal-staff) .site-footer h2 {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-synthesis: auto;
+    line-height: 1.2;
+    letter-spacing: 0.08em;
 }
 
 @layer components {
     .panel {
-        @apply rounded-2xl bg-white shadow-sm ring-1 ring-navy/10;
+        @apply rounded-lg bg-white shadow-sm ring-1 ring-navy/10;
     }
 
     .btn {
-        @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+        @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
     }
 
     .btn-primary {
-        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+        @apply inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
     }
 
     .btn-inverse {
@@ -46,7 +128,11 @@
     }
 
     .btn-outline {
-        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-navy ring-1 ring-navy/15 transition hover:bg-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+        @apply inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-navy ring-1 ring-navy/15 transition hover:bg-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+    }
+
+    .eyebrow {
+        @apply font-sans text-xs font-medium tracking-[0.08em] uppercase;
     }
 
     .btn-sm {
@@ -59,5 +145,104 @@
 
     .badge {
         @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold;
+    }
+}
+
+body:not(.portal-staff) :is(
+    .btn-primary,
+    .btn-outline,
+    .wd-btn,
+    .bag-btn,
+    .pb-cart,
+    .pb-review-btn,
+    .pb-similar-btn,
+    .pk-cart,
+    .pk-sample,
+    .co-apply,
+    .co-go,
+    .nd-bulk,
+    .sp-btn,
+    .contact-submit,
+    .site-footer-cta,
+    .pub-recent,
+    .pub-create,
+    .pub-apply
+) {
+    border-radius: 9999px;
+    transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+
+body:not(.portal-staff) :is(
+    .btn-primary,
+    .btn-outline,
+    .wd-btn-primary,
+    .wd-btn-outline,
+    .bag-btn-primary,
+    .bag-btn-line,
+    .pb-cart,
+    .pb-review-btn,
+    .pb-similar-btn,
+    .pk-cart,
+    .pk-sample,
+    .co-apply,
+    .co-go,
+    .nd-bulk,
+    .sp-btn,
+    .contact-submit,
+    .site-footer-cta,
+    .pub-recent,
+    .pub-create,
+    .pub-apply
+):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(21, 32, 41, 0.14);
+}
+
+body:not(.portal-staff) :is(
+    .eyebrow,
+    .why-kicker,
+    .home-cta-kicker,
+    .bag-kicker,
+    .pub-kicker,
+    .pkg-kicker,
+    .wl-kicker,
+    .sp-kicker,
+    .svc-kicker,
+    .say-kicker,
+    .contact-kicker,
+    .wd-kicker
+) {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body:not(.portal-staff) :is(
+        .btn-primary,
+        .btn-outline,
+        .wd-btn-primary,
+        .wd-btn-outline,
+        .bag-btn-primary,
+        .bag-btn-line,
+        .pb-cart,
+        .pb-review-btn,
+        .pb-similar-btn,
+        .pk-cart,
+        .pk-sample,
+        .co-apply,
+        .co-go,
+        .nd-bulk,
+        .sp-btn,
+        .contact-submit,
+        .site-footer-cta,
+        .pub-recent,
+        .pub-create,
+        .pub-apply
+    ):hover {
+        transform: none;
     }
 }

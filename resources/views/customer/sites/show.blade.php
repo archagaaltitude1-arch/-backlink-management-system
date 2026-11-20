@@ -56,7 +56,7 @@
         .site-front-crumb a:hover { color: #C0340D; }
         .site-front h1 {
             margin: 0;
-            font-family: Montserrat, sans-serif;
+            font-family: var(--font-sans), sans-serif;
             font-size: clamp(28px, 4vw, 40px);
             font-weight: 800;
             line-height: 1.15;
@@ -71,7 +71,7 @@
         .site-front h2 {
             margin: 28px 0 0;
             max-width: 820px;
-            font-family: Montserrat, sans-serif;
+            font-family: var(--font-sans), sans-serif;
             font-size: 22px;
             font-weight: 800;
             line-height: 1.3;
@@ -162,7 +162,7 @@
             @if ($site['kind'] === 'favorites')
                 <div class="mt-6 rounded-[20px] border border-[#E3E5E8] bg-white p-6">
                     <p class="text-[16px] leading-7 text-[#4A5560]">Save a publisher with the heart on its listing. Those websites stay on your account.</p>
-                    <a href="{{ $savedHref }}" class="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-[#D63A10] px-6 text-[15px] font-bold text-white hover:bg-[#FF4917] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Open favorite websites</a>
+                    <a href="{{ $savedHref }}" class="btn-primary mt-4">Open favorite websites</a>
                 </div>
             @elseif ($hasChart)
                 <div class="mt-6 rounded-[20px] border border-[#E3E5E8] bg-white p-5 sm:p-6">

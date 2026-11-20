@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\Website;
 use App\Services\Customer\NicheListingService;
+use App\Support\DemoNicheData;
+use App\Support\SpaViewData;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -31,6 +34,14 @@ class PageController extends Controller
                 'name' => $name,
                 'slug' => Str::slug($name),
             ])->all(),
+            'samplePublishers' => array_slice(DemoNicheData::rowsFor('Technology'), 0, 4),
+        ]);
+    }
+
+    public function homeJson(): JsonResponse
+    {
+        return response()->json([
+            'data' => app(SpaViewData::class)->convert($this->home()->getData()),
         ]);
     }
 

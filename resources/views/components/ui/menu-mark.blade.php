@@ -1,0 +1,61 @@
+@props([
+    'name' => 'layers',
+    'tone' => 'navy',
+])
+
+@php
+    $tones = [
+        'brand' => 'bg-[#FFF1EC]',
+        'navy' => 'bg-[#EEF1F4]',
+        'blue' => 'bg-[#E7F0FA]',
+        'teal' => 'bg-[#E5F6F2]',
+        'green' => 'bg-[#E7F6EA]',
+        'amber' => 'bg-[#FFF4DE]',
+        'rose' => 'bg-[#FDECEF]',
+        'violet' => 'bg-[#F1ECFA]',
+        'sky' => 'bg-[#E6F4FB]',
+        'slate' => 'bg-[#F1F3F5]',
+    ];
+    $emoji = [
+        'pen' => '📝',
+        'edit' => '✏️',
+        'article' => '📰',
+        'type' => '🔗',
+        'anchor' => '🔤',
+        'cpu' => '💻',
+        'code' => '⌨️',
+        'briefcase' => '💼',
+        'coins' => '💰',
+        'health' => '🩺',
+        'heart' => '❤️',
+        'book' => '🎓',
+        'plane' => '✈️',
+        'spark' => '👗',
+        'sun' => '☀️',
+        'home' => '🏠',
+        'bag' => '🛒',
+        'car' => '🚗',
+        'trophy' => '🏆',
+        'utensils' => '🍽️',
+        'sprout' => '🌾',
+        'scale' => '⚖️',
+        'crown' => '👑',
+        'chart' => '📈',
+        'globe' => '🌍',
+        'layout' => '🗂️',
+        'hash' => '#️⃣',
+        'shield' => '🛡️',
+        'link' => '🔗',
+        'gauge' => '📊',
+        'award' => '🏅',
+        'alert' => '⚠️',
+        'users' => '👥',
+        'star' => '⭐',
+        'badge' => '✅',
+        'building' => '🏢',
+        'seed' => '🚀',
+        'layers' => '📌',
+    ];
+@endphp
+
+<span {{ $attributes->merge(['class' => 'grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[16px] leading-none '.($tones[$tone] ?? $tones['navy'])]) }} aria-hidden="true">{{ $emoji[$name] ?? $emoji['layers'] }}</span>

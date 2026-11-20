@@ -83,7 +83,7 @@
         .co-card, .co-pay { border: 1px solid #E3E5E8; border-radius: 16px; background: #fff; }
         .co-card { padding: 22px 22px 18px; }
         .co-card + .co-card { margin-top: 14px; }
-        .co-card h2 { margin: 0; color: #152029; font-family: Montserrat, sans-serif; font-size: 22px; font-weight: 800; line-height: 1.25; word-break: break-word; }
+        .co-card h2 { margin: 0; color: #152029; font-family: var(--font-sans), sans-serif; font-size: 22px; font-weight: 800; line-height: 1.25; word-break: break-word; }
         .co-top { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 16px; margin-top: 16px; }
         .co-preview { position: relative; overflow: hidden; border: 1px solid #E3E5E8; border-radius: 8px; background: #F4F7FB; aspect-ratio: 16 / 10; }
         .co-preview img { width: 100%; height: 100%; object-fit: cover; }
@@ -99,7 +99,7 @@
         .co-tile strong { display: block; color: #152029; font-size: 16px; word-break: break-word; }
         .co-tile strong.is-follow { color: #17663A; }
         .co-tile span { color: #4A5560; font-size: 12px; }
-        .co-price { margin: 0 4px 0 auto; color: #152029; font-family: Montserrat, sans-serif; font-size: 20px; font-weight: 800; }
+        .co-price { margin: 0 4px 0 auto; color: #152029; font-family: var(--font-sans), sans-serif; font-size: 20px; font-weight: 800; }
         .co-trash { display: inline-flex; width: 44px; height: 44px; align-items: center; justify-content: center; border: 0; background: transparent; color: #4A5560; }
         .co-rules { margin-top: 14px; border-radius: 12px; background: #EEF5FC; padding: 14px 16px; }
         .co-rules h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; color: #152029; font-size: 15px; font-weight: 800; }
@@ -113,7 +113,7 @@
         .co-row + .co-row { margin-top: 12px; }
         .co-row strong { font-weight: 700; }
         .co-total { margin-top: 12px; border-top: 1px solid #E3E5E8; padding-top: 12px; font-weight: 800; }
-        .co-total strong { font-family: Montserrat, sans-serif; font-size: 20px; }
+        .co-total strong { font-family: var(--font-sans), sans-serif; font-size: 20px; }
         .co-go { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; margin-top: 16px; border: 0; border-radius: 8px; background: #FF7A45; color: #fff; font-size: 16px; font-weight: 800; text-decoration: none; }
         .co-go:hover { background: #D63A10; color: #fff; }
         .co-pay p { margin: 12px 0 0; color: #4A5560; font-size: 13px; line-height: 1.5; }

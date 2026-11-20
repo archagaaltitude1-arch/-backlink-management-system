@@ -520,7 +520,7 @@
                     <p class="mt-2 max-w-xl text-[16px] leading-7 text-[#4A5560]">Tell us the domain or niche you're after and our outreach team will try to add it.</p>
                 </div>
                 <div class="flex flex-col gap-3 sm:flex-row">
-                    <a href="mailto:[YOUR EMAIL]" class="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#D63A10] px-5 text-[15px] font-bold text-white hover:bg-[#FF4917] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Request a Website</a>
+                    <a href="mailto:[YOUR EMAIL]" class="btn-primary">Request a Website</a>
                     <a href="mailto:[YOUR EMAIL]" class="inline-flex min-h-11 items-center justify-center rounded-xl border border-navy bg-white px-5 text-[15px] font-bold text-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D63A10]">Add Your Website as a Publisher</a>
                 </div>
             </div>

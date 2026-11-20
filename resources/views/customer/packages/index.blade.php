@@ -2,7 +2,7 @@
 
 @section('document_title', 'Packages – BacklinkPro')
 
-@section('meta_description', 'Display backlink packages and the guest post package prices already set on BacklinkPro.')
+@section('meta_description', 'Choose a backlink package by placement and campaign size. The price updates as you change the number of backlinks.')
 
 @section('content')
     <style>
@@ -13,6 +13,9 @@
         .pkg-crumb a:focus-visible, .pkg-card:focus-visible, .pkg-price-card:focus-visible, .pkg-btn:focus-visible { outline: 2px solid #D63A10; outline-offset: 2px; }
         .pkg-title { margin: 16px 0 0; color: #152029; font-size: 36px; line-height: 1.1; font-weight: 800; }
         .pkg-lead { max-width: 720px; margin: 16px 0 0; color: #4A5560; font-size: 17px; line-height: 1.7; }
+        .pkg-service-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+        .pkg-service-tabs button { min-height: 44px; border: 1px solid #E3E5E8; border-radius: 999px; background: #fff; color: #152029; padding: 0 16px; font: inherit; font-size: 15px; font-weight: 800; cursor: pointer; }
+        .pkg-service-tabs button[aria-selected="true"] { border-color: #FF4917; background: #FFF1EC; color: #C0340D; }
         .pkg-block { margin-top: 36px; }
         .pkg-block h2 { margin: 0; color: #152029; font-size: 26px; line-height: 1.2; font-weight: 800; }
         .pkg-block > p { max-width: 720px; margin: 10px 0 0; color: #4A5560; font-size: 16px; line-height: 1.6; }
@@ -54,6 +57,34 @@
             <h1 class="pkg-title font-display">Packages</h1>
             <p class="pkg-lead">Each package has its own price. A larger package costs less per backlink. Guest posts cost more because a new article is included, and a higher Domain Rating costs more again.</p>
 
+            <section id="select" class="pkg-block" aria-labelledby="package-select-heading">
+                <h2 id="package-select-heading" class="font-display">Choose a package</h2>
+                <p>Pick a placement, then a campaign size. The price updates as you change the number of backlinks.</p>
+                <div class="pkg-service-tabs" role="tablist" aria-label="Placement type">
+                    @foreach ($packageSelections as $selection)
+                        <button type="button" data-package-service="{{ $selection['slug'] }}" aria-selected="{{ $loop->first ? 'true' : 'false' }}">{{ $selection['name'] }}</button>
+                    @endforeach
+                </div>
+                @foreach ($packageSelections as $selection)
+                    <div data-package-panel="{{ $selection['slug'] }}" @unless ($loop->first) hidden @endunless>
+                        @include('customer.packages.tier-tabs', ['tabs' => $selection['tabs'], 'service' => $selection['slug']])
+                    </div>
+                @endforeach
+            </section>
+            <script>
+                document.querySelectorAll('[data-package-service]').forEach(function (button) {
+                    button.addEventListener('click', function () {
+                        var slug = button.getAttribute('data-package-service');
+                        document.querySelectorAll('[data-package-service]').forEach(function (item) {
+                            item.setAttribute('aria-selected', item === button ? 'true' : 'false');
+                        });
+                        document.querySelectorAll('[data-package-panel]').forEach(function (panel) {
+                            panel.hidden = panel.getAttribute('data-package-panel') !== slug;
+                        });
+                    });
+                });
+            </script>
+
             @if ($guestPostPrices !== [])
                 <section class="pkg-block" aria-labelledby="guest-post-prices">
                     <h2 id="guest-post-prices" class="font-display">Guest post package prices</h2>
@@ -78,30 +109,6 @@
                     </ul>
                 </section>
             @endif
-
-            <section class="pkg-block" aria-labelledby="display-packages">
-                <h2 id="display-packages" class="font-display">Display backlink packages</h2>
-                <p>The price follows the number of backlinks. Growth and Professional cost less per link than Starter.</p>
-                <ul class="pkg-grid">
-                    @foreach ($packages as $package)
-                        <li id="{{ $package['slug'] }}">
-                            <article @class(['pkg-card', 'is-popular' => $package['popular']])>
-                                <p class="pkg-kicker">{{ $package['name'] }}</p>
-                                <p class="pkg-amount font-display">{{ $package['price_label'] }}</p>
-                                @if ($package['each_label'])
-                                    <p class="pkg-each">{{ $package['each_label'] }}</p>
-                                @endif
-                                <h3 class="pkg-name font-display">{{ $package['size'] }}</h3>
-                                <p class="pkg-meta">{{ $package['summary'] }}</p>
-                                <div class="pkg-actions">
-                                    <a class="pkg-btn pkg-btn-primary" href="{{ route('packages.websites', $package['slug']) }}">Choose Backlinks</a>
-                                    <a class="pkg-btn pkg-btn-line" href="{{ route('packages.show', $package['slug']) }}">Package details</a>
-                                </div>
-                            </article>
-                        </li>
-                    @endforeach
-                </ul>
-            </section>
         </div>
     </section>
 @endsection

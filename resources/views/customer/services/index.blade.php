@@ -7,60 +7,42 @@
 @section('content')
     <style>
         .svc-wrap { padding-left: clamp(24px, 4vw, 56px); padding-right: clamp(24px, 4vw, 56px); }
-        .svc-hero { background: #fff; border-bottom: 1px solid #E3E5E8; }
+        .svc-hero { position: relative; overflow: hidden; background: #152029; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .svc-hero-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+        .svc-hero-shade { position: absolute; inset: 0; background: rgba(21, 32, 41, 0.55); pointer-events: none; }
         .svc-hero-inner {
-            display: grid;
-            gap: 28px;
-            align-items: end;
-            padding-top: 56px;
-            padding-bottom: 48px;
+            position: relative;
+            padding-top: 64px;
+            padding-bottom: 64px;
         }
         .svc-kicker {
             margin: 0 0 12px;
-            color: #C0340D;
+            color: #FF4917;
             font-size: 12px;
             font-weight: 800;
             letter-spacing: 0.1em;
             text-transform: uppercase;
         }
+        .svc-hero-copy {
+            max-width: 48rem;
+            margin-inline: auto;
+            text-align: center;
+        }
         .svc-h1 {
-            margin: 0;
-            max-width: 16ch;
-            color: #152029;
+            margin: 0 auto;
+            color: #fff;
             font-size: clamp(34px, 4.4vw, 52px);
             line-height: 1.05;
             font-weight: 800;
             letter-spacing: -0.02em;
         }
         .svc-lead {
-            margin: 16px 0 0;
+            margin: 16px auto 0;
             max-width: 46ch;
-            color: #4A5560;
+            color: rgba(255, 255, 255, 0.82);
             font-size: 17px;
             line-height: 1.65;
         }
-        .svc-facts {
-            display: grid;
-            gap: 0;
-            margin: 0;
-            padding: 0;
-            list-style: none;
-            border: 1px solid #E3E5E8;
-            border-radius: 20px;
-            background: #F6F7F9;
-            overflow: hidden;
-        }
-        .svc-facts li {
-            display: flex;
-            align-items: baseline;
-            justify-content: space-between;
-            gap: 16px;
-            padding: 14px 18px;
-            border-top: 1px solid #E3E5E8;
-        }
-        .svc-facts li:first-child { border-top: 0; }
-        .svc-facts span { color: #152029; font-size: 14px; font-weight: 700; }
-        .svc-facts strong { color: #C0340D; font-size: 14px; font-weight: 800; }
         .svc-list { background: #F6F7F9; }
         .svc-list-inner { padding-top: 36px; padding-bottom: 56px; }
         .svc-grid {
@@ -166,34 +148,25 @@
         .svc-price-row th, .svc-price-row td { background: #FFF1EC; color: #152029; font-weight: 800; }
         .svc-price-row th { background: #FFF1EC; }
         @media (min-width: 900px) {
-            .svc-hero-inner { grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.7fr); padding-top: 72px; padding-bottom: 56px; }
+            .svc-hero-inner { padding-top: 96px; padding-bottom: 96px; }
             .svc-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
             .svc-list-inner { padding-top: 40px; padding-bottom: 72px; }
             .svc-scroll-note { display: none; }
         }
         @media (min-width: 640px) and (max-width: 899px) {
             .svc-grid { grid-template-columns: 1fr 1fr; }
-            .svc-facts { grid-template-columns: 1fr 1fr; }
-            .svc-facts li:nth-child(2) { border-top: 0; }
-            .svc-facts li:nth-child(odd) { border-right: 1px solid #E3E5E8; }
         }
     </style>
 
     <section class="svc-hero" aria-labelledby="services-overview-heading">
+        <img class="svc-hero-bg" src="{{ asset('images/services/services-overview-bg.jpg') }}" alt="">
+        <div class="svc-hero-shade" aria-hidden="true"></div>
         <div class="svc-wrap svc-hero-inner">
-            <div>
+            <div class="svc-hero-copy">
                 <p class="svc-kicker">Services</p>
                 <h1 id="services-overview-heading" class="svc-h1 font-display">{{ $overview['h1'] }}</h1>
                 <p class="svc-lead">{{ $overview['intro'] }}</p>
             </div>
-            <ul class="svc-facts" aria-label="Starting prices">
-                @foreach ($cards as $card)
-                    <li>
-                        <span>{{ $card['name'] }}</span>
-                        <strong>{{ $card['price'] }}</strong>
-                    </li>
-                @endforeach
-            </ul>
         </div>
     </section>
 

@@ -10,7 +10,7 @@
         .ck-crumb { margin: 0 0 18px; color: #4A5560; font-size: 14px; font-weight: 700; }
         .ck-crumb a { color: inherit; text-decoration: none; }
         .ck-crumb a:hover { color: #C0340D; }
-        .ck-title { margin: 0; font-family: Montserrat, sans-serif; font-size: clamp(28px, 4vw, 40px); font-weight: 800; line-height: 1.15; }
+        .ck-title { margin: 0; font-family: var(--font-sans), sans-serif; font-size: clamp(28px, 4vw, 40px); font-weight: 800; line-height: 1.15; }
         .ck-lead { margin: 10px 0 0; max-width: 620px; color: #4A5560; font-size: 16px; line-height: 1.6; }
         .ck-note { margin: 16px 0 0; border-radius: 12px; padding: 12px 14px; font-size: 14px; font-weight: 700; }
         .ck-note-ok { background: #E8F7EE; color: #146C43; }
@@ -25,7 +25,7 @@
         .ck-card + .ck-card { margin-top: 14px; }
         .ck-card h2, .ck-side h2 {
             margin: 0;
-            font-family: Montserrat, sans-serif;
+            font-family: var(--font-sans), sans-serif;
             font-size: 18px;
             font-weight: 800;
         }
@@ -106,7 +106,7 @@
         .ck-submit:hover { background: #FF4917; color: #fff; }
         .ck-row { display: flex; justify-content: space-between; gap: 12px; margin-top: 10px; color: #4A5560; font-size: 15px; }
         .ck-row strong { color: #152029; }
-        .ck-total { margin-top: 14px; padding-top: 14px; border-top: 1px solid #E3E5E8; font-family: Montserrat, sans-serif; font-size: 18px; font-weight: 800; }
+        .ck-total { margin-top: 14px; padding-top: 14px; border-top: 1px solid #E3E5E8; font-family: var(--font-sans), sans-serif; font-size: 18px; font-weight: 800; }
         .ck-side > p { margin: 14px 0 0; color: #4A5560; font-size: 13px; line-height: 1.55; }
         .ck-back { display: inline-flex; margin-top: 14px; color: #C0340D; font-size: 14px; font-weight: 700; text-decoration: none; }
         .ck-back:hover { text-decoration: underline; }
@@ -128,7 +128,7 @@
             background: #fff;
             padding: 22px;
         }
-        .ck-popup-card h2 { margin: 0; font-family: Montserrat, sans-serif; font-size: 22px; font-weight: 800; }
+        .ck-popup-card h2 { margin: 0; font-family: var(--font-sans), sans-serif; font-size: 22px; font-weight: 800; }
         .ck-popup-card p { margin: 10px 0 0; color: #4A5560; font-size: 14px; line-height: 1.5; }
         .ck-popup-code {
             margin: 16px 0;
@@ -136,7 +136,7 @@
             background: #F7F8FA;
             padding: 14px;
             text-align: center;
-            font-family: Montserrat, sans-serif;
+            font-family: var(--font-sans), sans-serif;
             font-size: 26px;
             font-weight: 800;
             letter-spacing: 0.04em;
@@ -152,7 +152,7 @@
     </style>
 
     @include('customer.coupons.select-saved-popup', [
-        'savedRewards' => $orderRewards ?? [],
+        'savedRewards' => $couponChoices ?? [],
         'applyUrl' => route('shopping.coupon'),
         'appliedCode' => $coupon,
     ])
@@ -160,7 +160,7 @@
         <div class="ck-popup" data-coupon-popup role="dialog" aria-modal="true" aria-labelledby="coupon-popup-title">
             <div class="ck-popup-card">
                 <h2 id="coupon-popup-title">Your coupon code</h2>
-                <p>{{ $couponOffer->discountSummary() }} for {{ $couponOffer->packageLabel() }}. Apply this code before you place the order.</p>
+                <p>{{ $couponOffer->discountSummary() }} on a package or an individual backlink. Apply this coupon before you place the order, or leave it for later.</p>
                 <p class="ck-popup-code">{{ $couponOffer->code }}</p>
                 <div class="ck-popup-actions">
                     <form method="POST" action="{{ route('shopping.coupon') }}">
@@ -168,7 +168,7 @@
                         <input type="hidden" name="coupon_code" value="{{ $couponOffer->code }}">
                         <button class="ck-apply" type="submit">Apply</button>
                     </form>
-                    <button class="ck-remove" type="button" onclick="this.closest('[data-coupon-popup]').remove()">Close</button>
+                    <button class="ck-remove" type="button" onclick="this.closest('[data-coupon-popup]').remove()">Not now</button>
                 </div>
             </div>
         </div>
