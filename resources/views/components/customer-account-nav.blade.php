@@ -14,34 +14,15 @@
     ];
 @endphp
 
-<div class="mx-auto w-full max-w-[1600px] px-4 pt-4 sm:px-6 lg:px-8">
-    <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-xs text-slate-600">
-        <a class="hover:underline" href="{{ route('customer.dashboard') }}">Home</a>
-        <span aria-hidden="true">›</span>
-        <span>My account</span>
-    </nav>
-    @if (request()->routeIs('customer.dashboard'))
-        <h1 class="mt-5 text-3xl font-bold text-black">My account</h1>
-    @else
-        <p class="mt-5 font-display text-3xl font-bold text-black">My account</p>
-    @endif
-    <div class="panel my-5 overflow-hidden">
-        <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-navy px-4 py-3 text-white sm:px-5">
-            <div class="min-w-0">
-                <p class="break-words text-sm text-white/75">{{ auth()->user()->name }}</p>
-            </div>
-            <form method="POST" action="{{ route('auth.logout') }}">
-                @csrf
-                <button type="submit" class="btn-inverse min-h-11 whitespace-nowrap">
-                    <svg class="size-4 shrink-0 text-orange-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M10 4H5v16h5m4-12 4 4-4 4m4-4H9" />
-                    </svg>
-                    Sign out
-                </button>
-            </form>
-        </div>
 
-        <nav aria-label="My account" class="grid grid-cols-2 gap-2 p-2.5 sm:grid-cols-3 lg:grid-cols-5">
+<aside class="bg-navy text-white lg:sticky lg:top-0 lg:min-h-screen">
+    <div class="border-b border-white/10 px-5 py-5">
+        <p class="text-xs font-medium tracking-widest text-brand uppercase">Customer workspace</p>
+        <p class="mt-2 truncate text-sm text-white/70">{{ auth()->user()->name }}</p>
+    </div>
+    <details open class="group">
+        <summary class="cursor-pointer px-5 py-4 text-sm font-medium lg:hidden">Account navigation</summary>
+        <nav aria-label="My account" class="grid gap-1 p-3">
             @foreach ($accountLinks as $link)
                 @php
                     [$label, $routeName, $icon] = $link;
@@ -51,9 +32,9 @@
                 @endphp
                 <a href="{{ route($routeName).$fragment }}"
                     @class([
-                        'flex min-h-11 min-w-0 items-center gap-2 rounded-xl px-3 py-2 text-sm transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
-                        'bg-orange-50 font-bold text-orange-900 ring-1 ring-brand/35' => $active,
-                        'font-medium text-navy hover:bg-canvas' => ! $active,
+                        'flex min-h-11 min-w-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
+                        'bg-brand text-navy' => $active,
+                        'text-white/70 hover:bg-white/10 hover:text-white' => ! $active,
                     ])
                     @if ($active) aria-current="page" @endif>
                     <svg class="size-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ $icon }}" /></svg>
@@ -61,5 +42,9 @@
                 </a>
             @endforeach
         </nav>
-    </div>
-</div>
+    </details>
+    <form method="POST" action="{{ route('auth.logout') }}" class="border-t border-white/10 p-3">
+        @csrf
+        <button type="submit" class="min-h-11 w-full rounded-lg px-3 text-left text-sm font-medium text-white/70 transition hover:bg-white/10 hover:text-white">Sign out</button>
+    </form>
+</aside>

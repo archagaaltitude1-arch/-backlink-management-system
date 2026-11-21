@@ -6,7 +6,7 @@
 @section('content')
     <style>
         .ck { background: #F7F8FA; color: #152029; }
-        .ck-wrap { max-width: none; margin: 0 auto; padding: 28px 20px 72px; }
+        .ck-wrap { padding-block: 28px 72px; }
         .ck-crumb { margin: 0 0 18px; color: #4A5560; font-size: 14px; font-weight: 700; }
         .ck-crumb a { color: inherit; text-decoration: none; }
         .ck-crumb a:hover { color: #C0340D; }
@@ -67,7 +67,7 @@
         }
         .ck-coupon-row { display: flex; flex-wrap: wrap; gap: 8px; }
         .ck-coupon-row input {
-            flex: 1 1 160px;
+            flex: 1 1 160px; min-width: 0;
             min-height: 44px;
             border: 1px solid #E3E5E8;
             border-radius: 10px;
@@ -146,7 +146,7 @@
         .ck-popup-actions .ck-apply, .ck-popup-actions .ck-remove { width: 100%; }
         @media (min-width: 900px) {
             .ck-grid { grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr); }
-            .ck-fields { grid-template-columns: 1fr 1fr; }
+            .ck-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .ck-fields .ck-span { grid-column: 1 / -1; }
         }
     </style>
@@ -174,7 +174,7 @@
         </div>
     @endif
     <section class="ck">
-        <div class="ck-wrap">
+        <div class="ck-wrap mx-auto w-full max-w-[76rem] px-4 sm:px-6 lg:px-8">
             <nav class="ck-crumb" aria-label="Breadcrumb">
                 <a href="{{ url('/') }}">Home</a>
                 <span aria-hidden="true"> / </span>

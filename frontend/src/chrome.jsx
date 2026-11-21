@@ -337,12 +337,16 @@ export function PublicChrome({ shell, path, view, flash, send, children }) {
 
     useEffect(() => {
         setMega(null);
+        setMobile(false);
+        setAccount(false);
     }, [path]);
 
     useEffect(() => {
         function onKey(event) {
             if (event.key === 'Escape') {
                 setMega(null);
+                setMobile(false);
+                setAccount(false);
             }
         }
 
@@ -352,20 +356,22 @@ export function PublicChrome({ shell, path, view, flash, send, children }) {
     }, []);
 
     useEffect(() => {
-        if (!mega) {
+        if (!mega && !mobile && !account) {
             return undefined;
         }
 
         function onPointerDown(event) {
             if (!headerRef.current?.contains(event.target)) {
                 setMega(null);
+                setMobile(false);
+                setAccount(false);
             }
         }
 
         document.addEventListener('pointerdown', onPointerDown);
 
         return () => document.removeEventListener('pointerdown', onPointerDown);
-    }, [mega]);
+    }, [mega, mobile, account]);
 
     function openMega(id) {
         setAccount(false);
@@ -391,7 +397,7 @@ export function PublicChrome({ shell, path, view, flash, send, children }) {
         <div className={`min-h-screen ${accountPage ? 'bg-[#f2f2f2]' : 'bg-white'}`}>
             <header
                 ref={headerRef}
-                className="sticky top-0 z-50 border-b border-[#E3E5E8] bg-white"
+                className="public-header sticky top-0 z-50 border-b border-[#E3E5E8] bg-white"
                 onMouseLeave={() => setMega(null)}
                 onBlur={(event) => {
                     if (!event.currentTarget.contains(event.relatedTarget)) {
@@ -399,9 +405,9 @@ export function PublicChrome({ shell, path, view, flash, send, children }) {
                     }
                 }}
             >
-                <div className="mx-auto flex items-center justify-between gap-3 px-4 py-3.5 lg:px-6">
-                    <A href="/home" className="flex items-center gap-2.5 font-sans text-xl font-extrabold text-navy" onMouseEnter={() => setMega(null)}><span className="grid h-9 w-9 place-items-center rounded-lg bg-brand text-sm text-white">↗</span>BacklinkPro</A>
-                    <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
+                <div className="public-header-inner mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
+                    <A href="/home" className="public-wordmark shrink-0 text-[24px] font-bold tracking-[-0.06em] text-navy" onMouseEnter={() => setMega(null)}>Backlink<span className="text-brand-dark">Pro</span><span className="text-brand" aria-hidden="true">.</span></A>
+                    <nav className="public-primary-nav hidden items-center gap-0.5 xl:flex" aria-label="Primary">
                         <A href="/" className={linkClass(home)} aria-current={home ? 'page' : undefined} onMouseEnter={() => setMega(null)}>Home</A>
                         <MegaButton label="Services" current={path.startsWith('/services')} open={mega === 'services'} onOpen={() => openMega('services')} onToggle={() => toggleMega('services')} />
                         <MegaButton label="Niches" current={path.startsWith('/niches')} open={mega === 'niches'} onOpen={() => openMega('niches')} onToggle={() => toggleMega('niches')} />
@@ -410,28 +416,28 @@ export function PublicChrome({ shell, path, view, flash, send, children }) {
                         <MegaButton label="Tools" current={path.startsWith('/tools')} open={mega === 'tools'} onOpen={() => openMega('tools')} onToggle={() => toggleMega('tools')} />
                         <MegaPanel shell={shell} path={path} mega={mega} />
                     </nav>
-                    <div className="flex items-center gap-1" onMouseEnter={() => setMega(null)}>
+                    <div className="public-header-actions flex items-center gap-1" onMouseEnter={() => setMega(null)}>
                         <A href="/wishlist" className="relative grid h-11 w-11 place-items-center rounded-xl hover:bg-[#F2F2F2]" aria-label={`Wishlist${shell?.wishlistCount ? `, ${shell.wishlistCount} saved` : ''}`}>♡{shell?.wishlistCount > 0 ? <span className="absolute top-0.5 right-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-brand-dark px-1 text-[11px] font-bold text-white">{shell.wishlistCount}</span> : null}</A>
                         <button type="button" className="relative grid h-11 w-11 place-items-center rounded-xl hover:bg-[#F2F2F2]" aria-label={`Cart, ${shell?.cartCount || 0} items`} onClick={() => setCartOpen(true)}>
                             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true"><path d="M6 7h15l-1.5 9h-12Z" /><path d="M6 7 5 4H2" /></svg>
                             <span className="absolute top-0.5 right-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-brand-dark px-1 text-[11px] font-bold text-white">{shell?.cartCount || 0}</span>
                         </button>
                         {auth ? (
-                            <div className="relative hidden lg:block">
+                            <div className="relative hidden xl:block">
                                 <button type="button" className="inline-flex min-h-11 max-w-48 items-center gap-2 rounded-xl px-3 text-[15px] font-bold hover:bg-[#F2F2F2]" aria-expanded={account} onClick={() => setAccount((value) => !value)}><span className="truncate">{auth.name}</span></button>
                                 {account ? <div className="absolute right-0 z-50 mt-2 w-52 rounded-xl border border-[#E3E5E8] bg-white p-2 shadow-lg" role="menu"><A href={auth.dashboard} className="block min-h-11 rounded-lg px-3 py-2.5 hover:bg-[#F2F2F2]" role="menuitem">My Dashboard</A>{shell?.logoutHref ? <button type="button" className="block min-h-11 w-full rounded-lg px-3 py-2.5 text-left hover:bg-[#F2F2F2]" role="menuitem" onClick={() => send(shell.logoutHref, 'POST', {})}>Logout</button> : null}</div> : null}
                             </div>
                         ) : (
-                            <div className="hidden items-center gap-2 lg:flex">
-                                <A href="/login" className="btn-outline">Login</A>
-                                <a href={shell?.accountHref || '/login'} className="btn-primary">My Account</a>
+                            <div className="ml-2 hidden items-center gap-3 border-l border-navy/10 pl-4 xl:flex">
+                                <A href="/login" className="inline-flex min-h-11 items-center text-sm font-medium text-navy hover:text-brand-dark">Login</A>
+                                <a href={shell?.accountHref || '/login'} className="inline-flex min-h-11 items-center rounded-lg bg-navy px-4 text-sm font-semibold text-white transition hover:bg-brand hover:text-navy">My Account</a>
                             </div>
                         )}
-                        <button type="button" className="grid h-11 w-11 place-items-center rounded-xl lg:hidden" aria-label="Open menu" aria-expanded={mobile} onClick={() => setMobile((value) => !value)}>☰</button>
+                        <button type="button" className="inline-flex min-h-11 items-center justify-center rounded-lg border border-navy/15 px-3 text-sm font-medium xl:hidden" aria-label={mobile ? 'Close menu' : 'Open menu'} aria-controls="public-mobile-menu" aria-expanded={mobile} onClick={() => setMobile((value) => !value)}>{mobile ? 'Close' : 'Menu'}</button>
                     </div>
                 </div>
                 {mobile ? (
-                    <nav className="flex max-h-[70vh] flex-col gap-1 overflow-auto border-t border-[#E3E5E8] px-4 py-4 lg:hidden" aria-label="Mobile">
+                    <nav id="public-mobile-menu" className="mx-auto flex max-h-[75dvh] max-w-7xl flex-col gap-1 overflow-auto overscroll-contain border-t border-[#E3E5E8] px-4 py-4 xl:hidden" aria-label="Mobile">
                         <A href="/" className="rounded-lg px-3 py-3 font-bold">Home</A>
                         <p className="eyebrow text-brand-dark px-3 pt-2">Services</p>
                         {(shell?.services || []).map((item) => {
@@ -502,10 +508,9 @@ export function PublicChrome({ shell, path, view, flash, send, children }) {
                     </nav>
                 ) : null}
             </header>
-            {accountPage ? <AccountNav send={send} path={path} view={view} /> : null}
-            <main className={accountPage ? 'mx-auto w-full max-w-[1600px] px-4 pb-10 sm:px-6 lg:px-8' : undefined}>{children}</main>
+            {accountPage ? <div className="customer-workspace mx-auto grid w-full max-w-[1600px] items-start lg:grid-cols-[240px_minmax(0,1fr)]"><AccountNav send={send} path={path} name={auth?.name} /><main className="min-w-0 p-4 sm:p-6 lg:p-8">{children}</main></div> : <main>{children}</main>}
             {view === 'customer.pages.contact' || accountPage || loginPage ? null : <Testimonials />}
-            {loginPage ? null : <CountryBrowser countries={shell?.countries || []} />}
+            {loginPage || accountPage ? null : <CountryBrowser countries={shell?.countries || []} />}
             {loginPage ? null : <SiteFooter shell={shell} />}
             <CartDrawer open={cartOpen} shell={shell} send={send} onClose={() => setCartOpen(false)} />
             {accountPage && view !== 'orders.payment' ? <SavedCouponDialog popup={flash?.saved_coupon_popup} /> : null}
@@ -648,39 +653,40 @@ function accountActive(href, path) {
     return path === href;
 }
 
-function AccountNav({ send, path, view }) {
-    const Heading = view === 'customer.dashboard' ? 'h1' : 'p';
-
+function AccountNav({ send, path, name }) {
     return (
-        <div className="mx-auto w-full max-w-[1600px] px-4 pt-4 sm:px-6 lg:px-8">
-            <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-600">
-                <A className="hover:underline" href="/customer/dashboard">Home</A>
-                <span aria-hidden="true">›</span>
-                <span>My account</span>
-            </nav>
-            <Heading className="mt-5 font-display text-3xl text-black">My account</Heading>
-            <nav aria-label="My account" className="mt-4 grid grid-cols-2 gap-x-2 gap-y-1 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-5 lg:mt-8">
-                {accountLinks.map(([label, href, icon]) => {
-                    const active = accountActive(href, path);
-
-                    return (
-                        <A key={label} href={href} className={`inline-flex min-h-11 min-w-0 items-center gap-1.5 border-b px-2 py-2 text-sm font-medium text-brand-dark hover:border-brand-dark sm:px-0 ${active ? 'border-navy' : 'border-transparent'}`} aria-current={active ? 'page' : undefined}>
-                            <svg className="size-4 shrink-0 text-navy" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={icon} /></svg>
-                            {label}
-                        </A>
-                    );
-                })}
-            </nav>
-            <form className="mt-2 mb-5 flex justify-end sm:mb-7 sm:justify-center" onSubmit={(event) => { event.preventDefault(); send('/logout', 'POST', {}); }}>
-                <button type="submit" className="inline-flex min-h-11 items-center gap-1.5 px-2 py-2 text-sm font-medium text-brand-dark hover:underline">
-                    <svg className="size-4 text-navy" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 4H4v16h6m4-12 4 4-4 4m4-4H8" /></svg>
-                    Logout
-                </button>
+        <aside className="customer-navigation bg-navy text-white lg:sticky lg:top-[77px] lg:min-h-[calc(100dvh-77px)]">
+            <div className="border-b border-white/10 px-5 py-5">
+                <p className="text-xs font-medium tracking-widest text-brand uppercase">Customer workspace</p>
+                <p className="mt-2 truncate text-sm text-white/70">{name || 'My account'}</p>
+            </div>
+            <details className="group lg:hidden">
+                <summary className="cursor-pointer px-5 py-4 text-sm font-medium">Account navigation</summary>
+                <AccountLinks path={path} />
+            </details>
+            <div className="hidden lg:block"><AccountLinks path={path} /></div>
+            <form className="border-t border-white/10 p-3" onSubmit={(event) => { event.preventDefault(); send('/logout', 'POST', {}); }}>
+                <button type="submit" className="min-h-11 w-full rounded-lg px-3 text-left text-sm font-medium text-white/70 transition hover:bg-white/10 hover:text-white">Sign out</button>
             </form>
-        </div>
+        </aside>
     );
 }
 
+function AccountLinks({ path }) {
+    return (
+        <nav aria-label="My account" className="grid gap-1 p-3">
+            {accountLinks.map(([label, href, icon]) => {
+                const active = accountActive(href, path);
+                return (
+                    <A key={label} href={href} className={`flex min-h-11 min-w-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${active ? 'bg-brand text-navy' : 'text-white/70 hover:bg-white/10 hover:text-white'}`} aria-current={active ? 'page' : undefined}>
+                        <svg className="size-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={icon} /></svg>
+                        {label}
+                    </A>
+                );
+            })}
+        </nav>
+    );
+}
 function SavedCouponDialog({ popup }) {
     const [open, setOpen] = useState(Boolean(popup?.code));
 

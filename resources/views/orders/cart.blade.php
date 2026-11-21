@@ -16,7 +16,7 @@
             <div class="rounded-xl bg-red-50 p-4 text-sm text-red-800">{{ session('error') }}</div>
         @endif
 
-        <div class="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
             <section class="panel overflow-hidden">
                 @forelse ($cart->items as $item)
                     <div class="flex flex-col gap-4 border-b border-navy/10 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -24,7 +24,7 @@
                             <h2 class="font-semibold">{{ $item->item_name }}</h2>
                             <p class="mt-1 text-sm text-navy/60">${{ number_format($item->unit_price, 2) }} each · {{ $item->credit_cost }} credits</p>
                         </div>
-                        <div class="flex items-center gap-3">
+                        <div class="flex flex-wrap items-center gap-3">
                             <form method="POST" action="{{ route('orders.cart.items.update', $item) }}" class="flex items-center gap-2">
                                 @csrf
                                 @method('PATCH')

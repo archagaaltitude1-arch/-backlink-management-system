@@ -10,6 +10,148 @@
     --radius-lg: 0.75rem;
 }
 
+.public-header {
+    font-family: "Ubuntu", ui-sans-serif, system-ui, sans-serif;
+    box-shadow: 0 1px 12px #15202904;
+}
+
+.customer-workspace {
+    --font-sans: "Ubuntu", ui-sans-serif, system-ui, sans-serif;
+    --font-display: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans);
+    background: #f2f2f2;
+    min-height: calc(100dvh - 77px);
+}
+
+.customer-workspace :is(h1, h2, h3) {
+    font-family: var(--font-display);
+    letter-spacing: -0.025em;
+}
+
+.customer-workspace :is(a, button, summary):focus-visible {
+    outline: 2px solid #ff4917;
+    outline-offset: 3px;
+}
+
+.public-wordmark {
+    font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+}
+
+.public-header :is(a, button, summary):focus-visible {
+    outline: 2px solid #ff4917;
+    outline-offset: 3px;
+}
+
+.public-primary-nav > :is(a, button) {
+    font-size: 14px;
+    padding-inline: 10px;
+    border-radius: 8px;
+}
+
+.public-header #mega-menu {
+    border-top: 1px solid #e3e5e8;
+    box-shadow: 0 20px 35px #15202912;
+}
+
+@media (max-width: 1279px) {
+    .public-header-actions > a,
+    .public-header-actions > button {
+        min-width: 40px;
+    }
+}
+
+.home-page {
+    font-family: "Ubuntu", ui-sans-serif, system-ui, sans-serif;
+    --font-sans: "Ubuntu", ui-sans-serif, system-ui, sans-serif;
+    --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+}
+
+.home-page :is(h1, h2, h3) {
+    font-family: var(--font-display);
+    text-wrap: balance;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    font-optical-sizing: auto;
+}
+
+.home-page h1 {
+    font-weight: 800;
+    letter-spacing: -0.045em;
+}
+
+.home-page h1 em {
+    font-weight: 500;
+}
+
+.home-page :is(a, button, [role="tabpanel"]):focus-visible {
+    outline: 3px solid #ff4917;
+    outline-offset: 4px;
+}
+
+.home-hero {
+    background-color: #0a0e13;
+    background-image:
+        radial-gradient(ellipse at 78% 12%, #ff49171a, transparent 55%),
+        linear-gradient(#ffffff03 1px, transparent 1px),
+        linear-gradient(90deg, #ffffff03 1px, transparent 1px);
+    background-size: auto, 64px 64px, 64px 64px;
+    border-bottom: 1px solid #ffffff12;
+}
+
+.home-page .home-tech-heading {
+    font-family: var(--font-display);
+    font-size: clamp(2.45rem, 4.3vw, 4.1rem);
+    line-height: 1.04;
+    letter-spacing: -0.05em;
+    font-weight: 800;
+    text-transform: none;
+    color: #fff;
+    text-wrap: initial;
+}
+
+.home-tech-heading span {
+    color: #ff4917;
+    font-weight: 500;
+}
+
+.home-hero-kicker {
+    display: inline-block;
+    border: 1px solid #ff491740;
+    border-radius: 999px;
+    padding: 10px 16px;
+    background: #ff491708;
+    color: #ff9475;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.home-page .home-discovery-panel h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.home-hero-graphic {
+    height: clamp(260px, 24vw, 350px);
+}
+
+.home-discovery-panel {
+    box-shadow: 0 24px 80px #0005;
+}
+
+.home-page .why-pro {
+    background: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .home-editorial-image img {
+        transition: none;
+        transform: none;
+    }
+}
+
 @layer base {
     html,
     body {

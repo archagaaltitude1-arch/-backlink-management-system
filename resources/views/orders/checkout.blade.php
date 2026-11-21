@@ -3,7 +3,7 @@
 @section('title', 'Checkout')
 
 @section('content')
-    <div class="mx-auto max-w-5xl space-y-6">
+    <div class="mx-auto max-w-6xl space-y-6">
         <div>
             <h1 class="mt-2 text-3xl font-semibold">Checkout</h1>
             <p class="mt-2 text-sm text-navy/70">Add the publishing details for each item in your cart.</p>

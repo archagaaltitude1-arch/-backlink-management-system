@@ -29,11 +29,12 @@
             </a>
             <div class="flex min-h-screen flex-col">
                 @include('components.public-navbar')
+                <div class="portal-staff mx-auto grid w-full max-w-[1600px] items-start bg-[#F2F2F2] lg:grid-cols-[240px_minmax(0,1fr)]">
                 @include('components.customer-account-nav')
-                <main id="account-content" class="mx-auto w-full max-w-[1600px] flex-1 px-4 pb-10 sm:px-6 lg:px-8">
+                <main id="account-content" class="min-w-0 p-4 sm:p-6 lg:p-8">
                     @yield('content')
                 </main>
-                <x-ui.country-browser centered />
+                </div>
                 @include('components.public-footer')
             </div>
             @include('components.public-cart-drawer')
