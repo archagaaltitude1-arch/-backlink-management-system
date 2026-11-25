@@ -106,6 +106,13 @@ class CustomerPurchaseTest extends TestCase
     public function test_coupon_discount_is_calculated_by_the_server(): void
     {
         $customer = User::factory()->create();
+        $customer->orders()->create([
+            'order_number' => 'BM-FIRST-'.$customer->id,
+            'session_id' => 'first-'.$customer->id,
+            'total_amount' => 10,
+            'payment_status' => 'paid',
+            'order_status' => 'completed',
+        ]);
         Coupon::create([
             'code' => 'SAVE10',
             'discount_type' => 'percentage',
@@ -128,7 +135,7 @@ class CustomerPurchaseTest extends TestCase
             ]],
         ])->assertRedirect();
 
-        $order = Order::query()->where('customer_id', $customer->id)->firstOrFail();
+        $order = Order::query()->where('customer_id', $customer->id)->where('coupon_code', 'SAVE10')->firstOrFail();
         $this->assertSame('108.00', $order->total_amount);
         $this->assertSame('12.00', $order->discount_amount);
         $this->assertDatabaseMissing('coupon_usages', ['order_id' => $order->id]);

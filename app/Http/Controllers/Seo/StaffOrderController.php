@@ -190,8 +190,7 @@ class StaffOrderController extends Controller
             throw new HttpResponseException(redirect()->guest(route('seo.login')));
         }
 
-        $user->loadMissing('role');
-        abort_unless(in_array($user->role?->role_name, ['Admin', 'Staff', 'SEO'], true), 403);
+        abort_unless($user->canAccessSeoPortal(), 403);
 
         return $user;
     }

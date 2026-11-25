@@ -9,6 +9,7 @@ use App\Models\DiscountCampaign;
 use App\Models\FirstOrderRedemption;
 use App\Models\User;
 use App\Notifications\CouponNotice;
+use App\Support\CustomerDiscounts;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -34,10 +35,38 @@ class CouponController extends Controller
             ->paginate(12)
             ->withQueryString();
 
+        $customerSearch = trim($request->string('customer')->toString());
+        $loyalty = DiscountCampaign::findType('loyalty');
+        $customers = User::query()
+            ->where('account_type', 'customer')
+            ->when($customerSearch !== '', function ($query) use ($customerSearch): void {
+                $query->where(function ($rows) use ($customerSearch): void {
+                    $rows->where('name', 'like', '%'.$customerSearch.'%')
+                        ->orWhere('email', 'like', '%'.$customerSearch.'%');
+                });
+            })
+            ->where(function ($query): void {
+                $query->whereHas('orders')->orWhereHas('coupons');
+            })
+            ->withCount(['orders as paid_orders_count' => function ($query): void {
+                $query->where('payment_status', 'paid')
+                    ->whereNotIn('order_status', ['cancelled', 'refunded', 'failed']);
+            }])
+            ->with(['coupons' => function ($query): void {
+                $query->withCount('usages')->latest();
+            }])
+            ->orderByDesc('paid_orders_count')
+            ->orderBy('name')
+            ->paginate(10, ['*'], 'customers')
+            ->withQueryString();
+
         return view('admin.coupons.index', [
             'coupons' => $coupons,
             'search' => $search,
             'view' => $view,
+            'customers' => $customers,
+            'customerSearch' => $customerSearch,
+            'loyalty' => $loyalty,
             'campaigns' => DiscountCampaign::query()->orderBy('id')->get(),
             'redemptions' => FirstOrderRedemption::query()->with('customer')->latest()->limit(12)->get(),
             'total' => Coupon::query()->where('code', 'not like', 'ORD-%')->count(),
@@ -45,6 +74,15 @@ class CouponController extends Controller
             'discountTotal' => (float) Coupon::query()->join('coupon_usages', 'coupon_usages.coupon_id', '=', 'coupons.id')->sum('coupon_usages.discount_amount')
                 + (float) FirstOrderRedemption::query()->sum('discount_amount'),
         ]);
+    }
+
+    public function issueLoyalty(User $customer): RedirectResponse
+    {
+        abort_unless($customer->account_type === 'customer', 404);
+
+        app(CustomerDiscounts::class)->issueLoyalty($customer);
+
+        return back()->with('success', 'Loyalty coupons checked for '.$customer->name.'.');
     }
 
     public function updateCampaign(Request $request, DiscountCampaign $campaign): RedirectResponse

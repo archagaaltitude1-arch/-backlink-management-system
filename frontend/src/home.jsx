@@ -111,6 +111,7 @@ export function HomePage({ page }) {
     const data = page.data || {};
     const publishers = data.publisherCount == null ? 'Checked' : `${Number(data.publisherCount).toLocaleString()}+`;
     const startHref = page.shell?.auth ? '/marketplace' : '/register';
+    const dashboardHref = '/customer/dashboard';
     const cards = data.serviceCards || [];
     const samples = data.samplePublishers || [];
     const niches = data.nicheTiles || [];
@@ -138,7 +139,7 @@ export function HomePage({ page }) {
                     <h1 className="mt-5 w-[min(1120px,calc(100vw-2.5rem))] font-display text-[42px] leading-tight text-white lg:text-[68px]">Earn Higher Rankings<br className="hidden lg:block" /> with Backlinks from <span className="text-brand">Real, Traffic-Driven</span> <br className="hidden lg:block" /><span className="text-brand">Websites</span></h1>
                     <p className="mt-5 max-w-3xl text-[17px] leading-8 text-white/80">Pick from {publishers} checked publisher websites and grow your search visibility, visitors and sales with text links, contextual links, guest posts and niche edits. Every one is verified before you get your report.</p>
                     <div className="mt-6 flex flex-wrap justify-center gap-3">
-                        <A href={startHref} className="btn-primary">Start Building Links</A>
+                        <A href={dashboardHref} className="btn-primary">Start Building Links</A>
                         <A href="/publishers" className="btn-outline">See the publisher list</A>
                     </div>
                     <ul className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2">

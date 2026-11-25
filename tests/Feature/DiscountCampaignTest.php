@@ -90,7 +90,78 @@ class DiscountCampaignTest extends TestCase
         $this->actingAs($customer)->get(route('customer.coupons'))
             ->assertOk()
             ->assertSee($loyalty->first()->code, false)
-            ->assertSee('Copy code', false);
+            ->assertSee('Copy code', false)
+            ->assertSee('Apply', false);
+    }
+
+    public function test_account_coupon_lists_show_earned_used_and_expired_coupons(): void
+    {
+        $customer = User::factory()->create();
+        $order = $customer->orders()->create([
+            'order_number' => 'BM-COUPON-LIST',
+            'session_id' => 'coupon-list',
+            'total_amount' => 40,
+            'payment_status' => 'paid',
+            'order_status' => 'completed',
+        ]);
+        $used = Coupon::query()->create([
+            'code' => 'USED-FLOW',
+            'type' => 'promotional',
+            'discount_type' => 'percentage',
+            'discount_value' => 5,
+            'purchase_type' => 'both',
+            'is_active' => true,
+            'customer_id' => $customer->id,
+            'expires_at' => now()->addDays(10),
+        ]);
+        $customer->couponUsages()->create([
+            'coupon_id' => $used->id,
+            'order_id' => $order->id,
+            'discount_amount' => 2,
+        ]);
+        $loyalty = Coupon::query()->create([
+            'code' => 'LOYAL-FLOW',
+            'type' => 'loyalty',
+            'discount_type' => 'percentage',
+            'discount_value' => 20,
+            'purchase_type' => 'both',
+            'is_active' => true,
+            'customer_id' => $customer->id,
+            'milestone' => 3,
+            'expires_at' => now()->addDays(10),
+        ]);
+        Coupon::query()->create([
+            'code' => 'OLD-FLOW',
+            'type' => 'order_reward',
+            'discount_type' => 'percentage',
+            'discount_value' => 2,
+            'purchase_type' => 'both',
+            'is_active' => true,
+            'customer_id' => $customer->id,
+            'expires_at' => now()->subDay(),
+        ]);
+
+        $response = $this->actingAs($customer)
+            ->withHeader('X-Backlink-Spa', '1')
+            ->getJson(route('customer.coupons'));
+
+        $response->assertOk();
+        $available = $response->json('data.available');
+        $this->assertIsArray($available);
+        $this->assertTrue(array_is_list($available));
+        $this->assertSame(['LOYAL-FLOW'], array_column($available, 'code'));
+        $this->assertSame(['USED-FLOW'], array_column($response->json('data.used'), 'code'));
+        $this->assertSame(['OLD-FLOW'], array_column($response->json('data.expired'), 'code'));
+
+        $this->postJson(route('customer.coupons.apply', $loyalty))
+            ->assertOk()
+            ->assertJsonPath('redirect', '/publishers')
+            ->assertJsonPath('flash.success', 'Coupon LOYAL-FLOW is ready for a package or an individual backlink. It applies at checkout.');
+        $this->assertSame('LOYAL-FLOW', session('shopping_coupon'));
+
+        $this->actingAs(User::factory()->create())
+            ->post(route('customer.coupons.apply', $loyalty))
+            ->assertNotFound();
     }
 
     public function test_admin_can_disable_the_first_order_campaign(): void
@@ -149,24 +220,25 @@ class DiscountCampaignTest extends TestCase
 
         $this->actingAs($customer)->get(route('orders.payment', $order))
             ->assertOk()
-            ->assertSee('Available coupons', false)
-            ->assertSee('Use coupon', false)
-            ->assertDontSee('Your 2% coupon', false)
-            ->assertDontSee('data-reward-coupon', false)
-            ->assertDontSee('data-coupon-popup', false)
-            ->assertDontSee('Save for later', false)
-            ->assertDontSee('individual backlink', false)
-            ->assertSee('Pay with dummy gateway', false);
+            ->assertSee('72.00', false)
+            ->assertDontSee('Use coupon', false)
+            ->assertDontSee('Not now', false);
+        $this->assertSame('first_order', $order->fresh()->offer_type);
+        $this->assertSame('8.00', $order->fresh()->discount_amount);
+        $this->assertSame(0, Coupon::query()->count());
+
+        $this->post(route('orders.payment.process', $order), [
+            'payment_method' => 'demo_card',
+            'demo_result' => 'declined',
+        ])->assertRedirect();
+        $this->assertSame(0, Coupon::query()->count());
+
+        $this->post(route('orders.payment.process', $order), [
+            'payment_method' => 'demo_card',
+            'demo_result' => 'success',
+        ])->assertRedirect();
 
         $coupon = Coupon::query()->where('reward_order_id', $order->id)->firstOrFail();
-        $this->get(route('customer.dashboard'))
-            ->assertOk()
-            ->assertSee('Available coupons', false)
-            ->assertSee('href="'.route('customer.coupons').'"', false)
-            ->assertSee($coupon->code, false)
-            ->assertSee('Deadline '.$coupon->expires_at->format('M j, Y'), false)
-            ->assertSee('Use on next purchase', false);
-        $this->assertSame('pending', $order->payment_status);
         $this->assertSame('order_reward', $coupon->type);
         $this->assertSame('2.00', $coupon->discount_value);
         $this->assertSame('both', $coupon->purchase_type);
@@ -174,54 +246,17 @@ class DiscountCampaignTest extends TestCase
         $this->assertTrue($coupon->expires_at->greaterThan(now()->addDays(13)));
         Notification::assertSentTo($customer, CouponNotice::class);
 
-        $order->update([
-            'coupon_code' => $coupon->code,
-            'offer_type' => 'order_reward',
-            'discount_amount' => 1.60,
-            'total_amount' => 78.40,
-        ]);
-        $this->get(route('orders.payment', $order))
+        $this->get(route('customer.dashboard'))
             ->assertOk()
-            ->assertDontSee('Apply', false)
-            ->assertDontSee('Save for later', false)
-            ->assertSee('Coupon '.$coupon->code.' is applied', false)
-            ->assertSee('78.40', false);
-        $this->assertSame($coupon->code, $order->fresh()->coupon_code);
-        $this->assertSame('78.40', $order->fresh()->total_amount);
+            ->assertSee($coupon->code, false)
+            ->assertSee('Use on next purchase', false);
 
-        $this->post(route('orders.payment.coupon', $order), ['coupon_code' => $coupon->code])
-            ->assertRedirect();
-        $order->refresh();
-        $this->assertSame('1.60', $order->discount_amount);
-        $this->assertSame('78.40', $order->total_amount);
-        $this->assertDatabaseCount('coupon_usages', 0);
-
-        $this->delete(route('orders.payment.coupon.destroy', $order))->assertRedirect();
-        $this->assertSame('72.00', $order->fresh()->total_amount);
-        $this->assertSame('first_order', $order->fresh()->offer_type);
-
-        $this->post(route('orders.payment.process', $order), [
-            'payment_method' => 'demo_card',
-            'demo_result' => 'declined',
-        ])->assertRedirect(route('orders.show', $order));
-        $this->assertDatabaseCount('coupon_usages', 0);
-
-        $this->get(route('orders.thanks', $order))->assertRedirect(route('orders.payment', $order));
-
-        $this->from(route('orders.payment', $order))
+        $this->from(route('customer.dashboard'))
             ->post(route('customer.coupons.save', $coupon))
-            ->assertRedirect(route('orders.payment', $order))
+            ->assertRedirect(route('customer.dashboard'))
             ->assertSessionHas('saved_coupon_popup.code', $coupon->code);
         $coupon->refresh();
         $this->assertNotNull($coupon->saved_for_later_at);
-
-        $this->get(route('orders.payment', $order))
-            ->assertOk()
-            ->assertSee('Available coupons', false)
-            ->assertSee($coupon->code, false)
-            ->assertSee('Use coupon', false)
-            ->assertDontSee('You must select this coupon before you make a payment.', false)
-            ->assertDontSee('Save for later', false);
 
         $this->get(route('customer.coupons'))
             ->assertOk()
@@ -301,8 +336,26 @@ class DiscountCampaignTest extends TestCase
             'article_topic' => 'Individual backlink',
         ]);
 
+        $customer->orders()->create([
+            'order_number' => 'BM-PAID-PRIOR',
+            'session_id' => 'paid-prior',
+            'total_amount' => 20,
+            'payment_status' => 'paid',
+            'order_status' => 'completed',
+        ]);
+        $first = Coupon::query()->create([
+            'code' => 'ORDER-FIRST1',
+            'type' => 'order_reward',
+            'discount_type' => 'percentage',
+            'discount_value' => 2,
+            'purchase_type' => 'both',
+            'usage_limit' => 1,
+            'per_customer_limit' => 1,
+            'is_active' => true,
+            'customer_id' => $customer->id,
+            'expires_at' => now()->addDays(14),
+        ]);
         $this->actingAs($customer)->get(route('orders.payment', $order))->assertOk();
-        $first = Coupon::query()->where('reward_order_id', $order->id)->firstOrFail();
         $second = $first->replicate(['reward_order_id']);
         $second->code = 'ORDER-SECOND1';
         $second->save();

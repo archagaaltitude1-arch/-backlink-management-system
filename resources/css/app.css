@@ -22,6 +22,17 @@
     --font-display: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
 }
 
+@media (min-width: 48rem) {
+    .admin-sidebar {
+        position: sticky;
+        top: 0;
+        bottom: auto;
+        height: 100vh;
+        translate: none;
+        transform: none;
+    }
+}
+
 @layer base {
     html {
         font-family: var(--font-sans);

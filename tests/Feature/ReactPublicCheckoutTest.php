@@ -107,6 +107,13 @@ class ReactPublicCheckoutTest extends TestCase
     public function test_checkout_popup_offers_one_coupon_and_apply_keeps_it_on_the_order(): void
     {
         $customer = User::factory()->create();
+        $customer->orders()->create([
+            'order_number' => 'BM-PAID-'.$customer->id,
+            'session_id' => 'paid-'.$customer->id,
+            'total_amount' => 20,
+            'payment_status' => 'paid',
+            'order_status' => 'completed',
+        ]);
         Coupon::query()->create([
             'code' => 'CHECKOUT10',
             'discount_type' => 'percentage',
@@ -163,6 +170,13 @@ class ReactPublicCheckoutTest extends TestCase
     public function test_checkout_popup_uses_the_customers_own_coupon_instead_of_the_public_code(): void
     {
         $customer = User::factory()->create();
+        $customer->orders()->create([
+            'order_number' => 'BM-PAID-'.$customer->id,
+            'session_id' => 'paid-'.$customer->id,
+            'total_amount' => 20,
+            'payment_status' => 'paid',
+            'order_status' => 'completed',
+        ]);
         Coupon::query()->create([
             'code' => 'CHECKOUT10',
             'discount_type' => 'percentage',

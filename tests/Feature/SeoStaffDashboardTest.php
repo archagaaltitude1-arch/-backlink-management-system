@@ -31,6 +31,16 @@ class SeoStaffDashboardTest extends TestCase
             ->assertRedirect(route('admin.dashboard'));
     }
 
+    public function test_a_customer_opening_the_seo_dashboard_is_sent_to_the_staff_login(): void
+    {
+        $this->actingAs($this->customer())
+            ->followingRedirects()
+            ->get(route('seo.dashboard'))
+            ->assertOk()
+            ->assertSee('SEO Staff Sign In', false)
+            ->assertSee('This account cannot access the SEO staff portal. Sign in with a staff or admin account.', false);
+    }
+
     public function test_seo_staff_dashboard_displays_only_orders_assigned_to_authenticated_staff_member(): void
     {
         $staffOne = $this->staff('Rae Staff', 'rae.staff@example.test');

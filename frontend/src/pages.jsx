@@ -144,6 +144,19 @@ function packageMoney(prefix, amount) {
     return `${prefix === '' ? '' : `${prefix} `}${money(amount)}`;
 }
 
+function highlightTier(text) {
+    const value = String(text || '');
+    const match = value.match(/\b(Professional|Enterprise|Starter|Growth|Pro)\b/);
+
+    if (!match || match.index === undefined) {
+        return value;
+    }
+
+    const start = match.index;
+
+    return <>{value.slice(0, start)}<span className="inline-block rounded bg-black px-[0.28em] py-[0.04em] leading-none text-white">{match[0]}</span>{value.slice(start + match[0].length)}</>;
+}
+
 function PackageScreen({ page, search }) {
     const pack = page.data.package || {};
     const story = pack.story || {};
@@ -202,7 +215,7 @@ function PackageScreen({ page, search }) {
                         <div className="absolute top-0 right-0 h-[164px] w-[164px] bg-brand" style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}>
                             <span className="absolute top-7 right-3 max-w-24 text-right font-sans text-[22px] leading-tight font-extrabold">{badge}</span>
                         </div>
-                        <h2 className="relative z-10 mt-12 max-w-md font-display text-[34px] leading-none font-extrabold uppercase lg:text-5xl">{hero}</h2>
+                        <h2 className="relative z-10 mt-12 max-w-md font-display text-[34px] leading-[1.15] font-extrabold uppercase lg:text-5xl">{highlightTier(hero)}</h2>
                         <ul className="relative z-10 mt-7 max-w-md">
                             {(story.gets || []).map((point) => (
                                 <li key={point} className="relative mt-2.5 pl-4 text-base leading-snug before:absolute before:top-[0.55em] before:left-0 before:h-1.5 before:w-1.5 before:rounded-full before:bg-[#C6A15B]">{point}</li>
@@ -215,16 +228,21 @@ function PackageScreen({ page, search }) {
                         ) : null}
                     </aside>
                     <article className="rounded-2xl border border-[#E3E5E8] bg-white p-6">
-                        <h1 className="font-display text-3xl font-extrabold lg:text-4xl">{title}</h1>
+                        <h1 className="font-display text-3xl leading-tight font-extrabold lg:text-4xl">{highlightTier(title)}</h1>
                         <div className="mt-4 flex flex-wrap items-center gap-3">
                             <p className="font-sans text-[34px] font-extrabold">{priceLabel}</p>
                             {story.category ? <span className="inline-flex min-h-9 items-center rounded-lg border border-[#E3E5E8] px-2.5 text-sm font-bold text-[#4A5560]">{story.category}</span> : null}
                         </div>
                         {story.lead ? <p className="mt-4 text-[15px] leading-relaxed">{story.lead}</p> : <p className="mt-4 text-[15px] leading-relaxed">{pack.summary}</p>}
                         {story.support ? <p className="mt-3 text-[15px] leading-relaxed">{story.support}</p> : null}
-                        <div className="mt-4 flex flex-wrap gap-2">
-                            {chips.map((chip) => <span key={chip} className="inline-flex min-h-10 items-center rounded-lg border border-[#E3E5E8] px-2.5 text-sm font-bold">{chip}</span>)}
-                        </div>
+                        <p className="mt-4 text-sm font-semibold leading-6 text-[#4A5560]">
+                            {chips.map((chip, index) => (
+                                <span key={chip}>
+                                    {index > 0 ? <span className="px-2 text-[#C5CAD1]" aria-hidden="true">|</span> : null}
+                                    {chip}
+                                </span>
+                            ))}
+                        </p>
                         {sample ? <a className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-brand px-4 text-sm font-extrabold text-brand hover:bg-[#FFF1EC] hover:text-brand-dark" href={`/${sample}`} target="_blank" rel="noopener">View Sample Report</a> : null}
                         {story.layout === 'offer' ? null : (
                             <div className="mt-6 space-y-2 text-[15px] leading-relaxed">
@@ -639,7 +657,7 @@ function CartScreen({ page, send }) {
                 {page.data.packageDiscount > 0 ? <p className="flex justify-between"><span>Package discount</span><strong>-{money(page.data.packageDiscount)}</strong></p> : null}
                 {page.data.discount > 0 ? <p className="flex justify-between text-[#17663A]"><span>{page.data.offerLabel || 'Coupon'} {page.data.coupon}</span><strong>-{money(page.data.discount)}</strong></p> : null}
                 <p className="flex justify-between text-xl font-extrabold"><span>Total</span><span>{money(page.data.total)}</span></p>
-                <CouponBox coupon={page.data.coupon} send={send} />
+                {page.data.firstOrderOnly ? <p className="text-sm text-navy/70">Your first order includes the required 10% new-customer offer.</p> : <CouponBox coupon={page.data.coupon} send={send} />}
                 <div className="flex flex-wrap gap-2">
                     <A href="/cart/checkout" className="btn-primary">Checkout</A>
                     <RemoveButton action="/cart/clear" method="POST" fields={{}} send={send} label="Clear cart" />
@@ -707,7 +725,7 @@ function CheckoutScreen({ page, send }) {
         applied,
     ) || offered;
     const [dismissedCode, setDismissedCode] = useState('');
-    const showCouponChoice = Boolean(reward) && dismissedCode !== reward.code && !popupDismissed(reward?.code) && !page.flash?.saved_coupon_popup;
+    const showCouponChoice = !page.data.firstOrderOnly && Boolean(reward) && dismissedCode !== reward.code && !popupDismissed(reward?.code) && !page.flash?.saved_coupon_popup;
     const { submit, pending } = useSend(send);
     const couponAction = useSend(send);
     const errors = couponAction.errors;
@@ -743,7 +761,7 @@ function CheckoutScreen({ page, send }) {
             ) : null}
             <div className="mx-auto w-full px-4 py-10">
                 <h1 className="text-4xl font-extrabold">Checkout</h1>
-                <p className="mt-3 max-w-xl text-navy/70">Add your website URL, anchor text and target details for each item. Have a coupon? Enter your code before you place the order.</p>
+                <p className="mt-3 max-w-xl text-navy/70">{page.data.firstOrderOnly ? 'Your first order includes the required 10% new-customer offer.' : 'Add your website URL, anchor text and target details for each item. Have a coupon? Enter your code before you place the order.'}</p>
                 <div className="mt-4"><Flash flash={page.flash} errors={{ ...page.errors, ...errors }} /></div>
                 <form className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)]" onSubmit={place}>
                     <div className="space-y-4">
@@ -756,7 +774,7 @@ function CheckoutScreen({ page, send }) {
                         {page.data.packageDiscount > 0 ? <p className="flex justify-between"><span>Package discount</span><strong>-{money(page.data.packageDiscount)}</strong></p> : null}
                         {page.data.discount > 0 ? <p className="flex justify-between"><span>{page.data.offerLabel || 'Discount'} {page.data.coupon}</span><strong>-{money(page.data.discount)}</strong></p> : null}
                         <p className="flex justify-between border-t border-[#E3E5E8] pt-3 text-lg font-extrabold"><span>Total</span><span>{money(page.data.total)}</span></p>
-                        <CouponBox coupon={page.data.coupon} send={send} />
+                        {page.data.firstOrderOnly ? <p className="text-sm text-navy/70">The 10% first-order offer is included. Other coupons can be used after this order is paid.</p> : <CouponBox coupon={page.data.coupon} send={send} />}
                         <button className="btn-primary w-full uppercase" type="submit" disabled={pending}>{pending ? 'Placing…' : 'Place order'}</button>
                         <A href="/cart" className="inline-flex text-sm font-extrabold text-brand-dark">Back to cart</A>
                     </aside>

@@ -17,8 +17,11 @@ class SeoDashboardController extends Controller
             throw new HttpResponseException(redirect()->guest(route('seo.login')));
         }
 
-        $user->loadMissing('role');
-        abort_unless(in_array($user->role?->role_name, ['Admin', 'Staff', 'SEO'], true), 403);
+        if (! $user->canAccessSeoPortal()) {
+            return redirect()->route('seo.login')->withErrors([
+                'email' => 'This account cannot access the SEO staff portal. Sign in with a staff or admin account.',
+            ]);
+        }
 
         $cards = $orders->cards($user);
 

@@ -66,7 +66,13 @@ class SpaViewData
         }
 
         if ($value instanceof Collection) {
-            return $this->value($value->all(), $depth + 1);
+            $items = $value->all();
+
+            if ($this->hasIntegerKeys($items)) {
+                $items = array_values($items);
+            }
+
+            return $this->value($items, $depth + 1);
         }
 
         if ($value instanceof Arrayable) {
@@ -93,5 +99,25 @@ class SpaViewData
         }
 
         return null;
+    }
+
+    /**
+     * Filtered collections keep their original keys, so JSON would turn the list into an object.
+     *
+     * @param  array<array-key, mixed>  $items
+     */
+    private function hasIntegerKeys(array $items): bool
+    {
+        if ($items === [] || array_is_list($items)) {
+            return false;
+        }
+
+        foreach (array_keys($items) as $key) {
+            if (! is_int($key)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

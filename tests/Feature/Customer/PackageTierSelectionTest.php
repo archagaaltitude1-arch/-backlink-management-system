@@ -69,6 +69,7 @@ class PackageTierSelectionTest extends TestCase
             ->assertSee('Home', false)
             ->assertSee('Packages', false)
             ->assertSee('Starter Text Link Package', false)
+            ->assertSee('<span class="pk-tier">Starter</span>', false)
             ->assertSee('Choose Backlinks', false)
             ->assertSee('choose 7 websites', false);
 

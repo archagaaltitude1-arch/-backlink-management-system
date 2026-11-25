@@ -9,6 +9,8 @@ use Illuminate\Support\Str;
 
 class SpaShell
 {
+    public function __construct(private SiteSettings $settings) {}
+
     /**
      * Navigation and session counts shared by the public React pages.
      *
@@ -102,6 +104,7 @@ class SpaShell
             'loginHref' => Route::has('auth.login') ? route('auth.login') : url('/login'),
             'accountHref' => Route::has('customer.dashboard') ? route('customer.dashboard') : url('/login'),
             'logoutHref' => Route::has('auth.logout') ? route('auth.logout') : null,
+            'settings' => $this->settings->publicPayload(),
         ];
     }
 }

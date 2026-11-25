@@ -4,7 +4,11 @@
             <button
                 type="button"
                 id="sidebar-toggle"
-                class="inline-flex h-10 w-10 items-center justify-center rounded-xl text-navy hover:bg-canvas lg:hidden"
+                @class([
+                    'inline-flex h-10 w-10 items-center justify-center rounded-xl text-navy hover:bg-canvas',
+                    'md:hidden' => ($portal ?? null) === 'Admin',
+                    'lg:hidden' => ($portal ?? null) !== 'Admin',
+                ])
                 aria-controls="app-sidebar"
                 aria-expanded="false"
                 aria-label="Open navigation"

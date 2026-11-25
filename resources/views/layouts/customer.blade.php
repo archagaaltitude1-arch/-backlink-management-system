@@ -17,6 +17,7 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800&display=swap" rel="stylesheet">
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @include('components.site-branding-head', ['applyTheme' => false])
         @stack('head')
     </head>
     <body class="overflow-x-hidden bg-canvas font-sans text-navy antialiased">
@@ -28,13 +29,13 @@
                 Skip to content
             </a>
             <div class="flex min-h-screen flex-col">
-                @include('components.public-navbar')
+                @include('components.public-navbar', ['classicBrand' => true])
                 @include('components.customer-account-nav')
                 <main id="account-content" class="mx-auto w-full max-w-[1600px] flex-1 px-4 pb-10 sm:px-6 lg:px-8">
                     @yield('content')
                 </main>
                 <x-ui.country-browser centered />
-                @include('components.public-footer')
+                @include('components.public-footer', ['classicBrand' => true])
             </div>
             @include('components.public-cart-drawer')
         @else

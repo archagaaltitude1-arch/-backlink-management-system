@@ -22,6 +22,7 @@
         <title>@yield('title', 'Admin') · Backlink Management</title>
         @fonts
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @include('components.site-branding-head', ['applyTheme' => false])
         @stack('head')
     </head>
     <body class="portal-staff bg-canvas font-sans text-navy antialiased">

@@ -116,6 +116,17 @@ class OrderController extends Controller
     public function applyCoupon(Request $request): RedirectResponse|JsonResponse
     {
         $data = $request->validate(['coupon_code' => ['required', 'string', 'max:40']]);
+
+        if (app(CustomerDiscounts::class)->awaitingFirstOrder($request->user())) {
+            $message = 'Your first order uses the 10% new-customer offer.';
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 422);
+            }
+
+            return back()->withErrors(['coupon_code' => $message]);
+        }
+
         $cart = $this->cartFor($request);
         $coupon = Coupon::findByCode($data['coupon_code']);
         $subtotal = $this->cartSubtotal($cart);
@@ -188,7 +199,7 @@ class OrderController extends Controller
             $subtotal = $this->cartSubtotal($cart);
             $context = CouponCart::fromNamedItems($cart->items);
 
-            if ($cart->coupon_code) {
+            if ($cart->coupon_code && ! app(CustomerDiscounts::class)->awaitingFirstOrder($request->user())) {
                 $found = Coupon::findByCode($cart->coupon_code);
                 $coupon = $found === null ? null : Coupon::query()->whereKey($found->id)->lockForUpdate()->first();
                 $message = $coupon === null

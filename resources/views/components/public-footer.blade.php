@@ -2,23 +2,45 @@
     $footerCategories = class_exists(\App\Support\DemoNicheData::class)
         ? \App\Support\DemoNicheData::names()
         : [];
-
+    $classicBrand = $classicBrand ?? false;
+    $brand = $classicBrand
+        ? [
+            'websiteName' => 'BacklinkPro',
+            'companyName' => 'Prime One Global (PVT) LTD.',
+            'address' => '#146B, Goodshed Road',
+            'city' => 'Thonikkal',
+            'state' => 'Vavuniya',
+            'postalCode' => '',
+            'country' => 'NP, Sri Lanka',
+            'footerDescription' => 'Backlinks on real publisher websites, placed and verified by our SEO team.',
+            'footerCopyright' => '© '.now()->year.' BacklinkPro',
+            'footerLinks' => [],
+            'footerHtml' => null,
+            'logoUrl' => null,
+            'companyEmail' => '',
+            'supportEmail' => '',
+            'phoneNumber' => '',
+            'theme' => ['accent' => '#ff4917'],
+        ]
+        : ($siteSettings ?? []);
+    $accent = $brand['theme']['accent'] ?? '#FF4917';
+    $websiteName = $brand['websiteName'] ?? 'BacklinkPro';
     $contactChannels = array_values(array_filter([
-        ['label' => 'Email', 'value' => '[YOUR EMAIL]', 'href' => 'mailto:[YOUR EMAIL]'],
-        ['label' => 'Phone', 'value' => '[YOUR PHONE]', 'href' => null],
-        ['label' => 'Office', 'value' => '[YOUR ADDRESS]', 'href' => null],
-    ], fn (array $channel): bool => ! str_starts_with($channel['value'], '[')));
+        ['label' => 'Email', 'value' => $brand['companyEmail'] ?? '', 'href' => filled($brand['companyEmail'] ?? null) ? 'mailto:'.$brand['companyEmail'] : null],
+        ['label' => 'Support', 'value' => $brand['supportEmail'] ?? '', 'href' => filled($brand['supportEmail'] ?? null) ? 'mailto:'.$brand['supportEmail'] : null],
+        ['label' => 'Phone', 'value' => $brand['phoneNumber'] ?? '', 'href' => null],
+    ], fn (array $channel): bool => $channel['value'] !== ''));
 @endphp
 
 <footer class="site-footer">
     <style>
         .site-footer {
-            border-top: 4px solid #FF4917;
+            border-top: 4px solid {{ $accent }};
             background: #152029;
             color: #fff;
         }
         .site-footer-main {
-            background: radial-gradient(ellipse at 0% 0%, rgba(255, 73, 23, 0.16), transparent 34%);
+            background: radial-gradient(ellipse at 0% 0%, color-mix(in srgb, {{ $accent }} 16%, transparent), transparent 34%);
             padding: 64px 24px 48px;
         }
         .site-footer-grid {
@@ -40,7 +62,7 @@
             height: 36px;
             place-items: center;
             border-radius: 8px;
-            background: #FF4917;
+            background: {{ $accent }};
             font-size: 14px;
         }
         .site-footer-name { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; line-height: 1; }
@@ -55,12 +77,12 @@
             flex: 0 0 20px;
             place-items: center;
             border-radius: 999px;
-            background: #FF4917;
+            background: {{ $accent }};
             color: #fff;
             font-size: 11px;
             font-weight: 700;
         }
-        .site-footer h2 { margin: 0; color: #FF4917; }
+        .site-footer h2 { margin: 0; color: {{ $accent }}; }
         .site-footer-links { margin: 16px 0 0; padding: 0; list-style: none; }
         .site-footer-links a, .site-footer-cats a {
             display: inline-flex;
@@ -75,7 +97,7 @@
             content: "";
             width: 12px;
             height: 1px;
-            background: rgba(255, 73, 23, 0.7);
+            background: color-mix(in srgb, {{ $accent }} 70%, transparent);
             transition: width 160ms ease;
         }
         .site-footer-links a:hover, .site-footer-cats a:hover, .site-footer-brand:hover { color: #fff; }
@@ -90,14 +112,14 @@
             align-items: center;
             margin-top: 20px;
             border-radius: 999px;
-            background: #FF4917;
+            background: {{ $accent }};
             padding: 0 16px;
             color: #fff;
             font-size: 14px;
             font-weight: 600;
             text-decoration: none;
         }
-        .site-footer-cta:hover { background: #D63A10; }
+        .site-footer-cta:hover { filter: brightness(0.92); }
         .site-footer-note { max-width: 28ch; margin: 16px 0 0; color: #B8C2CC; font-size: 14px; line-height: 1.6; }
         .site-footer-address { margin: 20px 0 0; color: #D5DCE3; font-size: 14px; font-style: normal; line-height: 1.6; }
         .site-footer-address strong { display: block; color: #fff; font-weight: 600; }
@@ -126,6 +148,12 @@
             font-size: 14px;
         }
         .site-footer-bar p { margin: 0; }
+        .site-footer-legal { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0; padding: 0; list-style: none; }
+        .site-footer-legal a { color: #D5DCE3; text-decoration: none; }
+        .site-footer-legal a:hover { color: #fff; }
+        .site-footer-html { max-width: 62ch; margin-top: 28px; color: #D5DCE3; font-size: 14px; line-height: 1.7; }
+        .site-footer-html a { color: #fff; }
+        .site-footer-logo { display: block; max-width: 250px; max-height: 80px; width: auto; height: auto; object-fit: contain; }
         @media (max-width: 1024px) {
             .site-footer-grid, .site-footer-cats ul { grid-template-columns: 1fr 1fr; }
             .site-footer-brand-col { grid-column: 1 / -1; }
@@ -146,10 +174,14 @@
         <div class="site-footer-grid">
             <div class="site-footer-brand-col">
                 <a href="{{ route('home') }}" class="site-footer-brand">
-                    <span class="site-footer-mark" aria-hidden="true">↗</span>
-                    <span class="site-footer-name font-sans">BacklinkPro</span>
+                    @if (! empty($brand['logoUrl']))
+                        <img src="{{ $brand['logoUrl'] }}" alt="" class="site-footer-logo">
+                    @else
+                        <span class="site-footer-mark" aria-hidden="true">↗</span>
+                    @endif
+                    <span class="site-footer-name font-sans">{{ $websiteName }}</span>
                 </a>
-                <p class="site-footer-lead">Backlinks on real publisher websites, placed and verified by our SEO team.</p>
+                <p class="site-footer-lead">{{ $brand['footerDescription'] ?? 'Backlinks on real publisher websites, placed and verified by our SEO team.' }}</p>
                 <ul class="site-footer-trust">
                     <li>White-hat only</li>
                     <li>Every link verified</li>
@@ -184,10 +216,10 @@
                 <a class="site-footer-cta" href="{{ route('contact') }}">Contact the team</a>
                 <p class="site-footer-note">Questions about a campaign, a package, or a publisher.</p>
                 <address class="site-footer-address">
-                    <strong>Prime One Global (PVT) LTD.</strong>
-                    #146B, Goodshed Road<br>
-                    Thonikkal, Vavuniya<br>
-                    NP, Sri Lanka
+                    <strong>{{ $brand['companyName'] ?? $websiteName }}</strong>
+                    {{ $brand['address'] ?? '' }}<br>
+                    {{ trim(($brand['city'] ?? '').', '.($brand['state'] ?? '').' '.($brand['postalCode'] ?? '')) }}<br>
+                    {{ $brand['country'] ?? '' }}
                 </address>
                 @foreach ($contactChannels as $channel)
                     <p class="site-footer-channel">
@@ -215,12 +247,26 @@
                 </ul>
             </div>
         @endif
+
+        @if (! empty($brand['footerHtml']))
+            <div class="site-footer-html">{!! $brand['footerHtml'] !!}</div>
+        @endif
     </div>
 
     <div class="site-footer-bar">
         <div class="site-footer-bar-inner">
-            <p>&copy; {{ date('Y') }} BacklinkPro</p>
-            <p>White-hat placements, verified before delivery</p>
+            <p>{{ $brand['footerCopyright'] ?? $brand['copyright'] ?? '' }}</p>
+            @if (! empty($brand['footerLinks']))
+                <ul class="site-footer-legal">
+                    @foreach ($brand['footerLinks'] as $link)
+                        <li>
+                            <a href="{{ $link['url'] }}" @if (($link['target'] ?? '_self') === '_blank') target="_blank" rel="noopener noreferrer" @endif>{{ $link['label'] }}</a>
+                        </li>
+                    @endforeach
+                </ul>
+            @elseif ($classicBrand)
+                <p>White-hat placements, verified before delivery</p>
+            @endif
         </div>
     </div>
 </footer>

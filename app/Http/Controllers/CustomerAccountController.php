@@ -11,11 +11,13 @@ use App\Models\Invoice;
 use App\Models\OrderAssignment;
 use App\Models\PaymentMethod;
 use App\Models\SavedWebsite;
+use App\Models\User;
 use App\Support\CouponCart;
 use App\Support\CustomerDiscounts;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -40,7 +42,7 @@ class CustomerAccountController extends Controller
             'savedWebsiteCount' => $customer->savedWebsites()->count(),
             'unreadNotificationCount' => $customer->unreadNotifications()->count(),
             'firstOrder' => app(CustomerDiscounts::class)->firstOrderOffer($customer),
-            'availableCoupons' => app(CustomerDiscounts::class)->orderRewards($customer),
+            'availableCoupons' => $this->couponGroups($customer)['available'],
         ]);
     }
 
@@ -243,32 +245,24 @@ class CustomerAccountController extends Controller
     public function coupons(Request $request): View
     {
         $customer = $request->user();
-        $usedIds = $customer->couponUsages()->pluck('coupon_id');
-        $coupons = Coupon::query()
-            ->where(function ($query) use ($customer): void {
-                $query->where('customer_id', $customer->id)->orWhereNull('customer_id');
-            })
-            ->latest()
-            ->get();
-        $available = $coupons->filter(fn (Coupon $coupon): bool => $coupon->is_active
-            && ($coupon->expires_at === null || $coupon->expires_at->isFuture())
-            && ($coupon->starts_at === null || $coupon->starts_at->isPast())
-            && ! $usedIds->contains($coupon->id));
-        $used = $coupons->filter(fn (Coupon $coupon): bool => $usedIds->contains($coupon->id));
-        $expired = $coupons->reject(fn (Coupon $coupon): bool => $available->contains($coupon) || $used->contains($coupon));
+        $groups = $this->couponGroups($customer);
 
         return view('customer.coupons', [
             'firstOrder' => app(CustomerDiscounts::class)->firstOrderOffer($customer),
             'redeemedFirstOrder' => FirstOrderRedemption::query()->where('customer_id', $customer->id)->first(),
-            'available' => $available,
-            'used' => $used,
-            'expired' => $expired,
+            'available' => $groups['available'],
+            'used' => $groups['used'],
+            'expired' => $groups['expired'],
         ]);
     }
 
     public function applyCoupon(Request $request, Coupon $coupon): RedirectResponse
     {
-        $coupon = $this->rewardCoupon($request, $coupon);
+        $coupon = $this->ownedCoupon($request, $coupon);
+
+        if (app(CustomerDiscounts::class)->awaitingFirstOrder($request->user())) {
+            return back()->withErrors(['coupon_code' => 'Your first order uses the 10% new-customer offer.']);
+        }
 
         if ($coupon->expires_at !== null && $coupon->expires_at->isPast()) {
             return back()->withErrors(['coupon_code' => 'Coupon has expired.']);
@@ -310,10 +304,49 @@ class CustomerAccountController extends Controller
         ]);
     }
 
+    /**
+     * @return array{available: Collection<int, Coupon>, used: Collection<int, Coupon>, expired: Collection<int, Coupon>}
+     */
+    private function couponGroups(User $customer): array
+    {
+        $usedIds = $customer->couponUsages()->pluck('coupon_id');
+        $coupons = Coupon::query()
+            ->where(function ($query) use ($customer, $usedIds): void {
+                $query->where('customer_id', $customer->id)->orWhereIn('id', $usedIds);
+            })
+            ->latest()
+            ->get();
+        $available = $coupons->filter(fn (Coupon $coupon): bool => $coupon->is_active
+            && ($coupon->expires_at === null || $coupon->expires_at->isFuture())
+            && ($coupon->starts_at === null || $coupon->starts_at->isPast())
+            && ! $usedIds->contains($coupon->id))->values();
+        $used = $coupons->filter(fn (Coupon $coupon): bool => $usedIds->contains($coupon->id))->values();
+        $expired = $coupons->reject(fn (Coupon $coupon): bool => $available->contains($coupon) || $used->contains($coupon))->values();
+
+        if (app(CustomerDiscounts::class)->awaitingFirstOrder($customer)) {
+            $available = collect();
+        }
+
+        return [
+            'available' => $available,
+            'used' => $used,
+            'expired' => $expired,
+        ];
+    }
+
+    private function ownedCoupon(Request $request, Coupon $coupon): Coupon
+    {
+        abort_unless((int) $coupon->customer_id === $request->user()->id, 404);
+        abort_if(! $coupon->is_active, 404);
+        abort_if($coupon->usages()->where('customer_id', $request->user()->id)->exists(), 404);
+
+        return $coupon;
+    }
+
     private function rewardCoupon(Request $request, Coupon $coupon): Coupon
     {
-        abort_unless($coupon->customer_id === $request->user()->id && $coupon->type === 'order_reward', 404);
-        abort_if($coupon->usages()->where('customer_id', $request->user()->id)->exists(), 404);
+        $coupon = $this->ownedCoupon($request, $coupon);
+        abort_unless($coupon->type === 'order_reward', 404);
 
         return $coupon;
     }

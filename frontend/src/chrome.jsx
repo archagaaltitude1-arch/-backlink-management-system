@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Flag } from './marks';
 
@@ -386,6 +386,68 @@ export function PublicChrome({ shell, path, view, flash, send, children }) {
 
     const accountPage = accountViews.has(view);
     const loginPage = view === 'auth.login';
+    const settings = shell?.settings || {};
+    const websiteName = accountPage ? 'BacklinkPro' : (settings.websiteName || 'BacklinkPro');
+
+    useEffect(() => {
+        const root = document.documentElement;
+
+        if (accountPage) {
+            root.style.setProperty('--color-brand', '#ff4917');
+            root.style.setProperty('--color-brand-dark', '#d63a10');
+            root.style.setProperty('--color-navy', '#152029');
+            root.style.removeProperty('--site-accent');
+            root.style.removeProperty('--site-bg');
+            root.style.removeProperty('--site-text');
+            document.body.style.backgroundColor = '';
+            document.body.style.color = '';
+            document.body.style.backgroundImage = '';
+            document.body.style.backgroundRepeat = '';
+            document.body.style.backgroundSize = '';
+            document.body.style.backgroundPosition = '';
+            document.body.style.backgroundAttachment = '';
+
+            return undefined;
+        }
+
+        const theme = settings.theme;
+
+        if (theme) {
+            root.style.setProperty('--color-brand', theme.button);
+            root.style.setProperty('--color-brand-dark', theme.secondary);
+            root.style.setProperty('--color-navy', theme.primary);
+            root.style.setProperty('--site-accent', theme.accent);
+            root.style.setProperty('--site-bg', theme.background);
+            root.style.setProperty('--site-text', theme.text);
+            document.body.style.backgroundColor = theme.background || '';
+            document.body.style.color = theme.text || '';
+        }
+
+        if (settings.wallpaperUrl) {
+            document.body.style.backgroundImage = `url("${settings.wallpaperUrl}")`;
+            document.body.style.backgroundRepeat = 'no-repeat';
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundPosition = settings.wallpaperCssPosition || 'center center';
+            document.body.style.backgroundAttachment = 'fixed';
+        } else {
+            document.body.style.backgroundImage = '';
+        }
+
+        if (settings.faviconUrl) {
+            let icon = document.querySelector('link[rel="icon"]');
+
+            if (!icon) {
+                icon = document.createElement('link');
+                icon.rel = 'icon';
+                document.head.appendChild(icon);
+            }
+
+            icon.type = 'image/x-icon';
+            icon.href = settings.faviconUrl;
+        }
+
+        return undefined;
+    }, [accountPage, settings]);
 
     return (
         <div className={`min-h-screen ${accountPage ? 'bg-[#f2f2f2]' : 'bg-white'}`}>
@@ -400,7 +462,10 @@ export function PublicChrome({ shell, path, view, flash, send, children }) {
                 }}
             >
                 <div className="mx-auto flex items-center justify-between gap-3 px-4 py-3.5 lg:px-6">
-                    <A href="/home" className="flex items-center gap-2.5 font-sans text-xl font-extrabold text-navy" onMouseEnter={() => setMega(null)}><span className="grid h-9 w-9 place-items-center rounded-lg bg-brand text-sm text-white">↗</span>BacklinkPro</A>
+                    <A href="/home" className="flex items-center gap-2.5 font-sans text-xl font-extrabold text-navy" onMouseEnter={() => setMega(null)}>
+                        {accountPage || !settings.logoUrl ? <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand text-sm text-white">↗</span> : <img src={settings.logoUrl} alt="" className="h-10 w-auto max-w-[250px] object-contain" />}
+                        {websiteName}
+                    </A>
                     <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
                         <A href="/" className={linkClass(home)} aria-current={home ? 'page' : undefined} onMouseEnter={() => setMega(null)}>Home</A>
                         <MegaButton label="Services" current={path.startsWith('/services')} open={mega === 'services'} onOpen={() => openMega('services')} onToggle={() => toggleMega('services')} />
@@ -506,14 +571,100 @@ export function PublicChrome({ shell, path, view, flash, send, children }) {
             <main className={accountPage ? 'mx-auto w-full max-w-[1600px] px-4 pb-10 sm:px-6 lg:px-8' : undefined}>{children}</main>
             {view === 'customer.pages.contact' || accountPage || loginPage ? null : <Testimonials />}
             {loginPage ? null : <CountryBrowser countries={shell?.countries || []} />}
-            {loginPage ? null : <SiteFooter shell={shell} />}
+            {loginPage ? null : <SiteFooter shell={shell} classic={accountPage} />}
             <CartDrawer open={cartOpen} shell={shell} send={send} onClose={() => setCartOpen(false)} />
             {accountPage && view !== 'orders.payment' ? <SavedCouponDialog popup={flash?.saved_coupon_popup} /> : null}
         </div>
     );
 }
 
-function SiteFooter({ shell }) {
+function SiteFooter({ shell, classic = false }) {
+    if (classic) {
+        const link = 'group inline-flex min-h-10 items-center gap-2 text-[15px] text-[#D5DCE3] transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
+        const services = [
+            ['Guest Post', '/services/guest-post'],
+            ['Niche Edit', '/sites/link-insertions-niche-edits'],
+            ['Contextual Link', '/services/contextual-link'],
+            ['Text Link', '/services/text-link'],
+        ];
+        const explore = [
+            ['Publisher list', '/publishers'],
+            ['Niches', '/niches'],
+            ['Sites', '/sites'],
+            ['Packages', '/packages'],
+            ['SEO Tools', '/tools'],
+            ['Browse by Country', '/#countries'],
+        ];
+        const trust = ['White-hat only', 'Every link verified', 'Delivery in 3–14 days'];
+
+        return (
+            <footer className="border-t-4 border-brand bg-[#152029] text-white">
+                <div className="w-full bg-[radial-gradient(ellipse_at_0%_0%,rgba(255,73,23,0.16),transparent_34%)] px-4 pt-16 pb-12 lg:px-6 lg:pt-20">
+                    <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-[minmax(260px,340px)_repeat(3,minmax(0,1fr))] lg:gap-x-14">
+                        <div>
+                            <A href="/home" className="inline-flex items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+                                <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand text-sm text-white" aria-hidden="true">↗</span>
+                                <span className="font-sans text-xl font-extrabold tracking-tight text-white">BacklinkPro</span>
+                            </A>
+                            <p className="mt-5 max-w-[32ch] text-[15px] leading-7 text-[#D5DCE3]">Backlinks on real publisher websites, placed and verified by our SEO team.</p>
+                            <ul className="mt-6 space-y-2.5">
+                                {trust.map((item) => (
+                                    <li key={item} className="flex items-center gap-2.5 text-sm text-[#F2F4F6]">
+                                        <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand text-[11px] font-bold text-white" aria-hidden="true">✓</span>
+                                        {item}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                        <nav aria-label="Services">
+                            <h2 className="text-brand uppercase">Services</h2>
+                            <ul className="mt-4">
+                                {services.map(([label, href]) => <li key={href}><A href={href} className={link}><span className="h-px w-3 bg-brand/70 transition-all group-hover:w-5" aria-hidden="true" />{label}</A></li>)}
+                            </ul>
+                        </nav>
+                        <nav aria-label="Explore">
+                            <h2 className="text-brand uppercase">Explore</h2>
+                            <ul className="mt-4">
+                                {explore.map(([label, href]) => <li key={href}><A href={href} className={link}><span className="h-px w-3 bg-brand/70 transition-all group-hover:w-5" aria-hidden="true" />{label}</A></li>)}
+                            </ul>
+                        </nav>
+                        <div>
+                            <h2 className="text-brand uppercase">Contact</h2>
+                            <A href="/contact" className="btn-primary mt-5">Contact the team</A>
+                            <p className="mt-4 max-w-[28ch] text-sm leading-6 text-[#B8C2CC]">Questions about a campaign, a package, or a publisher.</p>
+                            <address className="mt-5 text-sm leading-6 text-[#D5DCE3] not-italic">
+                                <span className="block font-semibold text-white">Prime One Global (PVT) LTD.</span>
+                                #146B, Goodshed Road<br />
+                                Thonikkal, Vavuniya<br />
+                                NP, Sri Lanka
+                            </address>
+                        </div>
+                    </div>
+                    {(shell?.niches || []).length > 0 ? (
+                        <div className="mt-14 border-t border-white/10 pt-10">
+                            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                                <h2 className="text-brand uppercase">Categories</h2>
+                                <p className="text-sm text-[#B8C2CC]">Publisher websites by niche</p>
+                            </div>
+                            <ul className="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+                                {(shell.niches || []).map((item) => (
+                                    <li key={item.href}><A href={item.href} className={link}>{item.label}</A></li>
+                                ))}
+                            </ul>
+                        </div>
+                    ) : null}
+                </div>
+                <div className="border-t border-white/10 px-4 py-5 lg:px-6">
+                    <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[#B8C2CC]">
+                        <p>© {new Date().getFullYear()} BacklinkPro</p>
+                        <p>White-hat placements, verified before delivery</p>
+                    </div>
+                </div>
+            </footer>
+        );
+    }
+
+    const settings = shell?.settings || {};
     const link = 'group inline-flex min-h-10 items-center gap-2 text-[15px] text-[#D5DCE3] transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
     const services = [
         ['Guest Post', '/services/guest-post'],
@@ -530,17 +681,19 @@ function SiteFooter({ shell }) {
         ['Browse by Country', '/#countries'],
     ];
     const trust = ['White-hat only', 'Every link verified', 'Delivery in 3–14 days'];
+    const websiteName = settings.websiteName || 'BacklinkPro';
+    const accent = settings.theme?.accent;
 
     return (
-        <footer className="border-t-4 border-brand bg-[#152029] text-white">
+        <footer className="border-t-4 border-brand bg-[#152029] text-white" style={accent ? { borderColor: accent } : undefined}>
             <div className="w-full bg-[radial-gradient(ellipse_at_0%_0%,rgba(255,73,23,0.16),transparent_34%)] px-4 pt-16 pb-12 lg:px-6 lg:pt-20">
                 <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-[minmax(260px,340px)_repeat(3,minmax(0,1fr))] lg:gap-x-14">
                     <div>
                         <A href="/home" className="inline-flex items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
-                            <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand text-sm text-white" aria-hidden="true">↗</span>
-                            <span className="font-sans text-xl font-extrabold tracking-tight text-white">BacklinkPro</span>
+                            {settings.logoUrl ? <img src={settings.logoUrl} alt="" className="h-10 w-auto max-w-[250px] object-contain" /> : <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand text-sm text-white" aria-hidden="true">↗</span>}
+                            <span className="font-sans text-xl font-extrabold tracking-tight text-white">{websiteName}</span>
                         </A>
-                        <p className="mt-5 max-w-[32ch] text-[15px] leading-7 text-[#D5DCE3]">Backlinks on real publisher websites, placed and verified by our SEO team.</p>
+                        <p className="mt-5 max-w-[32ch] text-[15px] leading-7 text-[#D5DCE3]">{settings.footerDescription || 'Backlinks on real publisher websites, placed and verified by our SEO team.'}</p>
                         <ul className="mt-6 space-y-2.5">
                             {trust.map((item) => (
                                 <li key={item} className="flex items-center gap-2.5 text-sm text-[#F2F4F6]">
@@ -567,11 +720,13 @@ function SiteFooter({ shell }) {
                         <A href="/contact" className="btn-primary mt-5">Contact the team</A>
                         <p className="mt-4 max-w-[28ch] text-sm leading-6 text-[#B8C2CC]">Questions about a campaign, a package, or a publisher.</p>
                         <address className="mt-5 text-sm leading-6 text-[#D5DCE3] not-italic">
-                            <span className="block font-semibold text-white">Prime One Global (PVT) LTD.</span>
-                            #146B, Goodshed Road<br />
-                            Thonikkal, Vavuniya<br />
-                            NP, Sri Lanka
+                            <span className="block font-semibold text-white">{settings.companyName || 'BacklinkPro'}</span>
+                            {settings.address || ''}<br />
+                            {[settings.city, settings.state, settings.postalCode].filter(Boolean).join(', ')}<br />
+                            {settings.country || ''}
                         </address>
+                        {settings.companyEmail ? <p className="mt-3 text-sm text-[#D5DCE3]"><span className="block text-[12px] font-extrabold tracking-wide text-[#8B939C] uppercase">Email</span><a href={`mailto:${settings.companyEmail}`}>{settings.companyEmail}</a></p> : null}
+                        {settings.phoneNumber ? <p className="mt-3 text-sm text-[#D5DCE3]"><span className="block text-[12px] font-extrabold tracking-wide text-[#8B939C] uppercase">Phone</span>{settings.phoneNumber}</p> : null}
                     </div>
                 </div>
                 {(shell?.niches || []).length > 0 ? (
@@ -587,11 +742,18 @@ function SiteFooter({ shell }) {
                         </ul>
                     </div>
                 ) : null}
+                {settings.footerHtml ? <div className="mt-8 max-w-3xl text-sm leading-7 text-[#D5DCE3]" dangerouslySetInnerHTML={{ __html: settings.footerHtml }} /> : null}
             </div>
             <div className="border-t border-white/10 px-4 py-5 lg:px-6">
                 <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[#B8C2CC]">
-                    <p>© {new Date().getFullYear()} BacklinkPro</p>
-                    <p>White-hat placements, verified before delivery</p>
+                    <p>{settings.footerCopyright || settings.copyright || `© ${new Date().getFullYear()} ${websiteName}`}</p>
+                    {(settings.footerLinks || []).length > 0 ? (
+                        <ul className="flex flex-wrap gap-x-4 gap-y-2">
+                            {settings.footerLinks.map((item) => (
+                                <li key={item.url}><A href={item.url} className="hover:text-white" target={item.target === '_blank' ? '_blank' : undefined} rel={item.target === '_blank' ? 'noopener noreferrer' : undefined}>{item.label}</A></li>
+                            ))}
+                        </ul>
+                    ) : <p>White-hat placements, verified before delivery</p>}
                 </div>
             </div>
         </footer>

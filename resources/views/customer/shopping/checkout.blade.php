@@ -184,7 +184,7 @@
             </nav>
 
             <h1 class="ck-title">Checkout</h1>
-            <p class="ck-lead">Add your website URL, anchor text and target details for each item. Have a coupon? Enter your code before you place the order.</p>
+            <p class="ck-lead">{{ ($firstOrderOnly ?? false) ? 'Your first order includes the required 10% new-customer offer.' : 'Add your website URL, anchor text and target details for each item. Have a coupon? Enter your code before you place the order.' }}</p>
 
             @if (session('shopping_status'))
                 <p class="ck-note ck-note-ok" role="status">{{ session('shopping_status') }}</p>
@@ -268,7 +268,9 @@
                     <div class="ck-row ck-total"><span>Total</span><span>${{ number_format($total, 2) }}</span></div>
 
                     <div class="ck-coupon-box">
-                        @if ($coupon)
+                        @if ($firstOrderOnly ?? false)
+                            <p>The 10% first-order offer is included. Other coupons can be used after this order is paid.</p>
+                        @elseif ($coupon)
                             <p>Coupon {{ $coupon }} is applied to this order.</p>
                             <div class="ck-coupon-row">
                                 <button class="ck-remove" form="checkout-coupon-remove" type="submit">Remove</button>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CreditPricingController;
 use App\Http\Controllers\Admin\CustomerStatisticController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\GlobalSettingController;
 use App\Http\Controllers\Admin\NicheController;
 use App\Http\Controllers\Admin\NicheSpecificationController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
@@ -127,6 +128,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/admin/packages/{package}', [PackageController::class, 'destroy'])->name('admin.packages.destroy');
 
     Route::get('/admin/coupons', [CouponController::class, 'index'])->name('admin.coupons');
+    Route::post('/admin/coupons/customers/{customer}/loyalty', [CouponController::class, 'issueLoyalty'])->name('admin.coupons.customers.loyalty');
     Route::put('/admin/coupons/campaigns/{campaign}', [CouponController::class, 'updateCampaign'])->name('admin.coupons.campaigns.update');
     Route::get('/admin/coupons/create', [CouponController::class, 'create'])->name('admin.coupons.create');
     Route::post('/admin/coupons', [CouponController::class, 'store'])->name('admin.coupons.store');
@@ -160,6 +162,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/settings', [SettingController::class, 'edit'])->name('admin.settings');
     Route::put('/admin/settings', [SettingController::class, 'update'])->name('admin.settings.update');
     Route::get('/admin/profile-photo', [SettingController::class, 'photo'])->name('admin.profile-photo');
+    Route::get('/admin/global-settings', [GlobalSettingController::class, 'edit'])->name('admin.global-settings');
+    Route::put('/admin/global-settings', [GlobalSettingController::class, 'update'])->name('admin.global-settings.update');
+    Route::post('/admin/global-settings/branding/{asset}', [GlobalSettingController::class, 'storeBranding'])
+        ->whereIn('asset', ['logo', 'wallpaper', 'favicon'])
+        ->name('admin.global-settings.branding.store');
+    Route::delete('/admin/global-settings/branding/{asset}', [GlobalSettingController::class, 'destroyBranding'])
+        ->whereIn('asset', ['logo', 'wallpaper', 'favicon'])
+        ->name('admin.global-settings.branding.destroy');
 });
 
 Route::view('/customer/dashboard', 'customer.dashboard')->name('customer.dashboard');

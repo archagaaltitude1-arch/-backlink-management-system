@@ -321,8 +321,8 @@ export function ServicePage({ page, send }) {
             ) : (
                 <section id="packages" className="scroll-mt-24 bg-white px-6 py-14 lg:px-14 lg:py-20" aria-labelledby="packages-heading">
                     <p className="text-xs font-extrabold tracking-[0.1em] text-brand-dark uppercase">Packages</p>
-                    <h2 id="packages-heading" className="mt-3 text-3xl font-extrabold tracking-tight lg:text-4xl">{details.packages_title}</h2>
-                    <p className="mt-4 max-w-[46ch] text-[17px] leading-7 text-[#4A5560]">{details.packages_intro || 'Choose a package that fits your requirements.'}</p>
+                    <h2 id="packages-heading" className="mt-3 text-4xl font-extrabold! tracking-tight text-navy lg:text-5xl">{details.packages_title}</h2>
+                    <p className="mt-4 max-w-[46ch] text-lg font-semibold leading-7 text-navy">{details.packages_intro || 'Choose a package that fits your requirements.'}</p>
                     {tabs.length > 0 ? <div className="mt-7"><PackageTabs tabs={tabs} send={send} /></div> : (
                         <div className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                             {tiers.map((tier) => (
@@ -345,8 +345,8 @@ export function ServicePage({ page, send }) {
                             ))}
                         </div>
                     )}
-                    <p className="mt-5 text-[15px] leading-6 text-[#4A5560]"><A href="/publishers" className="font-extrabold text-navy hover:text-brand-dark">Check out the publisher sites and individual pricing</A></p>
-                    <p className="mt-2 text-[15px] leading-6 text-[#4A5560]">Need a custom or bulk order? <A href="/contact" className="font-extrabold text-navy hover:text-brand-dark">Contact us</A></p>
+                    <p className="mt-5 text-base font-semibold leading-6 text-navy"><A href="/publishers" className="font-extrabold! text-navy hover:text-brand-dark">Check out the publisher sites and individual pricing</A></p>
+                    <p className="mt-2 text-base font-semibold leading-6 text-navy">Need a custom or bulk order? <A href="/contact" className="font-extrabold! text-navy hover:text-brand-dark">Contact us</A></p>
                 </section>
             )}
 
@@ -438,25 +438,25 @@ export function PackageTabs({ tabs, send }) {
                     const shown = on ? priced.final : tierDisplay(item, item.min).final;
 
                     return (
-                        <button key={item.key} type="button" role="tab" aria-selected={on} className={`rounded-[20px] border p-4 text-left transition ${on ? 'border-brand bg-[#FFF8F6] shadow-[0_14px_32px_rgba(255,73,23,0.14)]' : 'border-[#E3E5E8] bg-white hover:border-navy'}`} onClick={() => choose(item)}>
+                        <button key={item.key} type="button" role="tab" aria-selected={on} className={`rounded-[20px] border-2 p-4 text-left transition ${on ? 'border-brand bg-[#FFF8F6] shadow-[0_14px_32px_rgba(255,73,23,0.14)]' : 'border-[#D5DCE3] bg-white hover:border-navy'}`} onClick={() => choose(item)}>
                             <span className="flex items-center justify-between gap-2">
-                                <span className="font-sans text-[15px] font-extrabold">{item.label}</span>
-                                {item.key === 'pro' ? <span className="rounded-full bg-brand px-2 py-0.5 font-sans text-[11px] font-extrabold text-white">Best value</span> : null}
+                                <span className="font-sans text-lg font-extrabold! text-navy">{item.label}</span>
+                                {item.key === 'pro' ? <span className="rounded-full bg-brand px-2 py-0.5 font-sans text-[11px] font-extrabold! text-white">Best value</span> : null}
                             </span>
-                            <span className="mt-1 block font-sans text-[13px] font-bold text-[#4A5560]">{item.custom ? `${item.min}+ links` : `${item.min}–${item.max} links`}</span>
-                            <span className={`mt-3 inline-flex rounded-full px-2.5 py-1 font-sans text-[12px] font-extrabold ${packageLooks[item.key] || packageLooks.starter}`}>{item.custom ? 'Custom quote' : `${item.discount}% off`}</span>
-                            <span className="mt-3 block font-sans text-[22px] leading-none font-extrabold tracking-tight">{on ? money(shown) : `From ${money(shown)}`}</span>
+                            <span className="mt-1 block font-sans text-sm font-extrabold! text-navy">{item.custom ? `${item.min}+ links` : `${item.min}–${item.max} links`}</span>
+                            <span className={`mt-3 inline-flex rounded-full px-2.5 py-1 font-sans text-[12px] font-extrabold! ${packageLooks[item.key] || packageLooks.starter}`}>{item.custom ? 'Custom quote' : `${item.discount}% off`}</span>
+                            <span className="mt-3 block font-sans text-3xl leading-none font-extrabold! tracking-tight text-navy">{on ? money(shown) : `From ${money(shown)}`}</span>
                         </button>
                     );
                 })}
             </div>
             <div className="mt-4 grid items-stretch gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)]">
                 <div className="rounded-[24px] border border-[#E3E5E8] bg-white p-5 sm:p-6">
-                    <p className="font-sans text-xs font-extrabold tracking-[0.1em] text-brand-dark uppercase">Your selection</p>
-                    <p className="mt-2 font-sans text-2xl font-extrabold tracking-tight">{tab.label} package</p>
-                    <p className="mt-2 max-w-[48ch] font-sans text-[15px] leading-6 text-[#4A5560]">{tab.summary}</p>
+                    <p className="font-sans text-xs font-extrabold! tracking-[0.1em] text-brand-dark uppercase">Your selection</p>
+                    <p className="mt-2 font-sans text-3xl font-extrabold! tracking-tight text-navy">{tab.label} package</p>
+                    <p className="mt-2 max-w-[48ch] font-sans text-base font-semibold leading-6 text-navy">{tab.summary}</p>
                     <div className="mt-5 flex items-center justify-between gap-4">
-                        <p className="font-sans text-sm font-extrabold">Backlinks</p>
+                        <p className="font-sans text-base font-extrabold! text-navy">Backlinks</p>
                         <div className="flex items-center gap-2">
                             <button type="button" className="grid h-11 w-11 place-items-center rounded-full border border-[#E3E5E8] font-sans text-xl font-extrabold hover:border-navy disabled:opacity-40" aria-label="Fewer backlinks" disabled={selected <= tab.min} onClick={() => move(selected - 1)}>−</button>
                             <span className="min-w-12 text-center font-sans text-3xl font-extrabold tabular-nums">{selected}</span>
@@ -478,21 +478,21 @@ export function PackageTabs({ tabs, send }) {
                     )}
                 </div>
                 <form className="flex flex-col rounded-[24px] bg-navy p-5 text-white sm:p-6" onSubmit={save}>
-                    <p className="font-sans text-xs font-extrabold tracking-[0.1em] text-[#FF8A55] uppercase">Live price</p>
-                    <div className="mt-4 space-y-2 font-sans text-sm text-[#D5DCE3]" aria-live="polite">
-                        <p className="flex justify-between gap-3"><span>Quantity</span><strong className="text-white">{priced.quantity}</strong></p>
-                        {priced.custom ? <p className="flex justify-between gap-3"><span>Pricing</span><strong className="text-white">Custom quotation</strong></p> : (
+                    <p className="font-sans text-xs font-extrabold! tracking-[0.1em] text-[#FF8A55] uppercase">Live price</p>
+                    <div className="mt-4 space-y-2 font-sans text-base font-bold text-white" aria-live="polite">
+                        <p className="flex justify-between gap-3"><span>Quantity</span><strong className="font-extrabold!">{priced.quantity}</strong></p>
+                        {priced.custom ? <p className="flex justify-between gap-3"><span>Pricing</span><strong className="font-extrabold!">Custom quotation</strong></p> : (
                             <>
-                                <p className="flex justify-between gap-3"><span>Price per backlink</span><strong className="text-white">{money(priced.unit)}</strong></p>
-                                <p className="flex justify-between gap-3"><span>Subtotal</span><strong className="text-white">{money(priced.subtotal)}</strong></p>
-                                <p className="flex justify-between gap-3 text-[#8DDBA8]"><span>Discount ({tab.discount}%)</span><strong>-{money(priced.discount)}</strong></p>
+                                <p className="flex justify-between gap-3"><span>Price per backlink</span><strong className="font-extrabold!">{money(priced.unit)}</strong></p>
+                                <p className="flex justify-between gap-3"><span>Subtotal</span><strong className="font-extrabold!">{money(priced.subtotal)}</strong></p>
+                                <p className="flex justify-between gap-3 text-[#8DDBA8]"><span>Discount ({tab.discount}%)</span><strong className="font-extrabold!">-{money(priced.discount)}</strong></p>
                             </>
                         )}
                     </div>
-                    <p className="mt-5 font-sans text-[13px] font-bold text-[#D5DCE3]">{priced.custom ? 'Starting price' : 'Final price'}</p>
-                    <p key={`${tab.key}-${priced.final}`} className="price-live mt-1 font-sans text-[40px] leading-none font-extrabold">{money(priced.final)}</p>
+                    <p className="mt-5 font-sans text-sm font-extrabold! text-white">{priced.custom ? 'Starting price' : 'Final price'}</p>
+                    <p key={`${tab.key}-${priced.final}`} className="price-live mt-1 font-sans text-5xl leading-none font-extrabold!">{money(priced.final)}</p>
                     {Object.values(errors).flat().slice(0, 1).map((message) => <p key={message} className="mt-3 font-sans text-sm font-bold text-[#FFB199]" role="alert">{message}</p>)}
-                    <button className="btn-primary mt-auto w-full" type="submit" disabled={pending}>{pending ? 'Saving…' : 'Continue to Checkout'}</button>
+                    <button className="btn-primary mt-auto w-full font-extrabold!" type="submit" disabled={pending}>{pending ? 'Saving…' : 'Continue to Checkout'}</button>
                 </form>
             </div>
         </div>

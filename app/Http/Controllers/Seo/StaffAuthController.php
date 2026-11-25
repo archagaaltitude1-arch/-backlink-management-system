@@ -30,8 +30,10 @@ class StaffAuthController extends Controller
      */
     public function showLogin(): View|RedirectResponse
     {
-        if (Auth::check()) {
-            return redirect()->to($this->destination(Auth::user()));
+        $user = Auth::user();
+
+        if ($user instanceof User && $user->canAccessSeoPortal()) {
+            return redirect()->route('seo.dashboard');
         }
 
         return view('seo.login');
@@ -55,7 +57,7 @@ class StaffAuthController extends Controller
             $user = Auth::user();
             $user?->loadMissing('role');
 
-            if ($user === null || ! in_array($user->role?->role_name, ['Staff', 'SEO', 'Admin'], true)) {
+            if ($user === null || ! $user->canAccessSeoPortal()) {
                 $email = $request->string('email')->toString();
                 Auth::logout();
                 $request->session()->invalidate();
@@ -87,9 +89,7 @@ class StaffAuthController extends Controller
 
     private function destination(User $user): string
     {
-        $user->loadMissing('role');
-
-        return in_array($user->role?->role_name, ['Staff', 'SEO', 'Admin'], true)
+        return $user->canAccessSeoPortal()
             ? route('seo.dashboard')
             : $user->dashboardUrl();
     }

@@ -18,6 +18,56 @@ class AdminCouponManagementTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_admin_sees_paid_orders_and_can_issue_the_third_order_coupon(): void
+    {
+        Notification::fake();
+        $admin = User::factory()->create(['account_type' => 'admin']);
+        $ready = User::factory()->create(['account_type' => 'customer', 'name' => 'Loyalty Buyer', 'email' => 'loyalty@example.test']);
+        $waiting = User::factory()->create(['account_type' => 'customer', 'name' => 'Second Order', 'email' => 'second@example.test']);
+
+        foreach ([1, 2, 3] as $number) {
+            $ready->orders()->create([
+                'order_number' => 'BM-LOYAL-'.$number,
+                'session_id' => 'loyal-admin-'.$number,
+                'total_amount' => 40,
+                'payment_status' => 'paid',
+                'order_status' => 'completed',
+            ]);
+        }
+
+        foreach ([1, 2] as $number) {
+            $waiting->orders()->create([
+                'order_number' => 'BM-WAIT-'.$number,
+                'session_id' => 'wait-admin-'.$number,
+                'total_amount' => 40,
+                'payment_status' => 'paid',
+                'order_status' => 'completed',
+            ]);
+        }
+
+        $this->actingAs($admin)->get(route('admin.coupons'))
+            ->assertOk()
+            ->assertSee('Customer coupons')
+            ->assertSee('Loyalty Buyer')
+            ->assertSee('3 paid orders. Loyalty coupon is due.')
+            ->assertSee('Second Order')
+            ->assertSee('2 paid orders. 1 more until the next loyalty coupon.')
+            ->assertSee('No pending coupons');
+
+        $this->post(route('admin.coupons.customers.loyalty', $ready))->assertRedirect();
+
+        $coupon = Coupon::query()->where('customer_id', $ready->id)->where('type', 'loyalty')->firstOrFail();
+        $this->assertSame(3, $coupon->milestone);
+
+        $this->get(route('admin.coupons', ['customer' => 'loyalty@example.test']))
+            ->assertOk()
+            ->assertSee('Loyalty Buyer')
+            ->assertSee($coupon->code)
+            ->assertSee('Loyalty')
+            ->assertDontSee('Second Order')
+            ->assertDontSee('Loyalty coupon is due.');
+    }
+
     public function test_admin_creates_percentage_and_fixed_coupons_without_emailing_customers(): void
     {
         Notification::fake();
@@ -97,6 +147,7 @@ class AdminCouponManagementTest extends TestCase
     public function test_checkout_accepts_a_valid_coupon_and_rejects_invalid_ones_before_payment(): void
     {
         $customer = User::factory()->create();
+        $this->finishedFirstOrder($customer);
         $percentage = $this->makeCoupon([
             'code' => 'BACKLINK10',
             'discount_type' => 'percentage',
@@ -244,6 +295,7 @@ class AdminCouponManagementTest extends TestCase
     {
         $admin = User::factory()->create(['account_type' => 'admin']);
         $customer = User::factory()->create(['name' => 'Paid Customer']);
+        $this->finishedFirstOrder($customer);
         $coupon = $this->makeCoupon([
             'code' => 'BACKLINK10',
             'discount_type' => 'percentage',
@@ -304,6 +356,7 @@ class AdminCouponManagementTest extends TestCase
         ])]);
 
         $customer = User::factory()->create();
+        $this->finishedFirstOrder($customer);
         $coupon = $this->makeCoupon([
             'code' => 'BACKLINK10',
             'discount_type' => 'percentage',
@@ -338,6 +391,8 @@ class AdminCouponManagementTest extends TestCase
         ]);
         $first = User::factory()->create();
         $second = User::factory()->create();
+        $this->finishedFirstOrder($first);
+        $this->finishedFirstOrder($second);
 
         $this->actingAs($first);
         $firstLine = $this->addStarterPackage();
@@ -349,8 +404,8 @@ class AdminCouponManagementTest extends TestCase
         $this->post(route('shopping.coupon'), ['coupon_code' => 'BACKLINK10']);
         $this->post(route('shopping.checkout.store'), $this->checkoutPayload($secondLine));
 
-        $firstOrder = Order::query()->where('customer_id', $first->id)->firstOrFail();
-        $secondOrder = Order::query()->where('customer_id', $second->id)->firstOrFail();
+        $firstOrder = Order::query()->where('customer_id', $first->id)->where('payment_status', 'pending')->firstOrFail();
+        $secondOrder = Order::query()->where('customer_id', $second->id)->where('payment_status', 'pending')->firstOrFail();
 
         $this->actingAs($first)->post(route('orders.payment.process', $firstOrder), [
             'payment_method' => 'demo_card',
@@ -403,6 +458,17 @@ class AdminCouponManagementTest extends TestCase
             'per_customer_limit' => 1,
             'is_active' => true,
         ], $overrides));
+    }
+
+    private function finishedFirstOrder(User $customer): void
+    {
+        $customer->orders()->create([
+            'order_number' => 'BM-FIRST-'.$customer->id,
+            'session_id' => 'first-'.$customer->id,
+            'total_amount' => 10,
+            'payment_status' => 'paid',
+            'order_status' => 'completed',
+        ]);
     }
 
     private function pendingOrder(User $customer, string $number, float $amount, string $itemName): Order

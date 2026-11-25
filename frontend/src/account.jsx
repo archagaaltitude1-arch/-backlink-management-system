@@ -57,7 +57,7 @@ function DashboardScreen({ page, send }) {
                 <section className="panel p-4 sm:p-5">
                     <p className="eyebrow text-brand">New customer offer</p>
                     <h2 className="mt-2 text-lg font-semibold">{data.firstOrder.summary} on your first order</h2>
-                    <p className="mt-1 text-sm text-navy/65">It is applied automatically at checkout. You can use it once, after payment is confirmed.</p>
+                    <p className="mt-1 text-sm text-navy/65">This 10% offer is required on your first order. It is applied automatically at checkout and cannot be replaced.</p>
                     <A className="mt-3 inline-flex text-sm font-semibold text-brand-dark hover:underline" href="/customer/coupons">View coupons</A>
                 </section>
             ) : null}
@@ -415,7 +415,7 @@ function CouponsScreen({ page, send }) {
                 <section className="panel p-5">
                     <p className="eyebrow text-brand">First order</p>
                     <h2 className="mt-2 text-xl font-semibold">{data.firstOrder.summary} on your first purchase</h2>
-                    <p className="mt-2 text-sm text-navy/70">This discount is applied automatically at checkout. No code is required. {Number(data.firstOrder.minimum_order_amount) > 0 ? `Minimum purchase ${money(data.firstOrder.minimum_order_amount)}. ` : ''}It can be used once, and only after payment succeeds.</p>
+                    <p className="mt-2 text-sm text-navy/70">This 10% offer is the only discount on your first order. It is applied automatically at checkout. {Number(data.firstOrder.minimum_order_amount) > 0 ? `Minimum purchase ${money(data.firstOrder.minimum_order_amount)}. ` : ''}Other offers are available after this order is paid.</p>
                 </section>
             ) : data.redeemedFirstOrder ? (
                 <section className="panel p-5">
@@ -438,6 +438,9 @@ function CouponsScreen({ page, send }) {
                                 <div className="flex flex-wrap items-center gap-3">
                                     <span className="badge bg-orange-100 text-orange-800">{badge}</span>
                                     {heading === 'Available coupons' && coupon.type === 'order_reward' ? <RewardCopy coupon={coupon} compact actions send={send} /> : null}
+                                    {heading === 'Available coupons' && coupon.type !== 'order_reward' && coupon.customer_id ? (
+                                        <PostForm action={`/customer/coupons/${coupon.id}/apply`} send={send}><button className="btn-primary" type="submit">Apply</button></PostForm>
+                                    ) : null}
                                     {heading === 'Available coupons' && coupon.type !== 'order_reward' ? <CopyCode code={coupon.code} /> : null}
                                 </div>
                             </article>
@@ -642,7 +645,14 @@ function WebsitesScreen({ page, send, search }) {
                                                     <button className="btn-primary" type="submit">Add to cart</button>
                                                 </PostForm>
                                             </>
-                                        ) : <A className="btn-primary" href="/login">Sign in to order</A>}
+                                        ) : (
+                                            <PostForm action="/cart" send={send}>
+                                                <input type="hidden" name="domain" value={website.domain || ''} />
+                                                <input type="hidden" name="order_type" value="write_and_publish" />
+                                                <input type="hidden" name="quantity" value="1" />
+                                                <button className="btn-primary" type="submit">Order this site</button>
+                                            </PostForm>
+                                        )}
                                     </div>
                                 </div>
                             </article>

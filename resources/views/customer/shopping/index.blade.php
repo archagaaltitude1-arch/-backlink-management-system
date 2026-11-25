@@ -240,11 +240,13 @@
                         @endforeach
 
                         <div class="co-tools">
+                            @unless ($firstOrderOnly ?? false)
                             <form method="POST" action="{{ route('shopping.coupon') }}" style="display:flex;flex-wrap:wrap;gap:10px;flex:1">
                                 @csrf
                                 <input type="text" name="coupon_code" value="{{ $coupon }}" placeholder="Coupon code" aria-label="Coupon code" maxlength="40">
                                 <button class="co-apply" type="submit">Apply coupon</button>
                             </form>
+                            @endunless
                             <form method="POST" action="{{ route('shopping.clear') }}">
                                 @csrf
                                 <button class="co-text" type="submit">Clear cart</button>

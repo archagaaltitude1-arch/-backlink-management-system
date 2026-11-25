@@ -20,7 +20,7 @@
             <section class="panel p-5">
                 <p class="text-xs font-semibold tracking-wider text-brand uppercase">First order</p>
                 <h2 class="mt-2 text-xl font-semibold">{{ $firstOrder->summary() }} on your first purchase</h2>
-                <p class="mt-2 text-sm text-navy/70">This discount is applied automatically at checkout. No code is required. @if ((float) $firstOrder->minimum_order_amount > 0) Minimum purchase ${{ number_format((float) $firstOrder->minimum_order_amount, 2) }}. @endif It can be used once, and only after payment succeeds.</p>
+                <p class="mt-2 text-sm text-navy/70">This 10% offer is the only discount on your first order. It is applied automatically at checkout. @if ((float) $firstOrder->minimum_order_amount > 0) Minimum purchase ${{ number_format((float) $firstOrder->minimum_order_amount, 2) }}. @endif Other offers are available after this order is paid.</p>
             </section>
         @elseif ($redeemedFirstOrder)
             <section class="panel p-5">
@@ -46,6 +46,12 @@
                                 @if ($heading === 'Available coupons' && $coupon->type === 'order_reward')
                                     @include('customer.coupons.order-reward', ['coupon' => $coupon, 'applyUrl' => route('customer.coupons.apply', $coupon), 'usesCode' => false, 'compact' => true])
                                 @elseif ($heading === 'Available coupons')
+                                    @if ($coupon->customer_id)
+                                        <form method="POST" action="{{ route('customer.coupons.apply', $coupon) }}">
+                                            @csrf
+                                            <button class="btn-primary" type="submit">Apply</button>
+                                        </form>
+                                    @endif
                                     <button class="btn-navy" type="button" data-copy-coupon="{{ $coupon->code }}">Copy code</button>
                                 @endif
                             </div>

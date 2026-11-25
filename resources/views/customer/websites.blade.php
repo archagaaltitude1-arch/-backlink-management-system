@@ -91,7 +91,13 @@
                                         <button class="btn-primary" type="submit">Add to cart</button>
                                     </form>
                                 @else
-                                    <a class="btn-primary" href="{{ route('auth.login') }}">Sign in to order</a>
+                                    <form method="POST" action="{{ route('shopping.store') }}">
+                                        @csrf
+                                        <input type="hidden" name="domain" value="{{ $website->domain }}">
+                                        <input type="hidden" name="order_type" value="write_and_publish">
+                                        <input type="hidden" name="quantity" value="1">
+                                        <button class="btn-primary" type="submit">Order this site</button>
+                                    </form>
                                 @endauth
                             </div>
                         </div>

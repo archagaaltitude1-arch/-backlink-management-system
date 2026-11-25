@@ -13,12 +13,17 @@ class HomePageTest extends TestCase
 
     public function test_guest_sees_the_home_page(): void
     {
-        $this->get('/')
-            ->assertOk()
-            ->assertSee('Real, Traffic-Driven Websites', false)
+        $response = $this->get('/');
+
+        $response->assertOk()
+            ->assertSee('Real, Traffic-Driven', false)
             ->assertSee('href="'.route('customer.dashboard').'"', false)
-            ->assertSee('Start Building Links', false)
             ->assertSee('href="'.route('auth.register').'">Start Your Order</a>', false);
+
+        $this->assertMatchesRegularExpression(
+            '/href="'.preg_quote(route('customer.dashboard'), '/').'"[^>]*>\s*Start Building Links\s*</',
+            $response->getContent(),
+        );
     }
 
     public function test_mobile_home_endpoint_returns_the_existing_homepage_data(): void
@@ -47,7 +52,7 @@ class HomePageTest extends TestCase
         $this->actingAs($user)
             ->get('/')
             ->assertOk()
-            ->assertSee('Real, Traffic-Driven Websites', false);
+            ->assertSee('Real, Traffic-Driven', false);
     }
 
     public function test_logged_in_admin_sees_the_public_home_page(): void
@@ -58,6 +63,6 @@ class HomePageTest extends TestCase
         $this->actingAs($admin)
             ->get('/')
             ->assertOk()
-            ->assertSee('Real, Traffic-Driven Websites', false);
+            ->assertSee('Real, Traffic-Driven', false);
     }
 }

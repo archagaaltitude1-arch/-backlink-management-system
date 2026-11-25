@@ -15,9 +15,10 @@
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @endif
+        @include('components.site-branding-head', ['applyTheme' => true])
         @stack('head')
     </head>
-    <body class="overflow-x-hidden bg-canvas font-sans text-base text-navy antialiased">
+    <body class="overflow-x-hidden bg-canvas font-sans text-base text-navy antialiased" style="{{ $siteSettings['bodyStyle'] ?? '' }}">
         <a
             href="#main"
             class="absolute top-4 left-4 z-[60] -translate-y-24 rounded-xl bg-white px-4 py-2 text-sm font-medium text-navy shadow focus:translate-y-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
