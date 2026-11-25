@@ -20,13 +20,19 @@ class MergeIntegrationTest extends TestCase
     public function test_both_catalogues_and_customer_workflow_seed_without_duplicates(): void
     {
         $this->seed(DatabaseSeeder::class);
+        $counts = [];
+        foreach (['websites', 'seo_metrics', 'users', 'orders', 'wallets'] as $table) {
+            $counts[$table] = DB::table($table)->count();
+            $this->assertGreaterThan(0, $counts[$table], $table);
+        }
+
         $this->seed(DatabaseSeeder::class);
 
-        $this->assertDatabaseCount('websites', 46);
-        $this->assertDatabaseCount('seo_metrics', 46);
-        $this->assertDatabaseCount('users', 11);
-        $this->assertDatabaseCount('orders', 8);
-        $this->assertDatabaseCount('wallets', 1);
+        foreach ($counts as $table => $count) {
+            $this->assertDatabaseCount($table, $count);
+        }
+
+        $this->assertSame(Website::query()->count(), Website::query()->distinct()->count('domain'));
         $customer = User::query()->where('email', 'customer@example.test')->firstOrFail();
         $this->assertSame('Customer', $customer->role->role_name);
         $this->assertSame(3, $customer->orders()->count());

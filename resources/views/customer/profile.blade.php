@@ -3,7 +3,7 @@
 @section('title', 'Profile')
 
 @section('content')
-    <div class="mx-auto max-w-4xl space-y-6">
+    <div class="mx-auto max-w-6xl space-y-6">
         <div>
             <p class="text-xs font-semibold tracking-wider text-brand uppercase">My account</p>
             <h1 class="mt-2 text-3xl font-semibold">Account details</h1>

@@ -19,7 +19,7 @@
 
     <style>
         .bag { background: #F2F2F2; }
-        .bag-wrap { max-width: none; margin: 0 auto; padding: 28px 24px 72px; }
+        .bag-wrap { padding-block: 28px 72px; }
         .bag-crumb { margin: 0; color: #4A5560; font-size: 14px; font-weight: 700; }
         .bag-crumb a { color: inherit; }
         .bag-crumb a:hover { color: #C0340D; }
@@ -129,7 +129,7 @@
     </style>
 
     <section class="bag">
-        <div class="bag-wrap">
+        <div class="bag-wrap mx-auto w-full max-w-[76rem] px-4 sm:px-6 lg:px-8">
             <nav class="bag-crumb" aria-label="Breadcrumb">
                 <a href="{{ url('/') }}">Home</a>
                 <span aria-hidden="true"> / </span>

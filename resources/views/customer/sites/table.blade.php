@@ -53,7 +53,20 @@
 @php
     $loginHref = \Illuminate\Support\Facades\Route::has('auth.login') ? route('auth.login') : url('/login');
     $canSave = auth()->check() && \Illuminate\Support\Facades\Route::has('customer.saved-websites.store');
-    $canCart = auth()->check() && \Illuminate\Support\Facades\Route::has('orders.cart.items.store');
+    $canCart = \Illuminate\Support\Facades\Route::has('orders.cart.items.store');
+    $ahrefsMax = 0;
+    $semrushMax = 0;
+    foreach ($rows as $publisher) {
+        $ahrefsMax = max($ahrefsMax, (int) ($publisher['traffic'] ?? 0));
+        $semrushMax = max($semrushMax, (int) ($publisher['semrush_traffic'] ?? 0));
+    }
+    $barWidth = function (int $value, int $max): int {
+        if ($value <= 0 || $max <= 0) {
+            return 0;
+        }
+
+        return max(4, (int) round($value / $max * 100));
+    };
 @endphp
 <div class="nd-table-wrap rounded-[20px] border border-[#E3E5E8]">
     <table class="nd-table">

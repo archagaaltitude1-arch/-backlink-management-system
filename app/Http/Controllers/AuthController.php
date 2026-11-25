@@ -162,7 +162,7 @@ class AuthController extends Controller
         $this->authenticateAndAdoptCart($request, $user);
 
         if ($request->routeIs('auth.google.firebase')) {
-            return response()->json(['redirect' => route('customer.dashboard')]);
+            return response()->json(['redirect' => $request->session()->pull('url.intended', route('customer.dashboard'))]);
         }
 
         return redirect()->intended(route('customer.dashboard'));

@@ -59,7 +59,7 @@ class DemoPublisherData
         $points = [];
 
         for ($month = 0; $month < 12; $month++) {
-            $state = (int) (($state * 1103515245 + 12345) & 0x7fffffff);
+            $state = (int) (($state * 1103515245 + 12345) & 0x7FFFFFFF);
             $swing = ($state % 21) - 10;
             $points[] = max(0, $anchor + (int) round($anchor * ($swing / 100)));
         }

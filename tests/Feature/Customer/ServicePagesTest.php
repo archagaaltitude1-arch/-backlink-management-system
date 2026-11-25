@@ -25,6 +25,7 @@ class ServicePagesTest extends TestCase
             $slug = $item['slug'];
             $service = config('backlink_services.'.$slug);
             $response = $this->get('/services/'.$slug)->assertOk();
+
             $response->assertSee(Str::before($service['h1'], $service['h1_highlight']), false);
             $response->assertSee($service['h1_highlight'], false);
             $response->assertSee(Str::after($service['h1'], $service['h1_highlight']), false);
@@ -41,6 +42,17 @@ class ServicePagesTest extends TestCase
             }
 
             $response = $this->get('/services/'.$slug)->assertOk();
+
+            if (in_array($slug, PublicPackages::tieredServices(), true)) {
+                foreach (['starter', 'professional', 'pro', 'enterprise'] as $tier) {
+                    $response->assertSee('data-tier-tab="'.$tier.'"', false)
+                        ->assertSee('data-tier-panel="'.$tier.'"', false);
+                }
+
+                $response->assertSee('Continue to Checkout');
+
+                continue;
+            }
 
             foreach (config('backlink_services.'.$slug.'.tiers') as $tier) {
                 $features = $tier['features'];

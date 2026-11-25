@@ -68,7 +68,8 @@ class Order extends Model
 
     public function confirmPayment(): void
     {
-        $this->update(['payment_status' => 'paid', 'order_status' => 'awaiting_approval']);
+        $needsDetails = $this->items()->where('target_url', '')->exists();
+        $this->update(['payment_status' => 'paid', 'order_status' => $needsDetails ? 'awaiting_details' : 'awaiting_approval']);
 
         $this->invoice()->firstOrCreate([], [
             'customer_id' => $this->customer_id,
@@ -76,6 +77,10 @@ class Order extends Model
             'total_amount' => $this->total_amount,
             'issued_at' => now(),
         ]);
+
+        if ($needsDetails) {
+            return;
+        }
 
         app(CustomerDiscounts::class)->rewardAfterPayment($this->fresh());
     }

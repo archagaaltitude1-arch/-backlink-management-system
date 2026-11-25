@@ -239,6 +239,10 @@ class PaymentController extends Controller
 
     private function afterPayment(Order $order): RedirectResponse
     {
+        if ($order->fresh()->order_status === 'awaiting_details') {
+            return redirect()->route('orders.show', $order);
+        }
+
         return redirect()->route('orders.thanks', $order);
     }
 

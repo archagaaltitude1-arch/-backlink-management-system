@@ -52,7 +52,27 @@ function DashboardScreen({ page, send }) {
 
     return (
         <div className="space-y-4 sm:space-y-6">
-            <ServiceCards services={data.linkServices || []} />
+            <section className="overflow-hidden rounded-2xl bg-navy text-white shadow-sm">
+                <div className="h-1.5 bg-brand" />
+                <div className="flex flex-col gap-6 p-6 sm:p-8 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="min-w-0">
+                        <p className="text-xs font-medium tracking-widest text-brand uppercase">Customer dashboard</p>
+                        <h1 className="mt-3 break-words text-2xl font-semibold sm:text-3xl">Welcome, {data.customer?.name || page.shell?.auth?.name || 'Customer'}</h1>
+                        <p className="mt-3 text-sm leading-6 text-white/65">Manage your orders, credits, and publishing activity.</p>
+                    </div>
+                    <div className="flex shrink-0 flex-wrap gap-3">
+                        <A href="/publishers" className="btn-primary">Browse publishers</A>
+                        <A href="/cart" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/20 bg-white/5 px-5 text-sm font-semibold text-white hover:bg-white/10">View cart</A>
+                    </div>
+                </div>
+            </section>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+                <A href="/customer/wallet" className="panel min-w-0 p-3 sm:p-5"><p className="text-sm text-navy/55">Available credits</p><p className="mt-2 text-2xl font-semibold break-words tabular-nums sm:text-3xl">{count(wallet.available_balance)}</p><p className="mt-2 text-xs text-navy/55">{count(wallet.reserved_balance)} reserved</p></A>
+                <A href="/orders" className="panel min-w-0 p-3 sm:p-5"><p className="text-sm text-navy/55">Orders</p><p className="mt-2 text-2xl font-semibold break-words tabular-nums sm:text-3xl">{count(data.orderCount)}</p><p className="mt-2 text-xs text-navy/55">View order progress</p></A>
+                <A href="/customer/saved-websites" className="panel min-w-0 p-3 sm:p-5"><p className="text-sm text-navy/55">Saved websites</p><p className="mt-2 text-2xl font-semibold break-words tabular-nums sm:text-3xl">{count(data.savedWebsiteCount)}</p><p className="mt-2 text-xs text-navy/55">Your marketplace shortlist</p></A>
+                <A href="/customer/notifications" className="panel min-w-0 p-3 sm:p-5"><p className="text-sm text-navy/55">Unread notifications</p><p className="mt-2 text-2xl font-semibold break-words tabular-nums sm:text-3xl">{count(data.unreadNotificationCount)}</p><p className="mt-2 text-xs text-navy/55">Order and account updates</p></A>
+            </div>
+
             {data.firstOrder ? (
                 <section className="panel p-4 sm:p-5">
                     <p className="eyebrow text-brand">New customer offer</p>
@@ -86,12 +106,6 @@ function DashboardScreen({ page, send }) {
                 </div>
                 <A className="text-sm font-semibold text-brand-dark hover:underline" href="/customer/payment-methods">Manage payment methods</A>
             </section>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-                <A href="/customer/wallet" className="panel min-w-0 p-3 sm:p-5"><p className="text-sm text-navy/55">Available credits</p><p className="mt-2 text-2xl font-semibold break-words tabular-nums sm:text-3xl">{count(wallet.available_balance)}</p><p className="mt-2 text-xs text-navy/55">{count(wallet.reserved_balance)} reserved</p></A>
-                <A href="/orders" className="panel min-w-0 p-3 sm:p-5"><p className="text-sm text-navy/55">Orders</p><p className="mt-2 text-2xl font-semibold break-words tabular-nums sm:text-3xl">{count(data.orderCount)}</p><p className="mt-2 text-xs text-navy/55">View order progress</p></A>
-                <A href="/customer/saved-websites" className="panel min-w-0 p-3 sm:p-5"><p className="text-sm text-navy/55">Saved websites</p><p className="mt-2 text-2xl font-semibold break-words tabular-nums sm:text-3xl">{count(data.savedWebsiteCount)}</p><p className="mt-2 text-xs text-navy/55">Your marketplace shortlist</p></A>
-                <A href="/customer/notifications" className="panel min-w-0 p-3 sm:p-5"><p className="text-sm text-navy/55">Unread notifications</p><p className="mt-2 text-2xl font-semibold break-words tabular-nums sm:text-3xl">{count(data.unreadNotificationCount)}</p><p className="mt-2 text-xs text-navy/55">Order and account updates</p></A>
-            </div>
             <div className="grid gap-4 sm:gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
                 <section className="panel overflow-hidden">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-navy/10 px-5 py-4"><h2 className="font-semibold">Recent orders</h2><A className="text-sm font-semibold text-brand hover:underline" href="/orders">All orders</A></div>
@@ -120,6 +134,7 @@ function DashboardScreen({ page, send }) {
                     </div>
                 </section>
             </div>
+            <ServiceCards services={data.linkServices || []} />
         </div>
     );
 }
