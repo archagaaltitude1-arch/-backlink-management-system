@@ -2,123 +2,137 @@
     $status = (string) $order->order_status;
     $isPaid = $order->payment_status === 'paid';
     $paymentFailed = $order->payment_status === 'failed';
+    $isAccepted = in_array($status, ['processing', 'completed'], true);
+    $isDelivered = $status === 'completed';
+    $isInProgress = $status === 'completed' || $order->items->contains(fn ($item): bool => in_array($item->assignment?->status, ['in_progress', 'published', 'completed'], true));
+    $isOnTheWay = $isDelivered || $order->items->contains(fn ($item): bool => filled($item->project?->published_url)
+        || in_array($item->assignment?->status, ['published', 'completed'], true));
+    $hasTeamAssignment = $order->items->contains(fn ($item): bool => $item->assignment !== null);
 
-    $completedSteps = match ($status) {
-        'awaiting_details', 'awaiting_approval' => 2,
-        'processing' => 3,
-        'completed' => 5,
-        default => $isPaid ? 2 : 1,
+    $startedAt = $order->items
+        ->map(fn ($item) => $item->assignment?->status === 'in_progress' ? $item->assignment->updated_at : null)
+        ->filter()
+        ->sort()
+        ->first();
+    $publishedAt = $order->items
+        ->map(fn ($item) => $item->article?->published_at)
+        ->filter()
+        ->sort()
+        ->first();
+    $deliveredAt = $order->items
+        ->map(fn ($item) => $item->project?->completed_at)
+        ->filter()
+        ->sortDesc()
+        ->first();
+
+    $completedSteps = match (true) {
+        $isDelivered => 5,
+        $isOnTheWay => 4,
+        $isInProgress => 3,
+        $isAccepted => 2,
+        default => 1,
     };
-
-    $currentStep = match ($status) {
-        'awaiting_details', 'awaiting_approval' => 3,
-        'processing' => 4,
-        'completed' => 5,
-        default => 2,
-    };
-
+    $currentStep = min($completedSteps + 1, 5);
     $progressPercent = (($completedSteps - 1) / 4) * 100;
-    $statusLabel = match ($status) {
-        'awaiting_details' => 'Details needed',
-        'awaiting_approval' => 'Admin review',
-        'processing' => 'In progress',
-        'completed' => 'Verified live',
-        default => $paymentFailed ? 'Payment failed' : ($isPaid ? str($status)->headline() : 'Payment due'),
+
+    $statusLabel = match (true) {
+        $paymentFailed => 'Payment needs attention',
+        ! $isPaid => 'Awaiting payment',
+        $status === 'awaiting_details' => 'Campaign details needed',
+        $status === 'awaiting_approval' => 'Awaiting admin approval',
+        $isDelivered => 'Delivered',
+        $isOnTheWay => 'Placement published',
+        $isInProgress => 'In progress',
+        $isAccepted => 'Accepted',
+        default => 'Awaiting approval',
     };
-    $stageTitle = match (true) {
-        $status === 'awaiting_details' => 'One step from review',
-        $status === 'awaiting_approval' => 'Your order is under review',
-        $status === 'processing' => 'Content and placement are underway',
-        $status === 'completed' => 'Your backlink is verified live',
+
+    $currentTitle = match (true) {
         $paymentFailed => 'Payment needs another try',
-        ! $isPaid => 'Complete payment to get started',
-        default => 'Your order is moving forward',
+        ! $isPaid => 'Complete payment to confirm your order',
+        $status === 'awaiting_details' => 'Add your campaign details',
+        $status === 'awaiting_approval' => 'Your order is waiting for approval',
+        $isDelivered => 'Your order has been delivered',
+        $isOnTheWay => 'Your placement is ready for review',
+        $isInProgress => 'The team is working on your placement',
+        $isAccepted => $hasTeamAssignment ? 'Your order is with the SEO team' : 'Your order is approved and getting started',
+        default => 'Your order is waiting for approval',
     };
-    $stageDescription = match (true) {
-        $status === 'awaiting_details' => 'Payment is confirmed. Add the target URL and campaign brief below so the team can review your order.',
-        $status === 'awaiting_approval' => 'Your publishing details are with the admin team. Content work starts after the review.',
-        $status === 'processing' => 'The team is preparing your content and coordinating the backlink placement.',
-        $status === 'completed' => 'All placements in this order have passed customer approval.',
-        $paymentFailed => 'The payment did not complete. Retry it to continue with your order.',
-        ! $isPaid => 'Once payment is confirmed, you can submit your campaign details for review.',
-        default => 'We will keep this tracker in step with your order status.',
+
+    $currentDescription = match (true) {
+        $paymentFailed => 'Retry payment to move your order forward.',
+        ! $isPaid => 'Once payment clears, the team can accept and prepare your order.',
+        $status === 'awaiting_details' => 'Share the target URL and brief so the admin team can review the order.',
+        $status === 'awaiting_approval' => 'Payment is confirmed. Work begins after the admin team approves the order.',
+        $isDelivered => 'Your backlink has passed review and the order is complete.',
+        $isOnTheWay => 'The placement has been published. Review the live link in your order details.',
+        $isInProgress => 'Your campaign is approved and moving through content and placement.',
+        $isAccepted => $hasTeamAssignment ? 'Your SEO team is assigned and will begin content work next.' : 'The admin team approved your order. The SEO team assignment is next.',
+        default => 'Your order is confirmed and will move into fulfillment next.',
     };
-    $briefDetail = match ($status) {
-        'awaiting_details' => 'Details needed',
-        'awaiting_approval' => 'With the admin team',
-        'processing', 'completed' => 'Review complete',
-        default => $isPaid ? 'Ready for review' : 'After payment',
-    };
-    $placementDetail = match ($status) {
-        'processing' => 'In progress',
-        'completed' => 'Complete',
-        default => 'Next up',
-    };
+
     $stepDetails = [
-        ['title' => 'Order received', 'detail' => $order->created_at->format('M j, Y')],
-        ['title' => 'Payment cleared', 'detail' => $isPaid ? 'Confirmed' : ($paymentFailed ? 'Needs attention' : 'Awaiting payment')],
-        ['title' => 'Brief and review', 'detail' => $briefDetail],
-        ['title' => 'Content and placement', 'detail' => $placementDetail],
-        ['title' => 'Live and verified', 'detail' => $status === 'completed' ? 'Approved' : 'Final milestone'],
+        ['title' => 'Order placed', 'detail' => $order->created_at->format('M j · g:i A')],
+        ['title' => 'Accepted', 'detail' => $isAccepted ? 'Approved by the team' : ($paymentFailed ? 'Payment failed' : ($status === 'awaiting_details' ? 'Campaign details needed' : ($isPaid ? 'Awaiting approval' : 'Awaiting payment')))],
+        ['title' => 'In progress', 'detail' => $isInProgress ? ($startedAt?->format('M j · g:i A') ?? 'Content work started') : ($status === 'awaiting_approval' ? 'After admin approval' : ($status === 'awaiting_details' ? 'After campaign details' : ($isAccepted ? ($hasTeamAssignment ? 'Assigned · work starts next' : 'Awaiting team assignment') : 'After acceptance')))],
+        ['title' => 'On the way', 'detail' => $isOnTheWay ? ($publishedAt?->format('M j · g:i A') ?? 'Published') : ($isInProgress ? 'Preparing placement' : 'After content review')],
+        ['title' => 'Delivered', 'detail' => $isDelivered ? ($deliveredAt?->format('M j · g:i A') ?? 'Order complete') : 'After customer approval'],
     ];
 @endphp
 
-<section class="mx-auto max-w-6xl overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-navy/10" aria-label="Order tracking">
-    <header class="relative isolate overflow-hidden bg-navy px-5 py-6 text-white sm:px-7 sm:py-7">
-        <div class="pointer-events-none absolute -top-24 -right-12 size-64 rounded-full border border-white/10" aria-hidden="true">
-            <div class="absolute inset-6 rounded-full border border-white/10"></div>
-            <div class="absolute inset-14 rounded-full border border-brand/30"></div>
-            <span class="absolute top-1/2 left-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand shadow-[0_0_28px_rgba(255,73,23,0.8)]"></span>
+<section class="mx-auto max-w-6xl overflow-hidden rounded-3xl border border-navy/10 bg-white shadow-sm" aria-label="Order tracking">
+    <header class="flex flex-wrap items-start justify-between gap-4 border-b border-navy/10 px-5 py-5 sm:px-7">
+        <div>
+            <p class="text-[10px] font-bold tracking-[0.18em] text-brand uppercase">Your order journey</p>
+            <h2 class="mt-1 text-xl font-semibold tracking-tight text-navy sm:text-2xl">Track your placement</h2>
+            <p class="mt-1 text-sm text-navy/55">Follow each milestone from checkout to a verified live link.</p>
         </div>
-
-        <div class="relative flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <p class="text-[11px] font-semibold tracking-[0.18em] text-brand uppercase">Order tracking · {{ $order->order_number }}</p>
-                <h2 class="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Your campaign, step by step</h2>
-                <p class="mt-2 max-w-2xl text-sm leading-6 text-white/70">Follow your payment, review, content and backlink placement in one clear timeline.</p>
-            </div>
-            <span @class([
-                'inline-flex shrink-0 items-center rounded-full px-3.5 py-2 text-xs font-semibold ring-1 ring-inset',
-                'bg-emerald-400/10 text-emerald-100 ring-emerald-200/20' => $status === 'completed',
-                'bg-brand/15 text-orange-100 ring-brand/30' => in_array($status, ['awaiting_details', 'processing'], true),
-                'bg-amber-300/10 text-amber-100 ring-amber-200/20' => $status === 'awaiting_approval',
-                'bg-rose-300/10 text-rose-100 ring-rose-200/20' => $paymentFailed,
-                'bg-white/10 text-white/85 ring-white/15' => ! in_array($status, ['completed', 'awaiting_details', 'processing', 'awaiting_approval'], true) && ! $paymentFailed,
-            ])>{{ $statusLabel }}</span>
-        </div>
+        <span @class([
+            'inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold',
+            'border-emerald-200 bg-emerald-50 text-emerald-800' => $isDelivered,
+            'border-brand/20 bg-[#fff3ed] text-[#c0340d]' => ! $isDelivered && ! $paymentFailed,
+            'border-rose-200 bg-rose-50 text-rose-800' => $paymentFailed,
+        ])>{{ $statusLabel }}</span>
     </header>
 
     <div class="p-5 sm:p-7">
-        <div class="flex flex-wrap items-end justify-between gap-3">
-            <div>
-                <p class="text-[10px] font-semibold tracking-[0.16em] text-navy/45 uppercase">Progress overview</p>
-                <p class="mt-1 text-sm font-semibold text-navy">{{ $order->items->sum('quantity') }} placement{{ $order->items->sum('quantity') === 1 ? '' : 's' }} · Updated {{ $order->updated_at->format('M j, g:i A') }}</p>
-            </div>
-            <p class="text-xs font-medium text-navy/50">Step {{ $currentStep }} of 5</p>
-        </div>
-
-        <div class="relative mt-7">
-            <div class="absolute top-4 bottom-4 left-4 border-l-2 border-dotted border-navy/15 sm:hidden" aria-hidden="true"></div>
-            <div class="absolute top-4 right-[10%] left-[10%] hidden h-0.5 bg-navy/10 sm:block" aria-hidden="true">
+        <div class="relative">
+            <div class="absolute top-5 right-[10%] left-[10%] hidden h-0.5 bg-navy/10 sm:block" aria-hidden="true">
                 <span class="block h-full bg-brand transition-all duration-500" style="width: {{ $progressPercent }}%"></span>
             </div>
+            <div class="absolute top-5 bottom-5 left-5 border-l-2 border-dotted border-navy/15 sm:hidden" aria-hidden="true"></div>
 
-            <ol class="relative grid gap-4 sm:grid-cols-5 sm:gap-1" aria-label="Order progress: {{ $statusLabel }}">
+            <ol class="relative grid gap-5 sm:grid-cols-5 sm:gap-1" aria-label="Order progress: {{ $statusLabel }}">
                 @foreach ($stepDetails as $step)
                     @php
                         $isComplete = $loop->iteration <= $completedSteps;
                         $isCurrent = ! $isComplete && $loop->iteration === $currentStep;
                     @endphp
-                    <li @if ($isCurrent) aria-current="step" @endif class="flex items-start gap-3 sm:block sm:text-center">
+                    <li @if ($isCurrent) aria-current="step" @endif class="flex items-start gap-3 sm:block sm:px-1 sm:text-center">
                         <span @class([
-                            'relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition sm:mx-auto',
+                            'relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full border transition sm:mx-auto',
                             'border-brand bg-brand text-white shadow-[0_0_0_5px_rgba(255,73,23,0.12)]' => $isCurrent,
                             'border-brand bg-brand text-white' => $isComplete,
-                            'border-navy/15 bg-white text-navy/45' => ! $isComplete && ! $isCurrent,
-                        ])>
-                            <span aria-hidden="true">{{ $isComplete ? '✓' : $loop->iteration }}</span>
+                            'border-navy/15 bg-white text-navy/40' => ! $isComplete && ! $isCurrent,
+                        ]) aria-hidden="true">
+                            @switch($loop->iteration)
+                                @case(1)
+                                    <svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7.5 12 4l7 3.5v9L12 20l-7-3.5z"/><path d="m5.5 7.8 6.5 3.4 6.5-3.4M12 11.2V20"/></svg>
+                                    @break
+                                @case(2)
+                                    <svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 19 6v5.2c0 4.3-2.8 7.7-7 9.3-4.2-1.6-7-5-7-9.3V6z"/><path d="m8.5 11.8 2.2 2.2 4.8-4.8"/></svg>
+                                    @break
+                                @case(3)
+                                    <svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3.5 8 4.3v8.4l-8 4.3-8-4.3V7.8z"/><path d="m4.4 8 7.6 4 7.6-4M12 12v8.2"/></svg>
+                                    @break
+                                @case(4)
+                                    <svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5h11v10H3zM14 10h4l3 3v3.5h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="18" cy="18" r="1.8"/><path d="M16.5 10v3h4"/></svg>
+                                    @break
+                                @default
+                                    <svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8 12 4l7 4v8l-7 4-7-4z"/><path d="m5.5 8.3 6.5 3.5 6.5-3.5M12 11.8V20"/><path d="m9.4 15.2 1.7 1.7 3.7-3.7"/></svg>
+                            @endswitch
                         </span>
-                        <span class="min-w-0 pb-1 sm:mt-3 sm:block sm:px-1">
+                        <span class="min-w-0 pb-1 sm:mt-3 sm:block">
                             <span @class([
                                 'block text-sm font-semibold',
                                 'text-navy' => $isComplete || $isCurrent,
@@ -131,11 +145,11 @@
             </ol>
         </div>
 
-        <div class="mt-7 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand/15 bg-[#fff5f0] p-4 sm:p-5">
+        <div class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand/15 bg-[#fff5f0] p-4 sm:p-5">
             <div class="min-w-0 flex-1 basis-64">
-                <p class="text-[10px] font-semibold tracking-[0.16em] text-brand uppercase">Current step</p>
-                <h3 class="mt-1 text-base font-semibold text-navy">{{ $stageTitle }}</h3>
-                <p class="mt-1 text-sm leading-6 text-navy/65">{{ $stageDescription }}</p>
+                <p class="text-[10px] font-bold tracking-[0.16em] text-brand uppercase">Latest update</p>
+                <h3 class="mt-1 text-base font-semibold text-navy">{{ $currentTitle }}</h3>
+                <p class="mt-1 text-sm leading-6 text-navy/65">{{ $currentDescription }}</p>
             </div>
             @if ($status === 'awaiting_details')
                 <a href="#publishing-details" class="inline-flex min-h-11 items-center justify-center rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">Add campaign details</a>

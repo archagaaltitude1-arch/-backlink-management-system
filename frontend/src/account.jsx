@@ -716,6 +716,7 @@ function OrderDetailScreen({ page, search }) {
 
     return (
         <div className="mx-auto max-w-5xl space-y-6">
+            <OrderTracking order={order} />
             <div><h1 className="mt-2 text-3xl font-semibold">{order.order_number}</h1><p className="mt-2 text-sm text-navy/60">Placed {stamp(order.created_at)}</p></div>
             <section className="panel overflow-hidden">
                 <div className="grid gap-4 border-b border-navy/10 p-6 sm:grid-cols-3">
@@ -743,6 +744,125 @@ function OrderDetailScreen({ page, search }) {
             {unpaid ? <A className="btn-primary" href={`/orders/${order.id}/payment`}>{order.payment_status === 'failed' ? 'Retry payment' : 'Complete payment'}</A> : null}
         </div>
     );
+}
+
+function OrderTracking({ order }) {
+    const status = String(order.order_status || 'pending');
+    const paid = order.payment_status === 'paid';
+    const paymentFailed = order.payment_status === 'failed';
+    const items = Array.isArray(order.items) ? order.items : [];
+    const isAccepted = ['processing', 'completed'].includes(status);
+    const isDelivered = status === 'completed';
+    const isInProgress = status === 'completed' || items.some((item) => ['in_progress', 'published', 'completed'].includes(item.assignment?.status));
+    const isOnTheWay = isDelivered || items.some((item) => Boolean(item.project?.published_url) || ['published', 'completed'].includes(item.assignment?.status));
+    const hasTeamAssignment = items.some((item) => Boolean(item.assignment?.id));
+    const startedAt = items.map((item) => item.assignment?.status === 'in_progress' ? item.assignment.updated_at : null).filter(Boolean).sort()[0];
+    const publishedAt = items.map((item) => item.article?.published_at).filter(Boolean).sort()[0];
+    const deliveredAt = items.map((item) => item.project?.completed_at).filter(Boolean).sort().at(-1);
+
+    const completedSteps = isDelivered ? 5 : isOnTheWay ? 4 : isInProgress ? 3 : isAccepted ? 2 : 1;
+    const currentStep = Math.min(completedSteps + 1, 5);
+    const progressPercent = ((completedSteps - 1) / 4) * 100;
+    const statusLabel = paymentFailed ? 'Payment needs attention'
+        : !paid ? 'Awaiting payment'
+            : status === 'awaiting_details' ? 'Campaign details needed'
+                : status === 'awaiting_approval' ? 'Awaiting admin approval'
+                    : isDelivered ? 'Delivered'
+                        : isOnTheWay ? 'Placement published'
+                            : isInProgress ? 'In progress' : isAccepted ? 'Accepted' : 'Awaiting approval';
+    const currentTitle = paymentFailed ? 'Payment needs another try'
+        : !paid ? 'Complete payment to confirm your order'
+            : status === 'awaiting_details' ? 'Add your campaign details'
+                : status === 'awaiting_approval' ? 'Your order is waiting for approval'
+                    : isDelivered ? 'Your order has been delivered'
+                        : isOnTheWay ? 'Your placement is ready for review'
+                            : isInProgress ? 'The team is working on your placement' : isAccepted ? (hasTeamAssignment ? 'Your order is with the SEO team' : 'Your order is approved and getting started') : 'Your order is waiting for approval';
+    const currentDescription = paymentFailed ? 'Retry payment to move your order forward.'
+        : !paid ? 'Once payment clears, the team can accept and prepare your order.'
+            : status === 'awaiting_details' ? 'Share the target URL and brief so the admin team can review the order.'
+                : status === 'awaiting_approval' ? 'Payment is confirmed. Work begins after the admin team approves the order.'
+                    : isDelivered ? 'Your backlink has passed review and the order is complete.'
+                        : isOnTheWay ? 'The placement has been published. Review the live link in your order details.'
+                            : isInProgress ? 'Your campaign is approved and moving through content and placement.' : isAccepted ? (hasTeamAssignment ? 'Your SEO team is assigned and will begin content work next.' : 'The admin team approved your order. The SEO team assignment is next.') : 'Your order is confirmed and will move into fulfillment next.';
+
+    const steps = [
+        { title: 'Order placed', detail: trackingStamp(order.created_at) || 'Order created' },
+        { title: 'Accepted', detail: isAccepted ? 'Approved by the team' : (paymentFailed ? 'Payment failed' : status === 'awaiting_details' ? 'Campaign details needed' : paid ? 'Awaiting approval' : 'Awaiting payment') },
+        { title: 'In progress', detail: isInProgress ? (startedAt ? trackingStamp(startedAt) : 'Content work started') : (status === 'awaiting_details' ? 'After campaign details' : status === 'awaiting_approval' ? 'After admin approval' : isAccepted ? (hasTeamAssignment ? 'Assigned · work starts next' : 'Awaiting team assignment') : 'After acceptance') },
+        { title: 'On the way', detail: isOnTheWay ? (publishedAt ? trackingStamp(publishedAt) : 'Published') : (isInProgress ? 'Preparing placement' : 'After content review') },
+        { title: 'Delivered', detail: isDelivered ? (trackingStamp(deliveredAt) || 'Order complete') : 'After customer approval' },
+    ];
+
+    return (
+        <section className="overflow-hidden rounded-3xl border border-navy/10 bg-white shadow-sm" aria-label="Order tracking">
+            <header className="flex flex-wrap items-start justify-between gap-4 border-b border-navy/10 px-5 py-5 sm:px-7">
+                <div>
+                    <p className="text-[10px] font-bold tracking-[0.18em] text-brand uppercase">Your order journey</p>
+                    <h2 className="mt-1 text-xl font-semibold tracking-tight text-navy sm:text-2xl">Track your placement</h2>
+                    <p className="mt-1 text-sm text-navy/55">Follow each milestone from checkout to a verified live link.</p>
+                </div>
+                <span className={`inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold ${isDelivered ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : paymentFailed ? 'border-rose-200 bg-rose-50 text-rose-800' : 'border-brand/20 bg-[#fff3ed] text-[#c0340d]'}`}>
+                    {statusLabel}
+                </span>
+            </header>
+            <div className="p-5 sm:p-7">
+                <div className="relative">
+                    <div className="absolute top-5 right-[10%] left-[10%] hidden h-0.5 bg-navy/10 sm:block" aria-hidden="true">
+                        <span className="block h-full bg-brand transition-all duration-500" style={{ width: `${progressPercent}%` }} />
+                    </div>
+                    <div className="absolute top-5 bottom-5 left-5 border-l-2 border-dotted border-navy/15 sm:hidden" aria-hidden="true" />
+                    <ol className="relative grid gap-5 sm:grid-cols-5 sm:gap-1" aria-label={`Order progress: ${statusLabel}`}>
+                        {steps.map((step, index) => {
+                            const stepNumber = index + 1;
+                            const isComplete = stepNumber <= completedSteps;
+                            const isCurrent = !isComplete && stepNumber === currentStep;
+
+                            return (
+                                <li key={step.title} aria-current={isCurrent ? 'step' : undefined} className="flex items-start gap-3 sm:block sm:px-1 sm:text-center">
+                                    <span className={`relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full border transition sm:mx-auto ${isCurrent ? 'border-brand bg-brand text-white shadow-[0_0_0_5px_rgba(255,73,23,0.12)]' : isComplete ? 'border-brand bg-brand text-white' : 'border-navy/15 bg-white text-navy/40'}`} aria-hidden="true">
+                                        <OrderTrackingIcon step={stepNumber} />
+                                    </span>
+                                    <span className="min-w-0 pb-1 sm:mt-3 sm:block">
+                                        <span className={`block text-sm font-semibold ${isComplete || isCurrent ? 'text-navy' : 'text-navy/45'}`}>{step.title}</span>
+                                        <span className="mt-1 block text-xs leading-5 text-navy/50">{step.detail}</span>
+                                    </span>
+                                </li>
+                            );
+                        })}
+                    </ol>
+                </div>
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand/15 bg-[#fff5f0] p-4 sm:p-5">
+                    <div className="min-w-0 flex-1 basis-64">
+                        <p className="text-[10px] font-bold tracking-[0.16em] text-brand uppercase">Latest update</p>
+                        <h3 className="mt-1 text-base font-semibold text-navy">{currentTitle}</h3>
+                        <p className="mt-1 text-sm leading-6 text-navy/65">{currentDescription}</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}
+
+function OrderTrackingIcon({ step }) {
+    const shared = { className: 'size-5', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', viewBox: '0 0 24 24' };
+
+    if (step === 1) {
+        return <svg {...shared}><path d="M5 7.5 12 4l7 3.5v9L12 20l-7-3.5z" /><path d="m5.5 7.8 6.5 3.4 6.5-3.4M12 11.2V20" /></svg>;
+    }
+
+    if (step === 2) {
+        return <svg {...shared}><path d="M12 3.5 19 6v5.2c0 4.3-2.8 7.7-7 9.3-4.2-1.6-7-5-7-9.3V6z" /><path d="m8.5 11.8 2.2 2.2 4.8-4.8" /></svg>;
+    }
+
+    if (step === 3) {
+        return <svg {...shared}><path d="m12 3.5 8 4.3v8.4l-8 4.3-8-4.3V7.8z" /><path d="m4.4 8 7.6 4 7.6-4M12 12v8.2" /></svg>;
+    }
+
+    if (step === 4) {
+        return <svg {...shared}><path d="M3 6.5h11v10H3zM14 10h4l3 3v3.5h-7z" /><circle cx="7" cy="18" r="1.8" /><circle cx="18" cy="18" r="1.8" /><path d="M16.5 10v3h4" /></svg>;
+    }
+
+    return <svg {...shared}><path d="M5 8 12 4l7 4v8l-7 4-7-4z" /><path d="m5.5 8.3 6.5 3.5 6.5-3.5M12 11.8V20" /><path d="m9.4 15.2 1.7 1.7 3.7-3.7" /></svg>;
 }
 
 function OrderCartScreen({ page, send }) {
@@ -1088,6 +1208,15 @@ function stamp(value) {
     }
 
     return date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
+function trackingStamp(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
 
 function ago(value) {

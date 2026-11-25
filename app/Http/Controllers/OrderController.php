@@ -408,7 +408,9 @@ class OrderController extends Controller
             return response()->json(['data' => $order->load('items', 'payments')]);
         }
 
-        return view('orders.order-detail', ['order' => $order->load('items', 'invoice', 'rewardCoupon')]);
+        return view('orders.order-detail', [
+            'order' => $order->load('items.assignment', 'items.project', 'items.article', 'payments', 'invoice', 'rewardCoupon'),
+        ]);
     }
 
     public function thanks(Request $request, Order $order): View|RedirectResponse
