@@ -860,6 +860,7 @@ function PaymentScreen({ page, send }) {
     const applied = page.data.appliedCoupons || [];
     const available = page.data.availableCoupons || [];
     const { submit, pending, errors } = useSend(send);
+    const [agreed, setAgreed] = useState(false);
     const alert = Object.values({ ...page.errors, ...errors }).flat().find(Boolean);
 
     return (
@@ -928,16 +929,25 @@ function PaymentScreen({ page, send }) {
                         </div>
                     </div>
                 ) : null}
-                {page.payments?.stripe ? <button className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-dark" type="button" disabled={pending} onClick={() => submit(`/orders/${order.id}/payment`, 'POST', { payment_method: 'stripe' })}>Pay with Stripe</button> : null}
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-navy/10 bg-canvas/50 p-3.5 text-sm text-navy/80">
+                    <input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 rounded border-navy/30 accent-brand" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} />
+                    <span>
+                        I agree to the{' '}
+                        <A href="/return-refund-policy" className="font-medium text-brand underline underline-offset-2 hover:text-brand-dark">Return &amp; Refund Policy</A>,{' '}
+                        <A href="/terms-and-conditions" className="font-medium text-brand underline underline-offset-2 hover:text-brand-dark">Terms &amp; Conditions</A>, and{' '}
+                        <A href="/privacy-policy" className="font-medium text-brand underline underline-offset-2 hover:text-brand-dark">Privacy Policy</A>.
+                    </span>
+                </label>
+                {page.payments?.stripe ? <button className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50" type="button" disabled={pending || !agreed} onClick={() => submit(`/orders/${order.id}/payment`, 'POST', { payment_method: 'stripe' })}>Pay with Stripe</button> : null}
                 {page.payments?.demo ? (
-                    <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); submit(`/orders/${order.id}/payment`, 'POST', { payment_method: 'demo_card', demo_result: new FormData(event.currentTarget).get('demo_result') }); }}>
+                    <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); if (!agreed) return; submit(`/orders/${order.id}/payment`, 'POST', { payment_method: 'demo_card', demo_result: new FormData(event.currentTarget).get('demo_result') }); }}>
                         <p className="text-sm text-navy/65">Dummy payment gateway. No money is charged. Use this until Stripe is connected.</p>
                         <label className="block text-sm font-medium" htmlFor="demo_result">Payment result</label>
                         <select id="demo_result" name="demo_result" className="w-full rounded-lg border border-navy/15 px-3 py-2.5 text-sm" defaultValue="success">
                             <option value="success">Successful payment</option>
                             <option value="declined">Declined payment</option>
                         </select>
-                        <button className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-dark" type="submit" disabled={pending}>Pay with dummy gateway</button>
+                        <button className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50" type="submit" disabled={pending || !agreed}>Pay with dummy gateway</button>
                     </form>
                 ) : null}
                 {!page.payments?.stripe && !page.payments?.demo ? <p className="text-sm text-navy/65" role="status">Stripe checkout is currently unavailable.</p> : null}
