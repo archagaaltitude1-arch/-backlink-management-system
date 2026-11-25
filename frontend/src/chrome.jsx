@@ -529,12 +529,17 @@ function SiteFooter({ shell }) {
         ['SEO Tools', '/tools'],
         ['Browse by Country', '/#countries'],
     ];
+    const legal = [
+        ['Return & Refund Policy', '/return-refund-policy'],
+        ['Terms & Conditions', '/terms-and-conditions'],
+        ['Privacy Policy', '/privacy-policy'],
+    ];
     const trust = ['White-hat only', 'Every link verified', 'Delivery in 3–14 days'];
 
     return (
         <footer className="border-t-4 border-brand bg-[#152029] text-white">
             <div className="w-full bg-[radial-gradient(ellipse_at_0%_0%,rgba(255,73,23,0.16),transparent_34%)] px-4 pt-16 pb-12 lg:px-6 lg:pt-20">
-                <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-[minmax(260px,340px)_repeat(3,minmax(0,1fr))] lg:gap-x-14">
+                <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-[minmax(260px,340px)_repeat(4,minmax(0,1fr))] lg:gap-x-10">
                     <div>
                         <A href="/home" className="inline-flex items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
                             <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand text-sm text-white" aria-hidden="true">↗</span>
@@ -560,6 +565,12 @@ function SiteFooter({ shell }) {
                         <h2 className="text-brand uppercase">Explore</h2>
                         <ul className="mt-4">
                             {explore.map(([label, href]) => <li key={href}><A href={href} className={link}><span className="h-px w-3 bg-brand/70 transition-all group-hover:w-5" aria-hidden="true" />{label}</A></li>)}
+                        </ul>
+                    </nav>
+                    <nav aria-label="Legal">
+                        <h2 className="text-brand uppercase">Legal</h2>
+                        <ul className="mt-4">
+                            {legal.map(([label, href]) => <li key={href}><A href={href} className={link}><span className="h-px w-3 bg-brand/70 transition-all group-hover:w-5" aria-hidden="true" />{label}</A></li>)}
                         </ul>
                     </nav>
                     <div>
@@ -591,11 +602,7 @@ function SiteFooter({ shell }) {
             <div className="border-t border-white/10 px-4 py-5 lg:px-6">
                 <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[#B8C2CC]">
                     <p>© {new Date().getFullYear()} BacklinkPro</p>
-                    <div className="flex flex-wrap items-center gap-5">
-                        <A href="/return-refund-policy" className="transition-colors hover:text-white">Return &amp; Refund Policy</A>
-                        <A href="/terms-and-conditions" className="transition-colors hover:text-white">Terms &amp; Conditions</A>
-                        <A href="/privacy-policy" className="transition-colors hover:text-white">Privacy Policy</A>
-                    </div>
+                    <p>White-hat placements, verified before delivery</p>
                 </div>
             </div>
         </footer>
