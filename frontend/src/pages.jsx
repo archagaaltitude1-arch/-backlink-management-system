@@ -9,6 +9,7 @@ import { PublishView } from './publish-view';
 import { PackageTabs, ServicePage, ServicesOverview } from './services-view';
 import { ToolView } from './tools-view';
 import { accountScreens } from './account';
+import { PrivacyPolicyScreen, ReturnRefundPolicyScreen, TermsConditionsScreen } from './legal';
 
 export function screenFor(view) {
     return screens[view] || MissingScreen;
@@ -17,6 +18,9 @@ export function screenFor(view) {
 const screens = {
     'customer.pages.home': HomeScreen,
     'customer.pages.contact': ContactScreen,
+    'customer.pages.return-refund-policy': ReturnRefundPolicyScreen,
+    'customer.pages.terms-and-conditions': TermsConditionsScreen,
+    'customer.pages.privacy-policy': PrivacyPolicyScreen,
     'customer.services.index': ServicesScreen,
     'customer.services.show': ServiceScreen,
     'customer.packages.index': PackagesScreen,
@@ -856,6 +860,8 @@ function PaymentScreen({ page, send }) {
     const applied = page.data.appliedCoupons || [];
     const available = page.data.availableCoupons || [];
     const { submit, pending, errors } = useSend(send);
+    const [agreed, setAgreed] = useState({ refund: false, terms: false, privacy: false });
+    const allAgreed = agreed.refund && agreed.terms && agreed.privacy;
     const alert = Object.values({ ...page.errors, ...errors }).flat().find(Boolean);
 
     return (
@@ -924,16 +930,36 @@ function PaymentScreen({ page, send }) {
                         </div>
                     </div>
                 ) : null}
-                {page.payments?.stripe ? <button className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-dark" type="button" disabled={pending} onClick={() => submit(`/orders/${order.id}/payment`, 'POST', { payment_method: 'stripe' })}>Pay with Stripe</button> : null}
+                <div className="space-y-2.5 rounded-xl border border-navy/10 bg-canvas/50 p-3.5 text-sm text-navy/80">
+                    {[
+                        ['refund', 'Return & Refund Policy', '/return-refund-policy'],
+                        ['terms', 'Terms & Conditions', '/terms-and-conditions'],
+                        ['privacy', 'Privacy Policy', '/privacy-policy'],
+                    ].map(([key, label, href]) => (
+                        <label key={key} className="flex cursor-pointer items-start gap-3">
+                            <input
+                                type="checkbox"
+                                className="mt-0.5 h-4 w-4 shrink-0 rounded border-navy/30 accent-brand"
+                                checked={agreed[key]}
+                                onChange={(event) => setAgreed((prev) => ({ ...prev, [key]: event.target.checked }))}
+                            />
+                            <span>
+                                I agree to the{' '}
+                                <A href={href} className="font-medium text-brand underline underline-offset-2 hover:text-brand-dark">{label}</A>.
+                            </span>
+                        </label>
+                    ))}
+                </div>
+                {page.payments?.stripe ? <button className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50" type="button" disabled={pending || !allAgreed} onClick={() => submit(`/orders/${order.id}/payment`, 'POST', { payment_method: 'stripe' })}>Pay with Stripe</button> : null}
                 {page.payments?.demo ? (
-                    <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); submit(`/orders/${order.id}/payment`, 'POST', { payment_method: 'demo_card', demo_result: new FormData(event.currentTarget).get('demo_result') }); }}>
+                    <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); if (!allAgreed) return; submit(`/orders/${order.id}/payment`, 'POST', { payment_method: 'demo_card', demo_result: new FormData(event.currentTarget).get('demo_result') }); }}>
                         <p className="text-sm text-navy/65">Dummy payment gateway. No money is charged. Use this until Stripe is connected.</p>
                         <label className="block text-sm font-medium" htmlFor="demo_result">Payment result</label>
                         <select id="demo_result" name="demo_result" className="w-full rounded-lg border border-navy/15 px-3 py-2.5 text-sm" defaultValue="success">
                             <option value="success">Successful payment</option>
                             <option value="declined">Declined payment</option>
                         </select>
-                        <button className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-dark" type="submit" disabled={pending}>Pay with dummy gateway</button>
+                        <button className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50" type="submit" disabled={pending || !allAgreed}>Pay with dummy gateway</button>
                     </form>
                 ) : null}
                 {!page.payments?.stripe && !page.payments?.demo ? <p className="text-sm text-navy/65" role="status">Stripe checkout is currently unavailable.</p> : null}

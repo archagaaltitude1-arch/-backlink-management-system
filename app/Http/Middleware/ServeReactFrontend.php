@@ -47,7 +47,7 @@ class ServeReactFrontend
             return false;
         }
 
-        if ($path === '' || $path === 'home' || $path === 'contact' || $path === 'login' || $path === 'register') {
+        if ($path === '' || $path === 'home' || $path === 'contact' || $path === 'login' || $path === 'register' || $path === 'return-refund-policy' || $path === 'terms-and-conditions' || $path === 'privacy-policy') {
             return true;
         }
 
