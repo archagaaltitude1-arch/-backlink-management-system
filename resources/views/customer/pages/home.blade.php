@@ -57,7 +57,7 @@
                 <h1 id="home-heading" class="mt-5 w-[min(1120px,calc(100vw-2.5rem))] font-display text-[42px] leading-[1.08] text-white lg:text-[68px]">Earn Higher Rankings<br class="hidden lg:block"> with Backlinks from <span class="text-[#FF4917]">Real, Traffic-Driven</span> <br class="hidden lg:block"><span class="text-[#FF4917]">Websites</span></h1>
                 <p class="mt-5 max-w-3xl text-[17px] leading-8 text-white/80 sm:text-[19px]">Pick from {{ $publishers }} checked publisher websites and grow your search visibility, visitors and sales with text links, contextual links, guest posts and niche edits. Every one is verified before you get your report.</p>
                 <div class="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
-                    <x-ui.button variant="primary" :href="$startHref">Start Building Links</x-ui.button>
+                    <x-ui.button variant="primary" :href="route('customer.dashboard')">Start Building Links</x-ui.button>
                     <x-ui.button variant="outline" :href="$publisherListHref">See the publisher list</x-ui.button>
                 </div>
                 <ul class="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2">

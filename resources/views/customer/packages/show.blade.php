@@ -8,6 +8,16 @@
     $money = $unit === null ? 'Price on request' : ($prefix === '' ? '' : $prefix.' ').'$'.number_format($unit, 2);
     $chooseHref = route('packages.websites', $package['slug']);
     $selectedBacklinks = $selectedBacklinks ?? null;
+    $highlightTier = function (?string $text): string {
+        $safe = e((string) $text);
+
+        return preg_replace(
+            '/\b(Professional|Enterprise|Starter|Growth|Pro)\b/',
+            '<span class="pk-tier">$1</span>',
+            $safe,
+            1,
+        ) ?? $safe;
+    };
 @endphp
 
 @section('document_title', $title.' | BacklinkPro')
@@ -21,7 +31,8 @@
         .pk-crumb a:hover { color: #C0340D; }
         .pk-grid { display: grid; gap: 20px; }
         .pk-hero { position: relative; overflow: hidden; min-height: 420px; border: 1px solid rgba(198, 161, 91, 0.45); border-radius: 16px; background: linear-gradient(160deg, #152029 0%, #0c0c0e 62%, #2a2114 100%); color: #fff; padding: 36px 28px; }
-        .pk-hero h2 { position: relative; z-index: 1; margin: 48px 0 0; max-width: 460px; font-family: var(--font-sans), sans-serif; font-size: clamp(34px, 4vw, 52px); font-weight: 800; line-height: 0.98; text-transform: uppercase; }
+        .pk-hero h2 { position: relative; z-index: 1; margin: 48px 0 0; max-width: 460px; font-family: var(--font-sans), sans-serif; font-size: clamp(34px, 4vw, 52px); font-weight: 800; line-height: 1.15; text-transform: uppercase; }
+        .pk-tier { display: inline-block; border-radius: 4px; background: #000; color: #fff; padding: 0.04em 0.28em 0.08em; line-height: 1.05; }
         .pk-gold { position: absolute; top: 0; right: 0; z-index: 1; width: 180px; height: 180px; background: #C6A15B; clip-path: polygon(100% 0, 0 0, 100% 100%); }
         .pk-badge { position: absolute; top: 0; right: 0; z-index: 2; width: 164px; height: 164px; background: #FF4917; clip-path: polygon(100% 0, 0 0, 100% 100%); }
         .pk-badge span { position: absolute; top: 28px; right: 12px; max-width: 92px; font-family: var(--font-sans), sans-serif; font-size: 22px; font-weight: 800; line-height: 1.05; text-align: right; }
@@ -34,11 +45,11 @@
         .pk-hero li { position: relative; margin-top: 10px; padding-left: 16px; font-size: 16px; line-height: 1.4; }
         .pk-hero li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 6px; height: 6px; border-radius: 50%; background: #C6A15B; }
         .pk-panel { background: #fff; border: 1px solid #E3E5E8; border-radius: 16px; padding: 22px; }
-        .pk-panel h1 { margin: 0; font-family: var(--font-sans), sans-serif; font-size: 32px; font-weight: 800; line-height: 1.15; }
+        .pk-panel h1 { margin: 0; font-family: var(--font-sans), sans-serif; font-size: 32px; font-weight: 800; line-height: 1.25; }
         .pk-price { margin: 16px 0 0; font-family: var(--font-sans), sans-serif; font-size: 34px; font-weight: 800; }
         .pk-lead, .pk-copy p { color: #152029; font-size: 15px; line-height: 1.65; }
-        .pk-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-        .pk-chip { display: inline-flex; align-items: center; min-height: 40px; border: 1px solid #E3E5E8; border-radius: 8px; padding: 6px 10px; font-size: 14px; font-weight: 700; }
+        .pk-details { margin-top: 16px; color: #4A5560; font-size: 14px; font-weight: 600; line-height: 1.6; }
+        .pk-pipe { margin: 0 8px; color: #C5CAD1; font-weight: 400; }
         .pk-sample { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; margin-top: 16px; padding: 8px 18px; border: 1px solid #FF4917; border-radius: 8px; background: #fff; color: #FF4917; font-size: 14px; font-weight: 800; letter-spacing: 0.02em; text-decoration: none; }
         .pk-sample:hover { background: #FFF1EC; color: #C0340D; }
         .pk-copy { margin-top: 22px; }
@@ -88,7 +99,7 @@
                 <aside class="pk-hero" aria-label="{{ $title }}">
                     <div class="pk-gold" aria-hidden="true"></div>
                     <div class="pk-badge"><span>{{ $story['badge'] ?? ($story['count'] ?? $package['size']) }}</span></div>
-                    <h2>{{ $story['hero'] ?? ($package['name'].' Backlink Package') }}</h2>
+                    <h2>{!! $highlightTier($story['hero'] ?? ($package['name'].' Backlink Package')) !!}</h2>
                     <ul>
                         @foreach (($story['gets'] ?? []) as $point)
                             <li>{{ $point }}</li>
@@ -104,7 +115,7 @@
                 </aside>
 
                 <article class="pk-panel">
-                    <h1>{{ $title }}</h1>
+                    <h1>{!! $highlightTier($title) !!}</h1>
                     <div class="pk-price-row">
                         <p class="pk-price" data-pk-price="{{ $unit === null ? '' : $unit }}" data-pk-prefix="{{ $package['price_prefix'] ?? '' }}">{{ $money }}</p>
                         @if (! empty($story['category']))
@@ -117,18 +128,24 @@
                     @else
                         <p class="pk-lead">{{ $package['summary'] }}</p>
                     @endif
-                    <div class="pk-chips">
-                        @if (! empty($story['chips']))
-                            @foreach ($story['chips'] as $chip)
-                                <span class="pk-chip">{{ $chip }}</span>
-                            @endforeach
-                        @else
-                            <span class="pk-chip">{{ $story['count'] ?? $package['size'] }} backlinks</span>
-                            <span class="pk-chip">{{ $story['delivery'] ?? 'Delivery confirmed with the order' }}</span>
-                            <span class="pk-chip">Report included</span>
-                            <span class="pk-chip">Order tracking</span>
-                        @endif
-                    </div>
+                    @php
+                        $detailChips = ! empty($story['chips'])
+                            ? $story['chips']
+                            : [
+                                ($story['count'] ?? $package['size']).' backlinks',
+                                $story['delivery'] ?? 'Delivery confirmed with the order',
+                                'Report included',
+                                'Order tracking',
+                            ];
+                    @endphp
+                    <p class="pk-details">
+                        @foreach ($detailChips as $chip)
+                            @if (! $loop->first)
+                                <span class="pk-pipe" aria-hidden="true">|</span>
+                            @endif
+                            <span>{{ $chip }}</span>
+                        @endforeach
+                    </p>
                     @php
                         $sampleReports = [
                             'display-starter' => 'reports/starter-backlink-sample-report.xlsx',

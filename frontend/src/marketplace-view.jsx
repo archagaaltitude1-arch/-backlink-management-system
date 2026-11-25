@@ -78,7 +78,7 @@ export function MarketplaceView({ page, send }) {
     const profile = page.data.profile || {};
     const signedIn = Boolean(page.shell?.auth);
     const demo = Boolean(profile.demo);
-    const canBuy = signedIn && !demo && profile.website_id;
+    const canBuy = !demo && Boolean(profile.website_id);
     const [service, setService] = useState('write_and_publish');
     const [quantity, setQuantity] = useState(1);
     const [pending, setPending] = useState(false);

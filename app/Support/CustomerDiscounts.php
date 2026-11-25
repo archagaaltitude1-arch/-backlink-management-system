@@ -41,6 +41,14 @@ class CustomerDiscounts
             return $quote;
         }
 
+        $campaign = DiscountCampaign::findType('first_order');
+
+        if ($campaign !== null && $this->firstOrderApplies($customer, $subtotal, $packageDiscount, $campaign)) {
+            $amount = $this->moneyOff($campaign->discount_type, (float) $campaign->discount_value, $subtotal, null);
+
+            return $this->withOffer($quote, 'first_order', 'First-order discount', null, $amount);
+        }
+
         $code = is_string($code) ? Str::upper(trim($code)) : '';
 
         if ($code !== '') {
@@ -51,15 +59,12 @@ class CustomerDiscounts
             }
         }
 
-        $campaign = DiscountCampaign::findType('first_order');
-
-        if ($campaign !== null && $this->firstOrderApplies($customer, $subtotal, $packageDiscount, $campaign)) {
-            $amount = $this->moneyOff($campaign->discount_type, (float) $campaign->discount_value, $subtotal, null);
-
-            return $this->withOffer($quote, 'first_order', 'First-order discount', null, $amount);
-        }
-
         return $quote;
+    }
+
+    public function awaitingFirstOrder(User $customer): bool
+    {
+        return $this->firstOrderOffer($customer) !== null;
     }
 
     public function firstOrderOffer(User $customer): ?DiscountCampaign
@@ -171,6 +176,7 @@ class CustomerDiscounts
         $customer = $order->customer;
 
         if ($customer instanceof User) {
+            $this->issueOrderReward($order, $customer);
             $this->issueLoyalty($customer);
         }
     }
@@ -215,7 +221,7 @@ class CustomerDiscounts
 
         $customer->notify(new CouponNotice(
             'A '.$coupon->discountSummary().' coupon is ready',
-            'Use '.$coupon->code.' on a package or an individual backlink. Save it for later before '.$coupon->expires_at?->format('M j, Y').'.',
+            'Use '.$coupon->code.' on your next order for '.$coupon->discountSummary().'. Apply it at checkout, or choose Not now. It expires '.$coupon->expires_at?->format('M j, Y').'.',
         ));
     }
 
@@ -356,6 +362,53 @@ class CustomerDiscounts
         }
 
         return ! $this->successfulOrders($customer)->exists();
+    }
+
+    /**
+     * @param  Collection<int, Coupon>  $coupons
+     * @return array{paid: int, every: int, remaining: int, due: bool, label: string}
+     */
+    public function loyaltyStanding(int $paidOrders, Collection $coupons, ?DiscountCampaign $campaign): array
+    {
+        $every = (int) ($campaign->qualifying_orders ?? 0);
+        $issued = $coupons
+            ->where('type', 'loyalty')
+            ->pluck('milestone')
+            ->map(fn (mixed $milestone): int => (int) $milestone)
+            ->all();
+        $missing = [];
+
+        if ($campaign !== null && $campaign->is_enabled && $every >= 1) {
+            $milestones = $campaign->recurring
+                ? range($every, max($every, $paidOrders), $every)
+                : ($paidOrders >= $every ? [$every] : []);
+
+            foreach ($milestones as $milestone) {
+                if ($milestone <= $paidOrders && ! in_array($milestone, $issued, true)) {
+                    $missing[] = $milestone;
+                }
+            }
+        }
+
+        $remaining = 0;
+
+        if ($campaign === null || ! $campaign->is_enabled || $every < 1) {
+            $label = 'Loyalty coupons are turned off.';
+        } elseif ($missing !== []) {
+            $label = $paidOrders.' paid '.($paidOrders === 1 ? 'order' : 'orders').'. Loyalty coupon is due.';
+        } else {
+            $remainder = $paidOrders % $every;
+            $remaining = $remainder === 0 ? $every : $every - $remainder;
+            $label = $paidOrders.' paid '.($paidOrders === 1 ? 'order' : 'orders').'. '.$remaining.' more until the next loyalty coupon.';
+        }
+
+        return [
+            'paid' => $paidOrders,
+            'every' => $every,
+            'remaining' => $remaining,
+            'due' => $missing !== [],
+            'label' => $label,
+        ];
     }
 
     public function shopMoreMessage(User $customer): string

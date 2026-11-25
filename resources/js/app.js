@@ -26,9 +26,11 @@ function initSidebar() {
         }
     });
 
+    const breakpoint = Number(sidebar.dataset.sidebarBreakpoint || 1024);
+
     sidebar.querySelectorAll('a').forEach((link) => {
         link.addEventListener('click', () => {
-            if (window.matchMedia('(max-width: 1023px)').matches) {
+            if (window.matchMedia(`(max-width: ${breakpoint - 1}px)`).matches) {
                 setOpen(false);
             }
         });

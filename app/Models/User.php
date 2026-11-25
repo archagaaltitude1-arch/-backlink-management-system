@@ -67,6 +67,11 @@ class User extends Authenticatable
         return $this->hasMany(CouponUsage::class, 'customer_id');
     }
 
+    public function coupons(): HasMany
+    {
+        return $this->hasMany(Coupon::class, 'customer_id');
+    }
+
     /**
      * Get the attributes that should be cast.
      *
@@ -99,6 +104,13 @@ class User extends Authenticatable
     public function isActiveAdmin(): bool
     {
         return $this->status === 'active' && $this->role?->role_name === 'Admin';
+    }
+
+    public function canAccessSeoPortal(): bool
+    {
+        $this->loadMissing('role');
+
+        return in_array($this->role?->role_name, ['Admin', 'Staff', 'SEO'], true);
     }
 
     public function dashboardUrl(): string

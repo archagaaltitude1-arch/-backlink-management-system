@@ -62,6 +62,7 @@ class ShoppingController extends Controller
             'discount' => $discount,
             'total' => $quote['total'],
             'coupon' => $quote['coupon_code'] ?? session('shopping_coupon'),
+            'firstOrderOnly' => ($quote['offer_type'] ?? null) === 'first_order',
             'unpriced' => $items->count() - $priced->count(),
             'checkoutHref' => route('shopping.checkout'),
         ]);
@@ -521,6 +522,10 @@ class ShoppingController extends Controller
             return redirect()->route('shopping.index')->with('shopping_error', 'Coupons are not available right now.');
         }
 
+        if ($request->user() !== null && app(CustomerDiscounts::class)->awaitingFirstOrder($request->user())) {
+            return back()->withErrors(['coupon_code' => 'Your first order uses the 10% new-customer offer.']);
+        }
+
         $coupon = Coupon::findByCode($data['coupon_code']);
         $subtotal = $this->sessionSubtotal();
         $message = $coupon?->rejectionFor($request->user(), $subtotal, CouponCart::fromShoppingItems($this->sessionItems()))
@@ -567,8 +572,9 @@ class ShoppingController extends Controller
         }
 
         $quote = $this->pricedQuote($request->user());
-        $choices = $this->couponChoices($request->user(), (float) $quote['subtotal']);
-        $applied = $quote['coupon_code'];
+        $firstOrderOnly = ($quote['offer_type'] ?? null) === 'first_order';
+        $choices = $firstOrderOnly ? collect() : $this->couponChoices($request->user(), (float) $quote['subtotal']);
+        $applied = $firstOrderOnly ? null : $quote['coupon_code'];
         $hasOpenChoice = $choices->contains(fn (Coupon $coupon): bool => $coupon->code !== $applied);
 
         return view('customer.shopping.checkout', [
@@ -580,14 +586,15 @@ class ShoppingController extends Controller
             'discount' => $quote['offer_discount'],
             'total' => $quote['total'],
             'coupon' => $applied,
-            'couponOffer' => $hasOpenChoice || $applied !== null
+            'firstOrderOnly' => $firstOrderOnly,
+            'couponOffer' => $firstOrderOnly || $hasOpenChoice || $applied !== null
                 ? null
                 : app(CouponReservation::class)->offer(
                     $request->user(),
                     (float) $quote['subtotal'],
                     CouponCart::fromShoppingItems($this->sessionItems()),
                 ),
-            'orderRewards' => app(CustomerDiscounts::class)->orderRewards($request->user()),
+            'orderRewards' => $firstOrderOnly ? collect() : app(CustomerDiscounts::class)->orderRewards($request->user()),
             'couponChoices' => $choices,
             'loginHref' => Route::has('auth.login') ? route('auth.login') : url('/login'),
         ]);
@@ -632,12 +639,16 @@ class ShoppingController extends Controller
             }
         }
 
-        if (filled($data['coupon_code'] ?? null)) {
+        $firstOrderOnly = app(CustomerDiscounts::class)->awaitingFirstOrder($request->user());
+
+        if ($firstOrderOnly) {
+            session()->forget('shopping_coupon');
+        } elseif (filled($data['coupon_code'] ?? null)) {
             $code = Str::upper(trim((string) $data['coupon_code']));
             session(['shopping_coupon' => $code]);
         }
 
-        $couponCode = session('shopping_coupon');
+        $couponCode = $firstOrderOnly ? null : session('shopping_coupon');
 
         try {
             $order = DB::transaction(function () use ($request, $sessionItems, $detailsByLine, $couponCode) {

@@ -188,17 +188,30 @@
                             <button class="wd-btn wd-btn-primary" type="submit">Add to cart</button>
                         </form>
                     @else
-                        <fieldset class="wd-services">
-                            <legend class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Service</legend>
-                            @foreach ($services as $service)
-                                <label class="wd-choice">
-                                    <input type="radio" name="product_key_preview" value="{{ $service['value'] }}" @checked($loop->first) disabled>
-                                    {{ $service['label'] }}
-                                </label>
-                            @endforeach
-                        </fieldset>
-                        <p class="wd-muted">Final price may vary by service</p>
-                        <a class="wd-btn wd-btn-primary" href="{{ $loginHref }}">Login to buy</a>
+                        <form method="POST" action="{{ route('shopping.store') }}">
+                            @csrf
+                            <input type="hidden" name="domain" value="{{ $profile['domain'] }}">
+                            <input type="hidden" name="site" value="{{ $profile['key'] ?? $profile['domain'] }}">
+                            <fieldset class="wd-services">
+                                <legend class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Service</legend>
+                                @foreach ([
+                                    'write_and_publish' => 'Guest Post',
+                                    'contextual_link' => 'Contextual Link',
+                                    'niche_edit' => 'Niche Edit',
+                                    'text_link' => 'Text Link',
+                                ] as $orderType => $orderLabel)
+                                    <label class="wd-choice">
+                                        <input type="radio" name="order_type" value="{{ $orderType }}" @checked($loop->first)>
+                                        {{ $orderLabel }}
+                                    </label>
+                                @endforeach
+                            </fieldset>
+                            <p class="wd-muted">Final price may vary by service</p>
+                            <label class="wd-qty" for="guest-order-quantity">Quantity
+                                <input id="guest-order-quantity" name="quantity" type="number" min="1" max="10" value="1" required>
+                            </label>
+                            <button class="wd-btn wd-btn-primary" type="submit">Add to cart</button>
+                        </form>
                     @endif
 
                     @if (auth()->check() && $saveReady)

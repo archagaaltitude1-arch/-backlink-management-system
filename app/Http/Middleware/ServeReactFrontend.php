@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\SiteSettings;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,7 +26,18 @@ class ServeReactFrontend
             return $next($request);
         }
 
-        return response((string) file_get_contents($index), 200, [
+        $html = (string) file_get_contents($index);
+        $path = trim($request->path(), '/');
+        $branding = view('components.site-branding-head', [
+            'siteSettings' => app(SiteSettings::class)->publicPayload(),
+            'applyTheme' => preg_match('#^(customer|orders)(/|$)#', $path) !== 1,
+        ])->render();
+
+        if (str_contains($html, '</head>')) {
+            $html = str_replace('</head>', $branding.'</head>', $html);
+        }
+
+        return response($html, 200, [
             'Content-Type' => 'text/html; charset=UTF-8',
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
         ]);

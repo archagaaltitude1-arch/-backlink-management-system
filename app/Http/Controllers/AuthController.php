@@ -44,10 +44,13 @@ class AuthController extends Controller
         $this->authenticateAndAdoptCart($request, $user);
 
         if ($request->expectsJson()) {
-            return response()->json(['data' => $user->only(['id', 'name', 'email']) + ['role' => 'customer']], 201);
+            return response()->json([
+                'data' => $user->only(['id', 'name', 'email']) + ['role' => 'customer'],
+                'redirect' => $this->customerDestination(),
+            ], 201);
         }
 
-        return redirect()->route('customer.dashboard');
+        return redirect()->to($this->customerDestination());
     }
 
     public function showLogin(): View
@@ -162,10 +165,10 @@ class AuthController extends Controller
         $this->authenticateAndAdoptCart($request, $user);
 
         if ($request->routeIs('auth.google.firebase')) {
-            return response()->json(['redirect' => route('customer.dashboard')]);
+            return response()->json(['redirect' => $this->customerDestination()]);
         }
 
-        return redirect()->intended(route('customer.dashboard'));
+        return redirect()->to($this->customerDestination());
     }
 
     private function googleRedirectUri(): string
@@ -212,10 +215,13 @@ class AuthController extends Controller
         $this->moveCart($previousSessionId, $request->session()->getId(), $request->user());
 
         if ($request->expectsJson()) {
-            return response()->json(['data' => $request->user()->only(['id', 'name', 'email']) + ['role' => 'customer']]);
+            return response()->json([
+                'data' => $request->user()->only(['id', 'name', 'email']) + ['role' => 'customer'],
+                'redirect' => $this->customerDestination(),
+            ]);
         }
 
-        return redirect()->intended(route('customer.dashboard'));
+        return redirect()->to($this->customerDestination());
     }
 
     public function logout(Request $request): RedirectResponse
@@ -241,5 +247,80 @@ class AuthController extends Controller
             'session_id' => $sessionId,
             'customer_id' => $user->id,
         ]);
+    }
+
+    /**
+     * Send a customer who already chose a publisher to the URL and anchor checkout.
+     * A normal sign-in, with nothing waiting in the cart, still opens the dashboard.
+     */
+    private function customerDestination(): string
+    {
+        $intended = session()->pull('url.intended');
+        $dashboard = route('customer.dashboard');
+
+        if ($this->hasCheckoutCart() && $this->shouldOpenCheckout($intended)) {
+            return route('shopping.checkout');
+        }
+
+        if (is_string($intended) && $this->isSafeAppUrl($intended)) {
+            return $intended;
+        }
+
+        return $dashboard;
+    }
+
+    private function hasCheckoutCart(): bool
+    {
+        $items = session('shopping_cart', []);
+
+        if (! is_array($items)) {
+            return false;
+        }
+
+        foreach ($items as $item) {
+            if (is_array($item) && filled($item['domain'] ?? null) && is_numeric($item['price'] ?? null)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function shouldOpenCheckout(mixed $intended): bool
+    {
+        if (! is_string($intended) || $intended === '') {
+            return true;
+        }
+
+        foreach ([route('customer.dashboard'), route('auth.login'), route('auth.register'), route('shopping.checkout')] as $target) {
+            if ($this->samePath($intended, $target)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function isSafeAppUrl(string $url): bool
+    {
+        $parts = parse_url($url);
+
+        if (! is_array($parts)) {
+            return false;
+        }
+
+        if (isset($parts['host']) && $parts['host'] !== request()->getHost()) {
+            return false;
+        }
+
+        return str_starts_with($parts['path'] ?? '/', '/');
+    }
+
+    private function samePath(string $url, string $target): bool
+    {
+        $left = rtrim((string) (parse_url($url, PHP_URL_PATH) ?: ''), '/');
+        $right = rtrim((string) (parse_url($target, PHP_URL_PATH) ?: ''), '/');
+
+        return $left === $right;
     }
 }

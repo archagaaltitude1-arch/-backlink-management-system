@@ -32,13 +32,21 @@
         ['label' => 'Blog Approvals', 'route' => 'admin.articles', 'icon' => 'articles'],
         ['label' => 'Payment Management', 'route' => 'admin.payments', 'icon' => 'payments'],
         ['label' => 'Reports & Analytics', 'route' => 'admin.reports', 'icon' => 'reports'],
-        ['label' => 'Settings', 'route' => 'admin.settings', 'icon' => 'settings'],
+        [
+            'label' => 'Settings',
+            'icon' => 'settings',
+            'children' => [
+                ['label' => 'Account', 'route' => 'admin.settings'],
+                ['label' => 'Global Settings', 'route' => 'admin.global-settings'],
+            ],
+        ],
     ];
 @endphp
 
 <aside
     id="app-sidebar"
-    class="fixed top-16 bottom-0 left-0 z-40 flex w-64 -translate-x-full flex-col bg-navy text-white transition-transform duration-200 ease-out lg:sticky lg:top-0 lg:bottom-auto lg:h-screen lg:shrink-0 lg:translate-x-0 lg:self-start"
+    data-sidebar-breakpoint="768"
+    class="admin-sidebar fixed top-16 bottom-0 left-0 z-40 flex w-64 -translate-x-full flex-col bg-navy text-white transition-transform duration-200 ease-out md:sticky md:top-0 md:bottom-auto md:h-screen md:shrink-0 md:translate-x-0 md:self-start"
 >
     <a href="{{ route('admin.dashboard') }}" class="flex h-16 shrink-0 items-center gap-3 border-b border-white/10 px-5">
         <span class="grid h-10 w-10 place-items-center rounded-xl bg-brand font-display text-lg font-bold text-white">B</span>
@@ -51,22 +59,46 @@
     <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-4" aria-label="Admin">
         <p class="px-3 pb-2 text-[11px] font-semibold tracking-wider text-white/40 uppercase">Menu</p>
         @foreach ($navigation as $item)
-            <a
-                href="{{ route($item['route']) }}"
-                @class([
-                    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
-                    'bg-brand text-white' => request()->routeIs($item['route'], $item['route'].'.*'),
-                    'text-white/75 hover:bg-white/10 hover:text-white' => ! request()->routeIs($item['route'], $item['route'].'.*'),
-                ])
-                @if (request()->routeIs($item['route'], $item['route'].'.*')) aria-current="page" @endif
-            >
-                <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    @foreach ($icons[$item['icon']] ?? [] as $path)
-                        <path d="{{ $path }}" />
+            @if (! empty($item['children']))
+                <div class="pt-1">
+                    <p class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-white/50">
+                        <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            @foreach ($icons[$item['icon']] ?? [] as $path)
+                                <path d="{{ $path }}" />
+                            @endforeach
+                        </svg>
+                        <span>{{ $item['label'] }}</span>
+                    </p>
+                    @foreach ($item['children'] as $child)
+                        <a
+                            href="{{ route($child['route']) }}"
+                            @class([
+                                'flex items-center rounded-xl py-2 pr-3 pl-11 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
+                                'bg-brand text-white' => request()->routeIs($child['route'], $child['route'].'.*'),
+                                'text-white/75 hover:bg-white/10 hover:text-white' => ! request()->routeIs($child['route'], $child['route'].'.*'),
+                            ])
+                            @if (request()->routeIs($child['route'], $child['route'].'.*')) aria-current="page" @endif
+                        >{{ $child['label'] }}</a>
                     @endforeach
-                </svg>
-                <span>{{ $item['label'] }}</span>
-            </a>
+                </div>
+            @else
+                <a
+                    href="{{ route($item['route']) }}"
+                    @class([
+                        'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
+                        'bg-brand text-white' => request()->routeIs($item['route'], $item['route'].'.*'),
+                        'text-white/75 hover:bg-white/10 hover:text-white' => ! request()->routeIs($item['route'], $item['route'].'.*'),
+                    ])
+                    @if (request()->routeIs($item['route'], $item['route'].'.*')) aria-current="page" @endif
+                >
+                    <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        @foreach ($icons[$item['icon']] ?? [] as $path)
+                            <path d="{{ $path }}" />
+                        @endforeach
+                    </svg>
+                    <span>{{ $item['label'] }}</span>
+                </a>
+            @endif
         @endforeach
     </nav>
 

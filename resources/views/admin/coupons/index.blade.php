@@ -13,6 +13,7 @@
             <a href="{{ route('admin.coupons.create') }}" class="btn-primary">Add coupon</a>
         </section>
         @include('admin.niches.partials.alerts')
+        @include('admin.coupons.partials.customers')
         @include('admin.coupons.partials.campaigns')
         <section class="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <article class="panel p-5">

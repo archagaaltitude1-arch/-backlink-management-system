@@ -41,12 +41,34 @@ class PaymentController extends Controller
         }
 
         $discounts = app(CustomerDiscounts::class);
-        DB::transaction(function () use ($discounts, $order, $request): void {
-            $discounts->issueOrderReward($order, $request->user());
-        });
+        $order->loadMissing('items');
+        $context = CouponCart::fromNamedItems($order->items);
+
+        if ($discounts->awaitingFirstOrder($request->user())) {
+            $quote = $discounts->quote(
+                $request->user(),
+                $this->orderSubtotal($order),
+                (float) $order->package_discount_amount,
+                $context,
+            );
+            $order->update([
+                'coupon_code' => $quote['coupon_code'],
+                'applied_coupon_codes' => null,
+                'offer_type' => $quote['offer_type'],
+                'discount_amount' => $quote['offer_discount'],
+                'total_amount' => $quote['total'],
+            ]);
+
+            return view('orders.payment', [
+                'order' => $order->fresh(),
+                'couponOffer' => null,
+                'appliedCoupons' => collect(),
+                'availableCoupons' => collect(),
+            ]);
+        }
+
         $order = $order->fresh();
         $subtotal = $this->orderSubtotal($order);
-        $context = CouponCart::fromNamedItems($order->items);
         $rewards = $discounts->orderRewards($request->user())
             ->filter(fn (Coupon $coupon): bool => $coupon->rejectionFor($request->user(), $subtotal, $context) === null)
             ->keyBy(fn (Coupon $coupon): string => $coupon->code);
@@ -73,6 +95,10 @@ class PaymentController extends Controller
 
         if ($blocked = $this->couponChangeBlocked($order)) {
             return back()->withErrors(['coupon_code' => $blocked]);
+        }
+
+        if (app(CustomerDiscounts::class)->awaitingFirstOrder($request->user())) {
+            return back()->withErrors(['coupon_code' => 'Your first order uses the 10% new-customer offer.']);
         }
 
         $data = $request->validate(['coupon_code' => ['required', 'string', 'max:40']]);
