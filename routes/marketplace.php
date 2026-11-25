@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/home', [PageController::class, 'home'])->name('home');
 Route::get('/contact', [PageController::class, 'contact'])->name('contact');
+Route::view('/return-refund-policy', 'customer.pages.return-refund-policy')->name('legal.refund');
+Route::view('/terms-and-conditions', 'customer.pages.terms-and-conditions')->name('legal.terms');
+Route::view('/privacy-policy', 'customer.pages.privacy-policy')->name('legal.privacy');
 Route::get('/services', [ServicePageController::class, 'index'])->name('services.index');
 Route::get('/services/{slug}', [ServicePageController::class, 'show'])->name('services.show');
 Route::get('/packages', [PackagePageController::class, 'index'])->name('packages.index');

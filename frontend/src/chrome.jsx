@@ -591,7 +591,11 @@ function SiteFooter({ shell }) {
             <div className="border-t border-white/10 px-4 py-5 lg:px-6">
                 <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[#B8C2CC]">
                     <p>© {new Date().getFullYear()} BacklinkPro</p>
-                    <p>White-hat placements, verified before delivery</p>
+                    <div className="flex flex-wrap items-center gap-5">
+                        <A href="/return-refund-policy" className="transition-colors hover:text-white">Return &amp; Refund Policy</A>
+                        <A href="/terms-and-conditions" className="transition-colors hover:text-white">Terms &amp; Conditions</A>
+                        <A href="/privacy-policy" className="transition-colors hover:text-white">Privacy Policy</A>
+                    </div>
                 </div>
             </div>
         </footer>

@@ -9,6 +9,7 @@ import { PublishView } from './publish-view';
 import { PackageTabs, ServicePage, ServicesOverview } from './services-view';
 import { ToolView } from './tools-view';
 import { accountScreens } from './account';
+import { PrivacyPolicyScreen, ReturnRefundPolicyScreen, TermsConditionsScreen } from './legal';
 
 export function screenFor(view) {
     return screens[view] || MissingScreen;
@@ -17,6 +18,9 @@ export function screenFor(view) {
 const screens = {
     'customer.pages.home': HomeScreen,
     'customer.pages.contact': ContactScreen,
+    'customer.pages.return-refund-policy': ReturnRefundPolicyScreen,
+    'customer.pages.terms-and-conditions': TermsConditionsScreen,
+    'customer.pages.privacy-policy': PrivacyPolicyScreen,
     'customer.services.index': ServicesScreen,
     'customer.services.show': ServiceScreen,
     'customer.packages.index': PackagesScreen,
