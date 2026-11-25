@@ -1,0 +1,5 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Terms and Conditions</title></head>
+<body><h1>Terms and Conditions</h1></body>
+</html>
