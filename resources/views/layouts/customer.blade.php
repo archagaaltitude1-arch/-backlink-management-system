@@ -4,6 +4,7 @@
     $userName = auth()->user()?->name ?? 'Guest';
     $userRole = 'Customer';
     $isAccountPage = auth()->check()
+        && ! request()->routeIs('customer.dashboard', 'orders.index', 'orders.show')
         && request()->routeIs('customer.*', 'orders.cart', 'orders.checkout', 'orders.index', 'orders.show', 'orders.payment', 'orders.thanks');
 @endphp
 <!DOCTYPE html>
@@ -15,11 +16,11 @@
         <title>@yield('title', 'Customer') · Backlink Management</title>
         @fonts
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800&display=swap" rel="stylesheet">
+        <link href="https://fonts.bunny.net/css?family=montserrat:500,600,700,800|ubuntu:400,500,600,700&display=swap" rel="stylesheet">
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @stack('head')
     </head>
-    <body class="overflow-x-hidden bg-canvas font-sans text-navy antialiased">
+    <body class="portal-customer overflow-x-hidden bg-canvas font-sans text-navy antialiased">
         @if ($isAccountPage)
             <a
                 href="#account-content"

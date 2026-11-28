@@ -14,6 +14,7 @@ use App\Rules\MaxKeywords;
 use App\Support\CheckoutItemRules;
 use App\Support\CouponCart;
 use App\Support\CustomerDiscounts;
+use App\Support\OrderTracking;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -408,8 +409,19 @@ class OrderController extends Controller
             return response()->json(['data' => $order->load('items', 'payments')]);
         }
 
+        $order->load([
+            'items.assignment',
+            'items.project',
+            'items.article',
+            'items.website',
+            'payments',
+            'invoice',
+            'rewardCoupon',
+        ]);
+
         return view('orders.order-detail', [
-            'order' => $order->load('items.assignment', 'items.project', 'items.article', 'payments', 'invoice', 'rewardCoupon'),
+            'order' => $order,
+            'tracking' => app(OrderTracking::class)->build($order),
         ]);
     }
 

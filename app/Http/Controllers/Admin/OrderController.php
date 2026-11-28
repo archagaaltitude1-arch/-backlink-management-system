@@ -134,7 +134,10 @@ class OrderController extends Controller
                 return false;
             }
 
-            $lockedOrder->update(['order_status' => 'processing']);
+            $lockedOrder->update([
+                'order_status' => 'processing',
+                'accepted_at' => now(),
+            ]);
 
             return true;
         });

@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CustomerProject extends Model
 {
-    protected $fillable = ['customer_id', 'order_id', 'order_item_id', 'name', 'status', 'target_url', 'published_url', 'verification_status', 'report_summary', 'completed_at'];
+    protected $fillable = ['customer_id', 'order_id', 'order_item_id', 'name', 'status', 'target_url', 'published_url', 'published_at', 'verification_status', 'report_summary', 'completed_at'];
 
     protected function casts(): array
     {
-        return ['completed_at' => 'datetime'];
+        return ['published_at' => 'datetime', 'completed_at' => 'datetime'];
     }
 
     public function order(): BelongsTo

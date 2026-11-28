@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 
 class Order extends Model
 {
-    protected $fillable = ['order_number', 'customer_id', 'session_id', 'total_amount', 'discount_amount', 'package_discount_amount', 'coupon_code', 'applied_coupon_codes', 'offer_type', 'payment_status', 'order_status'];
+    protected $fillable = ['order_number', 'customer_id', 'session_id', 'total_amount', 'discount_amount', 'package_discount_amount', 'coupon_code', 'applied_coupon_codes', 'offer_type', 'payment_status', 'order_status', 'accepted_at', 'completed_at'];
 
     protected function casts(): array
     {
@@ -20,6 +20,8 @@ class Order extends Model
             'discount_amount' => 'decimal:2',
             'package_discount_amount' => 'decimal:2',
             'applied_coupon_codes' => 'array',
+            'accepted_at' => 'datetime',
+            'completed_at' => 'datetime',
         ];
     }
 

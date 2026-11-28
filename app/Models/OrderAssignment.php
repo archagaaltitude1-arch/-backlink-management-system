@@ -16,7 +16,13 @@ class OrderAssignment extends Model
         'assigned_by',
         'status',
         'notes',
+        'in_progress_at',
     ];
+
+    protected function casts(): array
+    {
+        return ['in_progress_at' => 'datetime'];
+    }
 
     public function orderItem(): BelongsTo
     {

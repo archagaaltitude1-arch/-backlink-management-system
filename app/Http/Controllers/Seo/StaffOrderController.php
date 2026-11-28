@@ -77,10 +77,14 @@ class StaffOrderController extends Controller
             }
         }
 
-        $assignment->update([
+        $assignmentAttributes = [
             'status' => $data['status'],
             'notes' => $data['notes'] ?? $assignment->notes,
-        ]);
+        ];
+        if ($data['status'] === 'in_progress' && $assignment->in_progress_at === null) {
+            $assignmentAttributes['in_progress_at'] = now();
+        }
+        $assignment->update($assignmentAttributes);
 
         if ($data['status'] === 'published' && ! $this->recordPublication($assignment, $data['published_url'])) {
             return back()->withErrors(['published_url' => 'This order has no customer account to approve the backlink.'])->withInput();
@@ -133,6 +137,7 @@ class StaffOrderController extends Controller
             'status' => 'published',
             'target_url' => $item->target_url,
             'published_url' => $publishedUrl,
+            'published_at' => now(),
             'verification_status' => 'pending',
             'completed_at' => null,
         ])->save();

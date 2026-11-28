@@ -79,8 +79,11 @@ class ArticleController extends Controller
             ],
         );
 
-        if ($assignment->status === 'assigned') {
-            $assignment->update(['status' => 'in_progress']);
+        if (in_array($assignment->status, ['assigned', 'reassigned'], true)) {
+            $assignment->update([
+                'status' => 'in_progress',
+                'in_progress_at' => $assignment->in_progress_at ?? now(),
+            ]);
         }
 
         return redirect()

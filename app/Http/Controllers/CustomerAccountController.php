@@ -8,11 +8,13 @@ use App\Models\CreditPackage;
 use App\Models\CustomerProject;
 use App\Models\FirstOrderRedemption;
 use App\Models\Invoice;
+use App\Models\Order;
 use App\Models\OrderAssignment;
 use App\Models\PaymentMethod;
 use App\Models\SavedWebsite;
 use App\Support\CouponCart;
 use App\Support\CustomerDiscounts;
+use App\Support\OrderTracking;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,14 +30,38 @@ class CustomerAccountController extends Controller
         $customer = $request->user();
         $wallet = $customer->wallet()->firstOrCreate([], ['available_balance' => 0, 'reserved_balance' => 0]);
         $orders = $customer->orders()->with('items')->latest()->take(5)->get();
+        $activeOrderQuery = $customer->orders()->whereNotIn('order_status', ['completed', 'cancelled', 'refunded', 'failed']);
+        $activeOrders = (clone $activeOrderQuery)
+            ->with(['items.assignment', 'items.project', 'items.article', 'items.website'])
+            ->latest()
+            ->take(4)
+            ->get()
+            ->map(fn (Order $order): array => [
+                'order' => $order,
+                'tracking' => app(OrderTracking::class)->build($order),
+            ]);
+        $actionOrders = $customer->orders()
+            ->whereIn('payment_status', ['pending', 'failed'])
+            ->whereNotIn('order_status', ['cancelled', 'refunded', 'failed'])
+            ->with('items')
+            ->latest()
+            ->take(4)
+            ->get();
         $projects = $customer->hasMany(CustomerProject::class, 'customer_id')->latest()->take(3)->get();
+        $invoices = Invoice::query()->where('customer_id', $customer->id)->with('order')->latest('issued_at')->take(4)->get();
+        $paymentMethods = PaymentMethod::query()->where('customer_id', $customer->id)->orderByDesc('is_default')->latest()->take(3)->get();
 
         return view('customer.dashboard', [
             'customer' => $customer,
             'wallet' => $wallet,
             'orders' => $orders,
+            'activeOrders' => $activeOrders,
+            'activeOrderCount' => $activeOrderQuery->count(),
+            'actionOrders' => $actionOrders,
+            'actionOrderCount' => $customer->orders()->whereIn('payment_status', ['pending', 'failed'])->whereNotIn('order_status', ['cancelled', 'refunded', 'failed'])->count(),
             'projects' => $projects,
-            'savedCard' => PaymentMethod::query()->where('customer_id', $customer->id)->orderByDesc('is_default')->latest()->first(),
+            'invoices' => $invoices,
+            'paymentMethods' => $paymentMethods,
             'orderCount' => $customer->orders()->count(),
             'savedWebsiteCount' => $customer->savedWebsites()->count(),
             'unreadNotificationCount' => $customer->unreadNotifications()->count(),
@@ -390,7 +416,18 @@ class CustomerAccountController extends Controller
             return;
         }
 
-        OrderAssignment::query()->where('order_item_id', $project->order_item_id)->update(['status' => $status]);
+        $assignment = OrderAssignment::query()->where('order_item_id', $project->order_item_id)->first();
+
+        if ($assignment === null) {
+            return;
+        }
+
+        $attributes = ['status' => $status];
+        if ($status === 'in_progress' && $assignment->in_progress_at === null) {
+            $attributes['in_progress_at'] = now();
+        }
+
+        $assignment->update($attributes);
     }
 
     private function completeOrderWhenApproved(CustomerProject $project): void
@@ -410,8 +447,11 @@ class CustomerAccountController extends Controller
             ->where('verification_status', 'approved')
             ->count();
 
-        if ($approved === $itemIds->count()) {
-            $order->update(['order_status' => 'completed']);
+        if ($approved === $itemIds->count() && $order->completed_at === null) {
+            $order->update([
+                'order_status' => 'completed',
+                'completed_at' => now(),
+            ]);
         }
     }
 
